@@ -1,0 +1,16 @@
+:root {
+    --primary-color: #e5540e;
+    --bezier-curve: cubic-bezier(0.65, 0, 0.15, 1);
+    --lighter: rgba(255, 255, 255, 0.3);
+}
+
+html,
+body {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Roboto', sans-serif;
+}

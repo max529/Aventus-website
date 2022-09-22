@@ -1,0 +1,7 @@
+<av-navbar>
+
+</av-navbar>
+<av-scrollable>
+    <av-home av-element="homePage"></av-home>
+    <av-example av-element="examplePage"></av-example>
+</av-scrollable>

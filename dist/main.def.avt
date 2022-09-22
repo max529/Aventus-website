@@ -1,0 +1,38 @@
+// version 0.0.1
+// region js //
+
+
+
+
+declare abstract class AvPage extends WebComponent implements DefaultComponent {
+    show: boolean;
+}
+
+declare class AvExample extends AvPage implements DefaultComponent {
+}
+
+declare class AvNavbar extends WebComponent implements DefaultComponent {
+    homeBtn: HTMLLIElement;
+    exampleBtn: HTMLLIElement;
+    states?: States;
+    changeState(e: Event, instance: PressManager): void;
+}
+
+declare class AvApp extends WebComponent implements DefaultComponent {
+    homePage: AvHome;
+    examplePage: AvExample;
+    oldActivePage: AvPage;
+    states?: States;
+    protected postCreation(): void;
+}
+
+declare class AvHome extends AvPage implements DefaultComponent {
+}
+
+// end region js //
+// region css //
+{"av-app":[],"av-navbar":[],"av-home":[],"av-example":[],"av-page":[]}
+// end region css //
+// region html //
+{"av-app":{"name":"av-app","description":"","attributes":{}},"av-navbar":{"name":"av-navbar","description":"","attributes":{}},"av-home":{"name":"av-home","description":"","attributes":{}},"av-example":{"name":"av-example","description":"","attributes":{}},"av-page":{"name":"av-page","description":"","attributes":{"show":{"name":"show","description":"","values":[]}}}}
+// end region html //
