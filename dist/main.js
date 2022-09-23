@@ -9891,14 +9891,14 @@ class AvNavbar extends WebComponent {
         let parentInfo = super.__getHtml();
         let info = {
             html: `<ul>
-    <li av-press="changeState" state="/" _id="avnavbar_0">Home</li>
+    <li av-press="changeState" state="/" _id="avnavbar_0">Home2</li>
     <li av-press="changeState" state="/example" _id="avnavbar_1">Example</li>
 </ul>`,
             slots: {
             },
             blocks: {
                 'default':`<ul>
-    <li av-press="changeState" state="/" _id="avnavbar_0">Home</li>
+    <li av-press="changeState" state="/" _id="avnavbar_0">Home2</li>
     <li av-press="changeState" state="/example" _id="avnavbar_1">Example</li>
 </ul>`
             }
