@@ -1,4 +1,4 @@
 <ul>
-    <li av-press="changeState" state="/" av-element="homeBtn">Home3</li>
+    <li av-press="changeState" state="/" av-element="homeBtn">Home</li>
     <li av-press="changeState" state="/example" av-element="exampleBtn">Example</li>
 </ul>
