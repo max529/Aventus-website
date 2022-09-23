@@ -11,26 +11,12 @@ export class AvNavbar extends WebComponent implements DefaultComponent {
 
 
     //#region variables
-    public homeBtn: HTMLLIElement;
-    public exampleBtn: HTMLLIElement;
+
     //#endregion
 
 
     //#region states
-    states?: States = {
-        '/': {
-            active: () => {
-				this.homeBtn.classList.add("active");
-				this.exampleBtn.classList.remove("active");
-            }
-        },
-        '/example2': {
-            active: () => {
-				this.homeBtn.classList.remove("active");
-				this.exampleBtn.classList.add("active");
-            }
-        }
-    };
+
     //#endregion
 
 
@@ -40,9 +26,7 @@ export class AvNavbar extends WebComponent implements DefaultComponent {
 
 
     //#region methods
-    changeState(e: Event, instance: PressManager) {
-        StateManager.getInstance().setActiveState(instance.getElement().getAttribute("state"));
-    }
+    
 	//#endregion
 	
 }

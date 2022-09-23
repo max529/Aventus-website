@@ -4,15 +4,10 @@
 	background-color: var(--primary-color);
 	box-shadow: 0 5px 5px rgb(200, 200, 200);
 
-	ul {
-		list-style: none;
+	.routing {
 		display: flex;
-		margin: 0;
-		padding: 0;
 		height: 100%;
-
-
-		li {
+		av-router-link {
 			margin: 0 8px;
 			padding: 0 8px;
 			display: flex;
@@ -23,11 +18,11 @@
 			cursor: pointer;
 		}
 
-		li:hover {
+		av-router-link:hover {
 			background-color: var(--lighter);
 		}
 
-		li.active {
+		av-router-link.active {
 			background-color: var(--lighter);
 		}
 	}
