@@ -24,7 +24,7 @@ export class AvNavbar extends WebComponent implements DefaultComponent {
 				this.exampleBtn.classList.remove("active");
             }
         },
-        '/example': {
+        '/example2': {
             active: () => {
 				this.homeBtn.classList.remove("active");
 				this.exampleBtn.classList.add("active");
