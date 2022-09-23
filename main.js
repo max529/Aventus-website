@@ -9230,6 +9230,127 @@ class ColorData {    r = 0;    g = 0;    b = 0;}
 
 
 
+class AvRouterLink extends WebComponent {
+    static get observedAttributes() {return ["state"].concat(super.observedAttributes).filter((v, i, a) => a.indexOf(v) === i);}
+    get 'state'() {
+                        return this.getAttribute('state');
+                    }
+                    set 'state'(val) {
+                        this.setAttribute('state',val);
+                    }    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(``);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<slot></slot>`,
+            slots: {
+                'default':`<slot></slot>`
+            },
+            blocks: {
+                'default':`<slot></slot>`
+            }
+        }
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvRouterLink", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvRouterLink";
+    }
+    __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('state')){ this['state'] = ''; } }
+    __upgradeAttributes() { super.__upgradeAttributes(); this.__upgradeProperty('state'); }
+     postCreation(){StateManager.getInstance("navigation").subscribe(this.state, {    active: () => {        this.classList.add("active");    },    inactive: () => {        this.classList.remove("active");    }});new PressManager({    element: this,    onPress: () => {        StateManager.getInstance("navigation").setActiveState(this.state);    }});}}
+window.customElements.define('av-router-link', AvRouterLink);
+class AvPage extends WebComponent {
+    static get observedAttributes() {return ["show"].concat(super.observedAttributes).filter((v, i, a) => a.indexOf(v) === i);}
+    constructor() { super(); if (this.constructor == AvPage) { throw "can't instanciate an abstract class"; } }
+    get 'show'() {
+                        return this.hasAttribute('show');
+                    }
+                    set 'show'(val) {
+                        if(val === 1 || val === 'true' || val === ''){
+                            val = true;
+                        }
+                        else if(val === 0 || val === 'false' || val === null || val === undefined){
+                            val = false;
+                        }
+                        if(val !== false && val !== true){
+                            console.error("error setting boolean in show");
+                            val = false;
+                        }
+                        if (val) {
+                            this.setAttribute('show', 'true');
+                        } else{
+                            this.removeAttribute('show');
+                        }
+                    }    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(`:host{display:none}:host([show]){display:block}`);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<slot></slot>`,
+            slots: {
+                'default':`<slot></slot>`
+            },
+            blocks: {
+                'default':`<slot></slot>`
+            }
+        }
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvPage", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvPage";
+    }
+    __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('show')) { this.attributeChangedCallback('show', false, false); } }
+    __upgradeAttributes() { super.__upgradeAttributes(); this.__upgradeProperty('show'); }
+    __listBoolProps() { return ["show"].concat(super.__listBoolProps()).filter((v, i, a) => a.indexOf(v) === i); }
+}
+window.customElements.define('av-page', AvPage);
+class AvRouter extends WebComponent {
+    constructor() { super(); if (this.constructor == AvRouter) { throw "can't instanciate an abstract class"; } }
+    __prepareVariables() { super.__prepareVariables(); if(this.oldPage === undefined) {this.oldPage = undefined;} }
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(``);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<slot></slot>`,
+            slots: {
+                'default':`<slot></slot>`
+            },
+            blocks: {
+                'default':`<slot></slot>`
+            }
+        }
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvRouter", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvRouter";
+    }
+     register(){let routes = this.defineRoutes();for (let key in routes) {    this.initRoute(key, new routes[key]());}} initRoute(path,element){this.shadowRoot.appendChild(element);StateManager.getInstance("navigation").subscribe(path, {    active: (currentState) => {        if (this.oldPage && this.oldPage != element) {            this.oldPage.show = false;        }        element.show = true;        this.oldPage = element;        if (window.location.pathname != currentState) {            let newUrl = window.location.origin + currentState;            window.history.pushState({}, element.defineTitle(), currentState);        }    }});} postCreation(){this.register();if (window.localStorage.getItem("navigation_url")) {    StateManager.getInstance("navigation").setActiveState(window.localStorage.getItem("navigation_url"));    window.localStorage.removeItem("navigation_url");}else {    StateManager.getInstance("navigation").setActiveState(window.location.pathname);}window.onpopstate = (e) => {    if (window.location.pathname != StateManager.getInstance("navigation").getActiveState()) {        StateManager.getInstance("navigation").setActiveState(window.location.pathname);    }};}}
+window.customElements.define('av-router', AvRouter);
 class AvScrollable extends WebComponent {
     static get observedAttributes() {return ["disable_scroll", "zoom", "floating_scroll", "only_vertical"].concat(super.observedAttributes).filter((v, i, a) => a.indexOf(v) === i);}
     get 'disable_scroll'() {
@@ -9714,59 +9835,6 @@ window.customElements.define('display-element', DisplayElement);
 
 
 
-class AvPage extends WebComponent {
-    static get observedAttributes() {return ["show"].concat(super.observedAttributes).filter((v, i, a) => a.indexOf(v) === i);}
-    constructor() { super(); if (this.constructor == AvPage) { throw "can't instanciate an abstract class"; } }
-    get 'show'() {
-                        return this.hasAttribute('show');
-                    }
-                    set 'show'(val) {
-                        if(val === 1 || val === 'true' || val === ''){
-                            val = true;
-                        }
-                        else if(val === 0 || val === 'false' || val === null || val === undefined){
-                            val = false;
-                        }
-                        if(val !== false && val !== true){
-                            console.error("error setting boolean in show");
-                            val = false;
-                        }
-                        if (val) {
-                            this.setAttribute('show', 'true');
-                        } else{
-                            this.removeAttribute('show');
-                        }
-                    }    __getStyle() {
-        let arrStyle = super.__getStyle();
-        arrStyle.push(`:host{display:none}:host([show]){display:block}`);
-        return arrStyle;
-    }
-    __getHtml() {
-        let parentInfo = super.__getHtml();
-        let info = {
-            html: `<slot></slot>`,
-            slots: {
-                'default':`<slot></slot>`
-            },
-            blocks: {
-                'default':`<slot></slot>`
-            }
-        }
-        return info;
-    }
-    __getMaxId() {
-        let temp = super.__getMaxId();
-        temp.push(["AvPage", 0])
-        return temp;
-    }
-    getClassName() {
-        return "AvPage";
-    }
-    __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('show')) { this.attributeChangedCallback('show', false, false); } }
-    __upgradeAttributes() { super.__upgradeAttributes(); this.__upgradeProperty('show'); }
-    __listBoolProps() { return ["show"].concat(super.__listBoolProps()).filter((v, i, a) => a.indexOf(v) === i); }
-}
-window.customElements.define('av-page', AvPage);
 class AvHome extends AvPage {
     __getStyle() {
         let arrStyle = super.__getStyle();
@@ -9804,167 +9872,8 @@ home`
     getClassName() {
         return "AvHome";
     }
-}
+     defineTitle(){return "Aventus";}}
 window.customElements.define('av-home', AvHome);
-class AvApp extends WebComponent {
-    __prepareVariables() { super.__prepareVariables(); if(this.oldActivePage === undefined) {this.oldActivePage = undefined;} }
-    __getStyle() {
-        let arrStyle = super.__getStyle();
-        arrStyle.push(`:host{height:100%;width:100%}:host av-scrollable{height:calc(100% - 75px);width:100%}`);
-        return arrStyle;
-    }
-    __getHtml() {
-        let parentInfo = super.__getHtml();
-        let info = {
-            html: `<av-navbar>
-</av-navbar>
-<av-scrollable>
-    <av-home _id="avapp_0"></av-home>
-    <av-example _id="avapp_1"></av-example>
-</av-scrollable>`,
-            slots: {
-            },
-            blocks: {
-                'default':`<av-navbar>
-</av-navbar>
-<av-scrollable>
-    <av-home _id="avapp_0"></av-home>
-    <av-example _id="avapp_1"></av-example>
-</av-scrollable>`
-            }
-        }
-        return info;
-    }
-    __createStates() { super.__createStates(); let that2 = this;                             this.statesList["/"] = {
-                                active(state){
-                                    if(that2.currentState == "default"){
-                                        that2.statesList["default"].inactive();
-                                    }
-                                    that2.currentState = state;
-                                    (() => {    if (that2.oldActivePage && that2.oldActivePage != that2.homePage) {        that2.oldActivePage.show = false;    }    that2.homePage.show = true;    that2.oldActivePage = that2.homePage;})(state)
-                                },
-                                inactive(currentState, nextState){
-                                    if(Object.keys(that2.statesList).indexOf(nextState) == -1){
-                                        that2.currentState = "default";
-                                        that2.statesList["default"].active();
-                                    }
-                                },
-                                askChange(currentState, nextState){
-                                    return true;
-                                }
-                            };                            this.statesList["/example"] = {
-                                active(state){
-                                    if(that2.currentState == "default"){
-                                        that2.statesList["default"].inactive();
-                                    }
-                                    that2.currentState = state;
-                                    (() => {    if (that2.oldActivePage && that2.oldActivePage != that2.examplePage) {        that2.oldActivePage.show = false;    }    that2.examplePage.show = true;    that2.oldActivePage = that2.examplePage;})(state)
-                                },
-                                inactive(currentState, nextState){
-                                    if(Object.keys(that2.statesList).indexOf(nextState) == -1){
-                                        that2.currentState = "default";
-                                        that2.statesList["default"].active();
-                                    }
-                                },
-                                askChange(currentState, nextState){
-                                    return true;
-                                }
-                            }; }
-    __getMaxId() {
-        let temp = super.__getMaxId();
-        temp.push(["AvApp", 2])
-        return temp;
-    }
-    __mapSelectedElement() { super.__mapSelectedElement(); this.homePage = this.shadowRoot.querySelector('[_id="avapp_0"]');this.examplePage = this.shadowRoot.querySelector('[_id="avapp_1"]');}
-    getClassName() {
-        return "AvApp";
-    }
-     postCreation(){StateManager.getInstance().setActiveState("/");}}
-window.customElements.define('av-app', AvApp);
-class AvNavbar extends WebComponent {
-    __getStyle() {
-        let arrStyle = super.__getStyle();
-        arrStyle.push(`:host{height:50px;width:100%;background-color:var(--primary-color);box-shadow:0 5px 5px #c8c8c8}:host ul{list-style:none;display:flex;margin:0;padding:0;height:100%}:host ul li{margin:0 8px;padding:0 8px;display:flex;height:100%;align-items:center;color:#fff;transition:background .4s var(--bezier-curve);cursor:pointer}:host ul li:hover{background-color:var(--lighter)}:host ul li.active{background-color:var(--lighter)}`);
-        return arrStyle;
-    }
-    __getHtml() {
-        let parentInfo = super.__getHtml();
-        let info = {
-            html: `<ul>
-    <li av-press="changeState" state="/" _id="avnavbar_0">Home</li>
-    <li av-press="changeState" state="/example" _id="avnavbar_1">Example</li>
-</ul>`,
-            slots: {
-            },
-            blocks: {
-                'default':`<ul>
-    <li av-press="changeState" state="/" _id="avnavbar_0">Home</li>
-    <li av-press="changeState" state="/example" _id="avnavbar_1">Example</li>
-</ul>`
-            }
-        }
-        return info;
-    }
-    __createStates() { super.__createStates(); let that2 = this;                             this.statesList["/"] = {
-                                active(state){
-                                    if(that2.currentState == "default"){
-                                        that2.statesList["default"].inactive();
-                                    }
-                                    that2.currentState = state;
-                                    (() => {    that2.homeBtn.classList.add("active");    that2.exampleBtn.classList.remove("active");})(state)
-                                },
-                                inactive(currentState, nextState){
-                                    if(Object.keys(that2.statesList).indexOf(nextState) == -1){
-                                        that2.currentState = "default";
-                                        that2.statesList["default"].active();
-                                    }
-                                },
-                                askChange(currentState, nextState){
-                                    return true;
-                                }
-                            };                            this.statesList["/example2"] = {
-                                active(state){
-                                    if(that2.currentState == "default"){
-                                        that2.statesList["default"].inactive();
-                                    }
-                                    that2.currentState = state;
-                                    (() => {    that2.homeBtn.classList.remove("active");    that2.exampleBtn.classList.add("active");})(state)
-                                },
-                                inactive(currentState, nextState){
-                                    if(Object.keys(that2.statesList).indexOf(nextState) == -1){
-                                        that2.currentState = "default";
-                                        that2.statesList["default"].active();
-                                    }
-                                },
-                                askChange(currentState, nextState){
-                                    return true;
-                                }
-                            }; }
-    __getMaxId() {
-        let temp = super.__getMaxId();
-        temp.push(["AvNavbar", 2])
-        return temp;
-    }
-    __mapSelectedElement() { super.__mapSelectedElement(); this.homeBtn = this.shadowRoot.querySelector('[_id="avnavbar_0"]');this.exampleBtn = this.shadowRoot.querySelector('[_id="avnavbar_1"]');}
-    getClassName() {
-        return "AvNavbar";
-    }
-    __addEvents(ids = null) { super.__addEvents(ids); 
-                new PressManager({
-                    "element": this._components['avnavbar_0'],
-                    "onPress": (e, pressInstance) => {
-                        this.changeState(e, pressInstance);
-                     },
-                });
-                new PressManager({
-                    "element": this._components['avnavbar_1'],
-                    "onPress": (e, pressInstance) => {
-                        this.changeState(e, pressInstance);
-                     },
-                });
-                 }
-     changeState(e,instance){StateManager.getInstance().setActiveState(instance.getElement().getAttribute("state"));}}
-window.customElements.define('av-navbar', AvNavbar);
 class AvExample extends AvPage {
     __getStyle() {
         let arrStyle = super.__getStyle();
@@ -10002,5 +9911,77 @@ example`
     getClassName() {
         return "AvExample";
     }
-}
+     defineTitle(){return "Aventus - Examples";}}
 window.customElements.define('av-example', AvExample);
+class AvApp extends AvRouter {
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(`:host{height:100%;width:100%}:host av-scrollable{height:calc(100% - 75px);width:100%}`);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<av-navbar>
+</av-navbar>`,
+            slots: {
+            },
+            blocks: {
+                'default':`<av-navbar>
+</av-navbar>`
+            }
+        }
+                let newHtml = parentInfo.html
+                for (let blockName in info.blocks) {
+                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
+                        throw "can't found slot with name " + blockName;
+                    }
+                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
+                }
+                info.html = newHtml;
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvApp", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvApp";
+    }
+     defineRoutes(){return {    "/": AvHome,    "/example": AvExample};}}
+window.customElements.define('av-app', AvApp);
+class AvNavbar extends WebComponent {
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(`:host{height:50px;width:100%;background-color:var(--primary-color);box-shadow:0 5px 5px #c8c8c8}:host .routing{display:flex;height:100%}:host .routing av-router-link{margin:0 8px;padding:0 8px;display:flex;height:100%;align-items:center;color:#fff;transition:background .4s var(--bezier-curve);cursor:pointer}:host .routing av-router-link:hover{background-color:var(--lighter)}:host .routing av-router-link.active{background-color:var(--lighter)}`);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<div class="routing">
+    <av-router-link state="/">Home</av-router-link>
+    <av-router-link state="/example">Example</av-router-link>
+</div>`,
+            slots: {
+            },
+            blocks: {
+                'default':`<div class="routing">
+    <av-router-link state="/">Home</av-router-link>
+    <av-router-link state="/example">Example</av-router-link>
+</div>`
+            }
+        }
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvNavbar", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvNavbar";
+    }
+}
+window.customElements.define('av-navbar', AvNavbar);
