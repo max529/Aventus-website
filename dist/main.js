@@ -9831,6 +9831,112 @@ class AvRessourceManager {    static memory = {};    static waiting = {};    
 
 
 
+class AvHome extends AvPage {
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(`:host .logo{margin:50px auto;display:flex;align-items:center;justify-content:center;max-width:1000px}:host .logo av-img{width:50%}:host .logo .right-part{width:50%}:host .logo .right-part p{color:var(--darker);font-size:35px}:host .content{background-color:var(--lighter);box-shadow:0 -5px 5px var(--lighter);padding:50px 0}:host .content .advantages{max-width:1500px;margin:auto}:host .content .advantages av-col{padding:0 50px}:host .content .advantages av-col .title{font-weight:bold;margin-bottom:10px}:host .content .advantages av-col .description{text-align:justify}`);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<div class="logo">
+    <av-img src="/img/aventus.gif"></av-img>
+    <div class="right-part">
+        <p>Keep a link <br>with your data</p>
+        <av-router-link state="/introduction">
+            <av-button>Getting started</av-button>
+        </av-router-link>
+    </div>
+</div>
+<div class="content">
+    <div class="advantages">
+        <av-row>
+            <av-col size_xs="12" size_md="4">
+                <div class="title">Easy to use</div>
+                <div class="description">
+                    <p>You can easly create component to keep your code clean and reuse complex logical part.</p>
+                    <p>With the use of typescript, you will avoid a lot of mistakes and keep your code clean.</p>
+                </div>
+            </av-col>
+            <av-col size_xs="12" size_md="4">
+                <div class="title">Manage your data</div>
+                <div class="description">
+                    <p>You can easly write data and store to provide consistency inside your app.</p>
+                    <p>When a change occurs, everythink is updated by magic.</p>
+                </div>
+            </av-col>
+            <av-col size_xs="12" size_md="4">
+                <div class="title">Strong backend interaction</div>
+                <div class="description">
+                    <p>With aventus, you can find a lot of plugin to manage your backend like c#, firebase, etc</p>
+                    <p>A lot of code can be automatically generated. It's give you free time to focus on your design</p>
+                </div>
+            </av-col>
+        </av-row>
+    </div>
+</div>`,
+            slots: {
+            },
+            blocks: {
+                'default':`<div class="logo">
+    <av-img src="/img/aventus.gif"></av-img>
+    <div class="right-part">
+        <p>Keep a link <br>with your data</p>
+        <av-router-link state="/introduction">
+            <av-button>Getting started</av-button>
+        </av-router-link>
+    </div>
+</div>
+<div class="content">
+    <div class="advantages">
+        <av-row>
+            <av-col size_xs="12" size_md="4">
+                <div class="title">Easy to use</div>
+                <div class="description">
+                    <p>You can easly create component to keep your code clean and reuse complex logical part.</p>
+                    <p>With the use of typescript, you will avoid a lot of mistakes and keep your code clean.</p>
+                </div>
+            </av-col>
+            <av-col size_xs="12" size_md="4">
+                <div class="title">Manage your data</div>
+                <div class="description">
+                    <p>You can easly write data and store to provide consistency inside your app.</p>
+                    <p>When a change occurs, everythink is updated by magic.</p>
+                </div>
+            </av-col>
+            <av-col size_xs="12" size_md="4">
+                <div class="title">Strong backend interaction</div>
+                <div class="description">
+                    <p>With aventus, you can find a lot of plugin to manage your backend like c#, firebase, etc</p>
+                    <p>A lot of code can be automatically generated. It's give you free time to focus on your design</p>
+                </div>
+            </av-col>
+        </av-row>
+    </div>
+</div>`
+            }
+        }
+                let newHtml = parentInfo.html
+                for (let blockName in info.blocks) {
+                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
+                        throw "can't found slot with name " + blockName;
+                    }
+                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
+                }
+                info.html = newHtml;
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvHome", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvHome";
+    }
+     defineTitle(){return "Aventus";}}
+window.customElements.define('av-home', AvHome);
 class AvGenericPage extends AvPage {
     constructor() { super(); if (this.constructor == AvGenericPage) { throw "can't instanciate an abstract class"; } }
     __getStyle() {
@@ -9951,112 +10057,6 @@ class AvInstallation extends AvGenericPage {
     }
      defineTitle(){return "Aventus - Installation";}}
 window.customElements.define('av-installation', AvInstallation);
-class AvHome extends AvGenericPage {
-    __getStyle() {
-        let arrStyle = super.__getStyle();
-        arrStyle.push(`:host .logo{margin:50px auto;display:flex;align-items:center;justify-content:center;max-width:1000px}:host .logo av-img{width:50%}:host .logo .right-part{width:50%}:host .logo .right-part p{color:var(--darker);font-size:35px}:host .content{background-color:var(--lighter);box-shadow:0 -5px 5px var(--lighter);padding:50px 0}:host .content .advantages{max-width:1500px;margin:auto}:host .content .advantages av-col{padding:0 50px}:host .content .advantages av-col .title{font-weight:bold;margin-bottom:10px}:host .content .advantages av-col .description{text-align:justify}`);
-        return arrStyle;
-    }
-    __getHtml() {
-        let parentInfo = super.__getHtml();
-        let info = {
-            html: `<div class="logo">
-    <av-img src="/img/aventus.gif"></av-img>
-    <div class="right-part">
-        <p>Keep a link <br>with your data</p>
-        <av-router-link state="/introduction">
-            <av-button>Getting started</av-button>
-        </av-router-link>
-    </div>
-</div>
-<div class="content">
-    <div class="advantages">
-        <av-row>
-            <av-col size_xs="12" size_md="4">
-                <div class="title">Easy to use</div>
-                <div class="description">
-                    <p>You can easly create component to keep your code clean and reuse complex logical part.</p>
-                    <p>With the use of typescript, you will avoid a lot of mistakes and keep your code clean.</p>
-                </div>
-            </av-col>
-            <av-col size_xs="12" size_md="4">
-                <div class="title">Manage your data</div>
-                <div class="description">
-                    <p>You can easly write data and store to provide consistency inside your app.</p>
-                    <p>When a change occurs, everythink is updated by magic.</p>
-                </div>
-            </av-col>
-            <av-col size_xs="12" size_md="4">
-                <div class="title">Strong backend interaction</div>
-                <div class="description">
-                    <p>With aventus, you can find a lot of plugin to manage your backend like c#, firebase, etc</p>
-                    <p>A lot of code can be automatically generated. It's give you free time to focus on your design</p>
-                </div>
-            </av-col>
-        </av-row>
-    </div>
-</div>`,
-            slots: {
-            },
-            blocks: {
-                'default':`<div class="logo">
-    <av-img src="/img/aventus.gif"></av-img>
-    <div class="right-part">
-        <p>Keep a link <br>with your data</p>
-        <av-router-link state="/introduction">
-            <av-button>Getting started</av-button>
-        </av-router-link>
-    </div>
-</div>
-<div class="content">
-    <div class="advantages">
-        <av-row>
-            <av-col size_xs="12" size_md="4">
-                <div class="title">Easy to use</div>
-                <div class="description">
-                    <p>You can easly create component to keep your code clean and reuse complex logical part.</p>
-                    <p>With the use of typescript, you will avoid a lot of mistakes and keep your code clean.</p>
-                </div>
-            </av-col>
-            <av-col size_xs="12" size_md="4">
-                <div class="title">Manage your data</div>
-                <div class="description">
-                    <p>You can easly write data and store to provide consistency inside your app.</p>
-                    <p>When a change occurs, everythink is updated by magic.</p>
-                </div>
-            </av-col>
-            <av-col size_xs="12" size_md="4">
-                <div class="title">Strong backend interaction</div>
-                <div class="description">
-                    <p>With aventus, you can find a lot of plugin to manage your backend like c#, firebase, etc</p>
-                    <p>A lot of code can be automatically generated. It's give you free time to focus on your design</p>
-                </div>
-            </av-col>
-        </av-row>
-    </div>
-</div>`
-            }
-        }
-                let newHtml = parentInfo.html
-                for (let blockName in info.blocks) {
-                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
-                        throw "can't found slot with name " + blockName;
-                    }
-                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
-                }
-                info.html = newHtml;
-        return info;
-    }
-    __getMaxId() {
-        let temp = super.__getMaxId();
-        temp.push(["AvHome", 0])
-        return temp;
-    }
-    getClassName() {
-        return "AvHome";
-    }
-     defineTitle(){return "Aventus";}}
-window.customElements.define('av-home', AvHome);
 class AvGettingStarted extends AvGenericPage {
     __getStyle() {
         let arrStyle = super.__getStyle();

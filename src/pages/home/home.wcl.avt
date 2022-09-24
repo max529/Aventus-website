@@ -1,6 +1,5 @@
-import { AvGenericPage } from "../genericPage/genericPage.wcl.avt";
 
-export class AvHome extends AvGenericPage implements DefaultComponent {
+export class AvHome extends AvPage implements DefaultComponent {
 
 	//#region static
 
