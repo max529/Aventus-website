@@ -7,14 +7,14 @@ declare interface Window {
 
 
 
+declare class AvHome extends AvPage implements DefaultComponent {
+    defineTitle(): string;
+}
+
 declare abstract class AvGenericPage extends AvPage implements DefaultComponent {
 }
 
 declare class AvInstallation extends AvGenericPage implements DefaultComponent {
-    defineTitle(): string;
-}
-
-declare class AvHome extends AvGenericPage implements DefaultComponent {
     defineTitle(): string;
 }
 
