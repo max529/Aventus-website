@@ -1,8 +1,11 @@
 :host {
-	height: 50px;
+	height: 70px;
+	padding:10px;
 	width: 100%;
 	background-color: var(--primary-color);
 	box-shadow: 0 5px 5px rgb(200, 200, 200);
+	display: flex;
+	justify-content: space-between;
 
 	.routing {
 		display: flex;
@@ -13,9 +16,10 @@
 			display: flex;
 			height: 100%;
 			align-items: center;
-			color: white;
+			color: var(--secondary-color);
 			transition: background 0.4s var(--bezier-curve);
 			cursor: pointer;
+			border-radius: 5px;
 		}
 
 		av-router-link:hover {

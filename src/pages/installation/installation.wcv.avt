@@ -1,0 +1,20 @@
+<h1>Aventus installation</h1>
+<p>
+    <span>Aventus is a vscode extension. You can download the installation file <i>(aventus-#version.vsix)</i></span>
+    <a href="https://github.com/max529/Aventus/releases" target="_blank">here</a>
+</p>
+<p>
+    <span>Then you can : </span>
+    <ul>
+        <li>Open your Visual Studio Code</li>
+        <li>Go on the extensions tab</li>
+        <li>Click on the three dots</li>
+        <li>Choose "Install from VSIX..."</li>
+        <li>Select the file you downloaded</li>
+    </ul>
+    <span>Well done! You are ready to use Aventus</span>
+    <p>
+        <span>Try the tutorial </span>
+        <av-router-link state="/introduction">here</av-router-link>
+    </p>
+</p>

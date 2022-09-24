@@ -1,7 +1,10 @@
+//https://mycolor.space/?hex=%23E5540E&sub=1
 :root {
-    --primary-color: #e5540e;
+    --primary-color: #a9a6dc;
+    --secondary-color: #e5540e;
     --bezier-curve: cubic-bezier(0.65, 0, 0.15, 1);
-    --lighter: rgba(255, 255, 255, 0.3);
+    --lighter: #f0edff;
+    --darker: #767496;
 }
 
 html,
@@ -12,5 +15,5 @@ body {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Roboto', sans-serif;
+    font-family: "Roboto", sans-serif;
 }

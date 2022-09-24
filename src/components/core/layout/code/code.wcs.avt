@@ -1,0 +1,12 @@
+:host {
+	display: flex;
+
+	pre {
+		border-radius: 5px;
+		width: 100%;
+	}
+
+	.hided {
+		display: none;
+	}
+}

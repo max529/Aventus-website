@@ -1,0 +1,63 @@
+export class AvRessourceManager {
+    private static memory = {};
+    private static waiting = {};
+    static async get(url) {
+        if(AvRessourceManager.memory.hasOwnProperty(url)) {
+            return AvRessourceManager.memory[url];
+        }
+        else if(AvRessourceManager.waiting.hasOwnProperty(url)) {
+            await this.awaitFct(url);
+            return AvRessourceManager.memory[url];
+        }
+        else {
+            AvRessourceManager.waiting[url] = [];
+            if(url.endsWith('.svg')) {
+                let result = await fetch(url);
+                let text = await result.text();
+                AvRessourceManager.memory[url] = text;
+                this.releaseAwaitFct(url);
+                return AvRessourceManager.memory[url];
+
+            }
+            else {
+                let result = await fetch(url, {
+                    headers: {
+                        responseType: 'blob'
+                    }
+                });
+                let blob = await result.blob();
+                AvRessourceManager.memory[url] = await this.readFile(blob);;
+                this.releaseAwaitFct(url);
+                return AvRessourceManager.memory[url];
+
+            }
+        }
+
+    }
+
+    private static releaseAwaitFct(url: string) {
+        if(AvRessourceManager.waiting[url]) {
+            for(let i = 0; i < AvRessourceManager.waiting[url].length; i++) {
+                AvRessourceManager.waiting[url][i]();
+            }
+            delete AvRessourceManager.waiting[url];
+        }
+    }
+    private static awaitFct(url: string) {
+        return new Promise((resolve) => {
+            AvRessourceManager.waiting[url].push(() => {
+                resolve('');
+            });
+        });
+    }
+
+    private static readFile(blob: Blob): Promise<string | ArrayBuffer> {
+        return new Promise((resolve) => {
+            var reader = new FileReader();
+            reader.onloadend = function () {
+                resolve(reader.result);
+            };
+            reader.readAsDataURL(blob);
+        });
+    }
+}

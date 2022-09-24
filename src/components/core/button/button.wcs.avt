@@ -1,0 +1,12 @@
+:host{
+	background-color: var(--primary-color);
+    color:var(--secondary-color);
+    border-radius: 900px;
+    padding: 10px 30px;
+    cursor: pointer;
+    box-shadow: 0 0 2px var(--darker);
+    transition: filter 0.4s var(--bezier-curve);
+}
+:host(:hover){
+    filter: brightness(0.9);
+}

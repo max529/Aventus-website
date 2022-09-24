@@ -1,4 +1,7 @@
+<av-img src="/img/icon.png"></av-img>
 <div class="routing">
     <av-router-link state="/">Home</av-router-link>
     <av-router-link state="/example">Example</av-router-link>
+    <av-router-link state="/api">API</av-router-link>
+    <av-router-link state="/installation">Installation</av-router-link>
 </div>

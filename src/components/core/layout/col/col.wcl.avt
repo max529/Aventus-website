@@ -1,0 +1,86 @@
+export class AvCol extends WebComponent implements DefaultComponent {
+
+    //#region static
+
+    //#endregion
+
+
+    //#region props
+
+    //#region size
+    @attribute()
+    size: number;
+    @attribute()
+    size_xs: number;
+    @attribute()
+    size_sm: number;
+    @attribute()
+    size_md: number;
+    @attribute()
+    size_lg: number;
+    @attribute()
+    size_xl: number;
+    //#endregion
+
+    //#region offset
+    @attribute()
+    offset: number;
+    @attribute()
+    offset_xs: number;
+    @attribute()
+    offset_sm: number;
+    @attribute()
+    offset_md: number;
+    @attribute()
+    offset_lg: number;
+    @attribute()
+    offset_xl: number;
+    //#endregion
+
+    //#region offset-right
+    @attribute()
+    offset_right: number;
+    @attribute()
+    offset_right_xs: number;
+    @attribute()
+    offset_right_sm: number;
+    @attribute()
+    offset_right_md: number;
+    @attribute()
+    offset_right_lg: number;
+    @attribute()
+    offset_right_xl: number;
+    //#endregion
+
+
+    @attribute()
+    nobreak: boolean;
+
+    @attribute()
+    center: boolean;
+
+    //#endregion
+
+
+    //#region variables
+
+    //#endregion
+
+
+    //#region states
+
+    //#endregion
+
+
+    //#region constructor
+
+    //#endregion
+
+
+    //#region methods
+
+    protected override postCreation(): void {
+
+    }
+	//#endregion
+}

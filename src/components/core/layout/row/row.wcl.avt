@@ -1,0 +1,54 @@
+export class AvRow extends WebComponent implements DefaultComponent {
+
+    //#region static
+
+    //#endregion
+
+
+    //#region props
+
+    @attribute()
+    max_width: string;
+
+    //#endregion
+
+
+    //#region variables
+    sizes: any = { "xs": 300, "sm": 540, "md": 720, "lg": 960, "xl": 1140 };
+
+    //#endregion
+
+
+    //#region states
+
+    //#endregion
+
+
+    //#region constructor
+
+    //#endregion
+
+
+    //#region methods
+    _calculateWidth() {
+        var size = this.offsetWidth;
+        var labels = [];
+        for(var key in this.sizes) {
+            var value = this.sizes[key];
+            if(size > value) {
+                labels.push(key);
+            } else {
+                break;
+            }
+        }
+        this.max_width = labels.join(" ");
+    }
+
+    protected override postCreation(): void {
+        this._calculateWidth();
+        new ResizeObserver(entries => {
+            this._calculateWidth();
+        }).observe(this);
+    }
+	//#endregion
+}

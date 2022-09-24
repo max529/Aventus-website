@@ -1,0 +1,104 @@
+<section>
+    <h1>Getting started with Aventus</h1>
+    <p>Welcome to Aventus !</p>
+    <p>This tutorial introduces you to the essentials of Aventus by walking through building a Todo list.</p>
+    <p>Let's get started !!!</p>
+</section>
+<av-separation></av-separation>
+<section>
+    <h2>Prerequistes</h2>
+    <p>Before everythink you need to : </p>
+    <ul>
+        <li>Have knowledge of HTML, CSS and Javascript</li>
+        <li>Install Aventus : <av-router-link state="/installation">here</av-router-link>
+        </li>
+    </ul>
+</section>
+<av-separation>
+
+</av-separation>
+<section>
+    <h2>The concept</h2>
+    <p>Aventus is a framework that allow you to create complex user interfaces by splitting common parts of a
+        front-end application in several well knowned files. It builds on top of standard HTML, CSS, Javascript
+        and provide a way to keep your development under control.</p>
+    <p>The core features are :</p>
+    <ul>
+        <li>Data consistency based on store</li>
+        <li>Reusability with web component</li>
+        <li>Simplified communication with websocket</li>
+        <li>Reactivity</li>
+    </ul>
+</section>
+<av-separation></av-separation>
+<section>
+    <h2>Understand files</h2>
+    <p>
+        First of all, you need to understand all files you can use inside Aventus.
+    </p>
+    <div class="table">
+        <av-row class="header">
+            <av-col size_sm="4" center>Extension</av-col>
+            <av-col size_sm="8" center>Role</av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center>*.wcl.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Web Component Logic</div>
+                <div class="description">Inside this file you can find the logical part in Typescript for your
+                    web
+                    component</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center>*.wcs.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Web Component Style</div>
+                <div class="description">Inside this file you can find the style in SCSS for your web component
+                </div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center>*.wcv.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Web Component View</div>
+                <div class="description">Inside this file you can find the structure in HTML for your web
+                    component
+                </div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center>*.data.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Data</div>
+                <div class="description">This file is a class / interface / enum representing usable objects for
+                    your application</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center>*.lib.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Library</div>
+                <div class="description">This file allow you to create some logical part for your project
+                    without
+                    web component</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center>*.ram.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">RAM</div>
+                <div class="description">This file allow you to create store for your data</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center>*.socket.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">WebSocket</div>
+                <div class="description">This file allow you to create websocket instance to send message to
+                    your
+                    backend</div>
+            </av-col>
+        </av-row>
+    </div>
+</section>

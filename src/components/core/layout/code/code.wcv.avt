@@ -1,0 +1,7 @@
+<pre>
+    <code @element="codeEl" class="language-{{language}}">
+    </code>
+</pre>
+<div class="hided">
+    <slot></slot>
+</div>

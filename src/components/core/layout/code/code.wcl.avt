@@ -1,0 +1,107 @@
+export class AvCode extends WebComponent implements DefaultComponent {
+
+    //#region static
+    public static primsCSS: string = "";
+    private static isLoading = false;
+    private static waitingLoad = [];
+    private static async loadScript(src: string) {
+        return new Promise<void>((resolve, reject) => {
+            let script = document.createElement('script');
+            script.setAttribute('src', src);
+            document.head.appendChild(script);
+            // success event 
+            script.addEventListener("load", () => {
+                resolve();
+            });
+            // error event
+            script.addEventListener("error", (ev) => {
+                reject();
+            });
+        });
+    }
+    public static async loadingPrism() {
+        if(!AvCode.isLoading) {
+            AvCode.isLoading = true;
+            await AvCode.loadScript("/libs/prism.js");
+            await AvCode.loadScript("/libs/prism-normalize-whitespace.min.js");
+            AvCode.primsCSS = await (await fetch("/libs/prism_vscode_theme.css")).text();
+            AvCode.releaseAwaitFct();
+            AvCode.isLoading = false;
+        }
+        else {
+            await AvCode.awaitFct();
+        }
+    }
+    private static releaseAwaitFct() {
+        for(let waiting of AvCode.waitingLoad) {
+            waiting();
+        }
+        AvCode.waitingLoad = [];
+    }
+    private static awaitFct() {
+        return new Promise((resolve) => {
+            AvCode.waitingLoad.push(() => {
+                resolve('');
+            });
+        });
+    }
+    //#endregion
+
+
+    //#region props
+    @property((target: AvCode) => {
+        if(window.Prism) {
+            if(!window.Prism.languages.hasOwnProperty(target.language)) {
+                target.language = 'plain';
+            }
+        }
+    })
+    public language: string = "plain";
+    //#endregion
+
+
+    //#region variables
+    public codeEl: HTMLElement;
+    //#endregion
+
+
+    //#region states
+
+    //#endregion
+
+
+    //#region constructor
+
+    //#endregion
+
+
+    //#region methods
+
+
+    private async loadFiles() {
+        await AvCode.loadingPrism();
+        this.init();
+
+    }
+    private init() {
+        if(!window.Prism.languages.hasOwnProperty(this.language)) {
+            this.language = 'plain';
+        }
+        this.codeEl.innerHTML = this.innerHTML.trim().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        this.innerHTML = "";
+        let style = this.shadowRoot.querySelector("style");
+        style.innerHTML = style.innerHTML.trim() + AvCode.primsCSS;
+        window.Prism.highlightElement(this.codeEl);
+
+    }
+    protected override postCreation(): void {
+        if(!window.Prism) {
+            this.loadFiles();
+        }
+        else {
+            this.init();
+        }
+    }
+	//#endregion
+	
+}

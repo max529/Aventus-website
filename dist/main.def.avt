@@ -1,14 +1,24 @@
 // version 0.0.1
 // region js //
+declare class AvRessourceManager {    private static memory;    private static waiting;    static get(url: any): unknown;    private static releaseAwaitFct;    private static awaitFct;    private static readFile;}
+declare interface Window {
+    Prism:any
+}
 
 
 
+declare abstract class AvGenericPage extends AvPage implements DefaultComponent {
+}
 
-declare class AvHome extends AvPage implements DefaultComponent {
+declare class AvInstallation extends AvGenericPage implements DefaultComponent {
     defineTitle(): string;
 }
 
-declare class AvExample extends AvPage implements DefaultComponent {
+declare class AvHome extends AvGenericPage implements DefaultComponent {
+    defineTitle(): string;
+}
+
+declare class AvGettingStarted extends AvGenericPage implements DefaultComponent {
     defineTitle(): string;
 }
 
@@ -21,10 +31,86 @@ declare class AvApp extends AvRouter implements DefaultComponent {
 declare class AvNavbar extends WebComponent implements DefaultComponent {
 }
 
+declare class AvSeparation extends WebComponent implements DefaultComponent {
+}
+
+declare class AvRow extends WebComponent implements DefaultComponent {
+    max_width: string;
+    sizes: any;
+    _calculateWidth(): void;
+    protected postCreation(): void;
+}
+
+declare class AvCol extends WebComponent implements DefaultComponent {
+    size: number;
+    size_xs: number;
+    size_sm: number;
+    size_md: number;
+    size_lg: number;
+    size_xl: number;
+    offset: number;
+    offset_xs: number;
+    offset_sm: number;
+    offset_md: number;
+    offset_lg: number;
+    offset_xl: number;
+    offset_right: number;
+    offset_right_xs: number;
+    offset_right_sm: number;
+    offset_right_md: number;
+    offset_right_lg: number;
+    offset_right_xl: number;
+    nobreak: boolean;
+    center: boolean;
+    protected postCreation(): void;
+}
+
+declare class AvCode extends WebComponent implements DefaultComponent {
+    static primsCSS: string;
+    private static isLoading;
+    private static waitingLoad;
+    private static loadScript;
+    static loadingPrism(): any;
+    private static releaseAwaitFct;
+    private static awaitFct;
+    language: string;
+    codeEl: HTMLElement;
+    private loadFiles;
+    private init;
+    protected postCreation(): void;
+}
+
+declare class AvImg extends WebComponent implements DefaultComponent {
+    /**
+     * Define the source for your image
+     */
+    src: string;
+    display_bigger: boolean;
+    mode: string;
+    bigImg: HTMLDivElement;
+    ratio: number;
+    _maxCalculateSize: number;
+    _isCalculing: boolean;
+    imgEl: HTMLImageElement;
+    svgEl: HTMLElement;
+    checkClose: (e: Event) => void;
+    close(): void;
+    calculateSize(attempt?: number): void;
+    showImg(e: MouseEvent): void;
+    protected postCreation(): void;
+}
+
+declare class AvButton extends WebComponent implements DefaultComponent {
+}
+
+declare class AvExample extends AvGenericPage implements DefaultComponent {
+    defineTitle(): string;
+}
+
 // end region js //
 // region css //
-{"av-navbar":[],"av-app":[],"av-example":[],"av-home":[]}
+{"av-button":[],"av-img":[{"name":"--img-color"},{"name":"--img-stroke-color"},{"name":"--img-fill-color"},{"name":"--img-color-transition"},{"name":"--img-color"},{"name":"--img-stroke-color"},{"name":"--img-fill-color"},{"name":"--img-color-transition"}],"av-code":[],"av-col":[],"av-row":[],"av-separation":[],"av-navbar":[],"av-app":[],"av-example":[],"av-getting-started":[],"av-home":[],"av-installation":[],"av-generic-page":[]}
 // end region css //
 // region html //
-{"av-navbar":{"name":"av-navbar","description":"","attributes":{}},"av-app":{"name":"av-app","description":"","attributes":{}},"av-example":{"name":"av-example","description":"","attributes":{}},"av-home":{"name":"av-home","description":"","attributes":{}}}
+{"av-button":{"name":"av-button","description":"","attributes":{}},"av-img":{"name":"av-img","description":"","attributes":{"src":{"name":"src","description":"Define the source for your image","values":[]},"display_bigger":{"name":"display_bigger","description":"","values":[]},"mode":{"name":"mode","description":"","values":[]}}},"av-code":{"name":"av-code","description":"","attributes":{"language":{"name":"language","description":"","values":[]}}},"av-col":{"name":"av-col","description":"","attributes":{"size":{"name":"size","description":"","values":[]},"size_xs":{"name":"size_xs","description":"","values":[]},"size_sm":{"name":"size_sm","description":"","values":[]},"size_md":{"name":"size_md","description":"","values":[]},"size_lg":{"name":"size_lg","description":"","values":[]},"size_xl":{"name":"size_xl","description":"","values":[]},"offset":{"name":"offset","description":"","values":[]},"offset_xs":{"name":"offset_xs","description":"","values":[]},"offset_sm":{"name":"offset_sm","description":"","values":[]},"offset_md":{"name":"offset_md","description":"","values":[]},"offset_lg":{"name":"offset_lg","description":"","values":[]},"offset_xl":{"name":"offset_xl","description":"","values":[]},"offset_right":{"name":"offset_right","description":"","values":[]},"offset_right_xs":{"name":"offset_right_xs","description":"","values":[]},"offset_right_sm":{"name":"offset_right_sm","description":"","values":[]},"offset_right_md":{"name":"offset_right_md","description":"","values":[]},"offset_right_lg":{"name":"offset_right_lg","description":"","values":[]},"offset_right_xl":{"name":"offset_right_xl","description":"","values":[]},"nobreak":{"name":"nobreak","description":"","values":[]},"center":{"name":"center","description":"","values":[]}}},"av-row":{"name":"av-row","description":"","attributes":{"max_width":{"name":"max_width","description":"","values":[]}}},"av-separation":{"name":"av-separation","description":"","attributes":{}},"av-navbar":{"name":"av-navbar","description":"","attributes":{}},"av-app":{"name":"av-app","description":"","attributes":{}},"av-example":{"name":"av-example","description":"","attributes":{}},"av-getting-started":{"name":"av-getting-started","description":"","attributes":{}},"av-home":{"name":"av-home","description":"","attributes":{}},"av-installation":{"name":"av-installation","description":"","attributes":{}},"av-generic-page":{"name":"av-generic-page","description":"","attributes":{}}}
 // end region html //

@@ -9230,129 +9230,8 @@ class ColorData {    r = 0;    g = 0;    b = 0;}
 
 
 
-class AvRouterLink extends WebComponent {
-    static get observedAttributes() {return ["state"].concat(super.observedAttributes).filter((v, i, a) => a.indexOf(v) === i);}
-    get 'state'() {
-                        return this.getAttribute('state');
-                    }
-                    set 'state'(val) {
-                        this.setAttribute('state',val);
-                    }    __getStyle() {
-        let arrStyle = super.__getStyle();
-        arrStyle.push(``);
-        return arrStyle;
-    }
-    __getHtml() {
-        let parentInfo = super.__getHtml();
-        let info = {
-            html: `<slot></slot>`,
-            slots: {
-                'default':`<slot></slot>`
-            },
-            blocks: {
-                'default':`<slot></slot>`
-            }
-        }
-        return info;
-    }
-    __getMaxId() {
-        let temp = super.__getMaxId();
-        temp.push(["AvRouterLink", 0])
-        return temp;
-    }
-    getClassName() {
-        return "AvRouterLink";
-    }
-    __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('state')){ this['state'] = ''; } }
-    __upgradeAttributes() { super.__upgradeAttributes(); this.__upgradeProperty('state'); }
-     postCreation(){StateManager.getInstance("navigation").subscribe(this.state, {    active: () => {        this.classList.add("active");    },    inactive: () => {        this.classList.remove("active");    }});new PressManager({    element: this,    onPress: () => {        StateManager.getInstance("navigation").setActiveState(this.state);    }});}}
-window.customElements.define('av-router-link', AvRouterLink);
-class AvPage extends WebComponent {
-    static get observedAttributes() {return ["show"].concat(super.observedAttributes).filter((v, i, a) => a.indexOf(v) === i);}
-    constructor() { super(); if (this.constructor == AvPage) { throw "can't instanciate an abstract class"; } }
-    get 'show'() {
-                        return this.hasAttribute('show');
-                    }
-                    set 'show'(val) {
-                        if(val === 1 || val === 'true' || val === ''){
-                            val = true;
-                        }
-                        else if(val === 0 || val === 'false' || val === null || val === undefined){
-                            val = false;
-                        }
-                        if(val !== false && val !== true){
-                            console.error("error setting boolean in show");
-                            val = false;
-                        }
-                        if (val) {
-                            this.setAttribute('show', 'true');
-                        } else{
-                            this.removeAttribute('show');
-                        }
-                    }    __getStyle() {
-        let arrStyle = super.__getStyle();
-        arrStyle.push(`:host{display:none}:host([show]){display:block}`);
-        return arrStyle;
-    }
-    __getHtml() {
-        let parentInfo = super.__getHtml();
-        let info = {
-            html: `<slot></slot>`,
-            slots: {
-                'default':`<slot></slot>`
-            },
-            blocks: {
-                'default':`<slot></slot>`
-            }
-        }
-        return info;
-    }
-    __getMaxId() {
-        let temp = super.__getMaxId();
-        temp.push(["AvPage", 0])
-        return temp;
-    }
-    getClassName() {
-        return "AvPage";
-    }
-    __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('show')) { this.attributeChangedCallback('show', false, false); } }
-    __upgradeAttributes() { super.__upgradeAttributes(); this.__upgradeProperty('show'); }
-    __listBoolProps() { return ["show"].concat(super.__listBoolProps()).filter((v, i, a) => a.indexOf(v) === i); }
-}
-window.customElements.define('av-page', AvPage);
-class AvRouter extends WebComponent {
-    constructor() { super(); if (this.constructor == AvRouter) { throw "can't instanciate an abstract class"; } }
-    __prepareVariables() { super.__prepareVariables(); if(this.oldPage === undefined) {this.oldPage = undefined;} }
-    __getStyle() {
-        let arrStyle = super.__getStyle();
-        arrStyle.push(``);
-        return arrStyle;
-    }
-    __getHtml() {
-        let parentInfo = super.__getHtml();
-        let info = {
-            html: `<slot></slot>`,
-            slots: {
-                'default':`<slot></slot>`
-            },
-            blocks: {
-                'default':`<slot></slot>`
-            }
-        }
-        return info;
-    }
-    __getMaxId() {
-        let temp = super.__getMaxId();
-        temp.push(["AvRouter", 0])
-        return temp;
-    }
-    getClassName() {
-        return "AvRouter";
-    }
-     register(){let routes = this.defineRoutes();for (let key in routes) {    this.initRoute(key, new routes[key]());}} initRoute(path,element){this.shadowRoot.appendChild(element);StateManager.getInstance("navigation").subscribe(path, {    active: (currentState) => {        if (this.oldPage && this.oldPage != element) {            this.oldPage.show = false;        }        element.show = true;        this.oldPage = element;        if (window.location.pathname != currentState) {            let newUrl = window.location.origin + currentState;            window.history.pushState({}, element.defineTitle(), currentState);        }    }});} postCreation(){this.register();if (window.localStorage.getItem("navigation_url")) {    StateManager.getInstance("navigation").setActiveState(window.localStorage.getItem("navigation_url"));    window.localStorage.removeItem("navigation_url");}else {    StateManager.getInstance("navigation").setActiveState(window.location.pathname);}window.onpopstate = (e) => {    if (window.location.pathname != StateManager.getInstance("navigation").getActiveState()) {        StateManager.getInstance("navigation").setActiveState(window.location.pathname);    }};}}
-window.customElements.define('av-router', AvRouter);
 class AvScrollable extends WebComponent {
-    static get observedAttributes() {return ["disable_scroll", "zoom", "floating_scroll", "only_vertical"].concat(super.observedAttributes).filter((v, i, a) => a.indexOf(v) === i);}
+    static get observedAttributes() {return ["disable_scroll", "zoom"].concat(super.observedAttributes).filter((v, i, a) => a.indexOf(v) === i);}
     get 'disable_scroll'() {
                         return this.hasAttribute('disable_scroll');
                     }
@@ -9477,10 +9356,132 @@ class AvScrollable extends WebComponent {
         return "AvScrollable";
     }
     __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('disable_scroll')) { this.attributeChangedCallback('disable_scroll', false, false); }if(!this.hasAttribute('zoom')){ this['zoom'] = '1'; }if(!this.hasAttribute('floating_scroll')) { this.attributeChangedCallback('floating_scroll', false, false); }if(!this.hasAttribute('only_vertical')) { this.attributeChangedCallback('only_vertical', false, false); } }
-    __upgradeAttributes() { super.__upgradeAttributes(); this.__upgradeProperty('disable_scroll');this.__upgradeProperty('zoom');this.__upgradeProperty('floating_scroll');this.__upgradeProperty('only_vertical'); }
+    __upgradeAttributes() { super.__upgradeAttributes(); this.__upgradeProperty('disable_scroll');this.__upgradeProperty('zoom'); }
     __listBoolProps() { return ["disable_scroll","floating_scroll","only_vertical"].concat(super.__listBoolProps()).filter((v, i, a) => a.indexOf(v) === i); }
      getVisibleBox(){return {    top: this.content.vertical.value,    left: this.content.horizontal.value,    width: this.contentHidder.offsetWidth,    height: this.contentHidder.offsetHeight};} changeZoom(){if (!this.disable_scroll) {    this.contentZoom.style.transform = 'scale(' + this.zoom + ')';    this.dimensionRefreshed();}} dimensionRefreshed(entries){this.calculateRealSize();if (this.contentWrapper.scrollHeight - this.contentHidderHeight > 2) {    if (!this.verticalScrollVisible) {        this.verticalScrollerContainer.style.display = "block";        this.verticalScrollVisible = true;        this.afterShowVerticalScroller();    }    var verticalScrollerHeight = (this.contentHidderHeight / this.contentWrapper.scrollHeight * 100);    this.verticalScroller.style.height = verticalScrollerHeight + '%';    this.scrollVerticalScrollbar(this.scrollbar.vertical.value);}else if (this.verticalScrollVisible) {    this.verticalScrollerContainer.style.display = "none";    this.verticalScrollVisible = false;    this.afterShowVerticalScroller();    this.scrollVerticalScrollbar(0);}if (!this.only_vertical) {    if (this.contentWrapper.scrollWidth - this.contentHidderWidth > 2) {        if (!this.horizontalScrollVisible) {            this.horizontalScrollerContainer.style.display = "block";            this.horizontalScrollVisible = true;            this.afterShowHorizontalScroller();        }        var horizontalScrollerWidth = (this.contentHidderWidth / this.contentWrapper.scrollWidth * 100);        this.horizontalScroller.style.width = horizontalScrollerWidth + '%';        this.scrollHorizontalScrollbar(this.scrollbar.horizontal.value);    }    else if (this.horizontalScrollVisible) {        this.horizontalScrollerContainer.style.display = "none";        this.horizontalScrollVisible = false;        this.afterShowHorizontalScroller();        this.scrollHorizontalScrollbar(0);    }}if (entries && entries[0].target == this) {    if (this.zoom != 1) {        this.contentZoom.style.width = '';        this.contentZoom.style.height = '';        this.changeZoom();    }}} calculateRealSize(){if (!this.disable_scroll) {    var currentOffsetWidth = this.contentZoom.offsetWidth;    var currentOffsetHeight = this.contentZoom.offsetHeight;    this.contentHidderHeight = currentOffsetHeight;    this.contentHidderWidth = currentOffsetWidth;    if (this.zoom < 1) {        this.contentZoom.style.width = this.elToCalculate.offsetWidth / this.zoom + 'px';        this.contentZoom.style.height = this.elToCalculate.offsetHeight / this.zoom + 'px';    }    else {        let inlineStyle = this.getAttribute("style");        if (inlineStyle) {            let arrStyle = inlineStyle.split(";");            for (let i = 0; i < arrStyle.length; i++) {                if (arrStyle[i].trim().startsWith("width") || arrStyle[i].trim().startsWith("height")) {                    this.contentZoom.style.width = '';                    this.contentZoom.style.height = '';                }            }        }        this.contentHidderHeight = currentOffsetHeight / this.zoom;        this.contentHidderWidth = currentOffsetWidth / this.zoom;    }}} afterShowVerticalScroller(){var leftMissing = this.elToCalculate.offsetWidth - this.verticalScrollerContainer.offsetLeft;if (leftMissing > 0 && this.verticalScrollVisible && !this.floating_scroll) {    this.contentHidder.style.width = 'calc(100% - ' + leftMissing + 'px)';    this.contentHidder.style.marginRight = leftMissing + 'px';}else {    this.contentHidder.style.width = '';    this.contentHidder.style.marginRight = '';}} afterShowHorizontalScroller(){var topMissing = this.elToCalculate.offsetHeight - this.horizontalScrollerContainer.offsetTop;if (topMissing > 0 && this.horizontalScrollVisible && !this.floating_scroll) {    this.contentHidder.style.height = 'calc(100% - ' + topMissing + 'px)';    this.contentHidder.style.marginBottom = topMissing + 'px';}else {    this.contentHidder.style.height = '';    this.contentHidder.style.marginBottom = '';}} createResizeObserver(){let inProgress = false;this.observer = new AvResizeObserver({    callback: entries => {        if (inProgress) {            return;        }        inProgress = true;        this.dimensionRefreshed(entries);        inProgress = false;    },    fps: 30});} addResizeObserver(){if (this.observer == undefined) {    this.createResizeObserver();}this.observer.observe(this.contentWrapper);this.observer.observe(this);} removeResizeObserver(){this.observer.unobserve(this.contentWrapper);this.observer.unobserve(this);} addVerticalScrollAction(){var diff = 0;var oldDiff = 0;var intervalTimer = undefined;var intervalMove = () => {    if (diff != oldDiff) {        oldDiff = diff;        this.scrollVerticalScrollbar(diff);    }};let mouseDown = (e) => {    e.normalize();    var startY = e.pageY;    var oldVerticalScrollPosition = this.verticalScroller.offsetTop;    this.classList.add("scrolling");    this.verticalScroller.classList.add("active");    intervalTimer = setInterval(intervalMove, this.refreshTimeout);    var mouseMove = (e) => {        e.normalize();        diff = oldVerticalScrollPosition + e.pageY - startY;    };    var mouseUp = (e) => {        clearInterval(intervalTimer);        this.scrollVerticalScrollbar(diff);        this.classList.remove("scrolling");        this.verticalScroller.classList.remove("active");        document.removeEventListener("mousemove", mouseMove);        document.removeEventListener("touchmove", mouseMove);        document.removeEventListener("mouseup", mouseUp);        document.removeEventListener("touchend", mouseUp);    };    document.addEventListener("mousemove", mouseMove);    document.addEventListener("touchmove", mouseMove);    document.addEventListener("mouseup", mouseUp);    document.addEventListener("touchend", mouseUp);    return false;};this.verticalScroller.addEventListener("mousedown", mouseDown);this.verticalScroller.addEventListener("touchstart", mouseDown);this.verticalScroller.addEventListener("dragstart", this.preventDrag);this.verticalScroller.addEventListener("drop", this.preventDrag);} addHorizontalScrollAction(){var diff = 0;var oldDiff = 0;var intervalTimer = undefined;var intervalMove = () => {    if (diff != oldDiff) {        oldDiff = diff;        this.scrollHorizontalScrollbar(diff);    }};let mouseDown = (e) => {    e.normalize();    var startX = e.pageX;    var oldHoritzontalScrollPosition = this.horizontalScroller.offsetLeft;    this.classList.add("scrolling");    this.horizontalScroller.classList.add("active");    intervalTimer = setInterval(intervalMove, this.refreshTimeout);    var mouseMove = (e) => {        e.normalize();        diff = oldHoritzontalScrollPosition + e.pageX - startX;    };    var mouseUp = (e) => {        clearInterval(intervalTimer);        this.scrollHorizontalScrollbar(diff);        this.classList.remove("scrolling");        this.horizontalScroller.classList.remove("active");        document.removeEventListener("mousemove", mouseMove);        document.removeEventListener("touchmove", mouseMove);        document.removeEventListener("mouseup", mouseUp);        document.removeEventListener("touchend", mouseUp);    };    document.addEventListener("mousemove", mouseMove);    document.addEventListener("touchmove", mouseMove);    document.addEventListener("mouseup", mouseUp);    document.addEventListener("touchend", mouseUp);};this.horizontalScroller.addEventListener("mousedown", mouseDown);this.horizontalScroller.addEventListener("touchstart", mouseDown);this.horizontalScroller.addEventListener("dragstart", this.preventDrag);this.horizontalScroller.addEventListener("drop", this.preventDrag);} createTouchWheelAction(){this.touchWheelAction = (e) => {    e.normalize();    let startX = e.pageX;    let startY = e.pageY;    let startVertical = this.scrollbar.vertical.value;    let startHorizontal = this.scrollbar.horizontal.value;    let touchMove = (e) => {        e.normalize();        let diffX = startX - e.pageX;        let diffY = startY - e.pageY;        this.scrollHorizontalScrollbar(startHorizontal + diffX);        this.scrollVerticalScrollbar(startVertical + diffY);    };    let touchEnd = () => {        window.removeEventListener("touchmove", touchMove);        window.removeEventListener("touchend", touchEnd);    };    window.addEventListener("touchmove", touchMove);    window.addEventListener("touchend", touchEnd);};} createWheelAction(){this.wheelAction = (e) => {    if (e.altKey) {        if (this.horizontalScrollVisible) {            var scrollX = e.deltaY / 5;            this.scrollHorizontalScrollbar(this.scrollbar.horizontal.value + scrollX);            let maxHorizontal = this.horizontalScrollerContainer.offsetWidth - this.horizontalScroller.offsetWidth;            if (this.scrollbar.horizontal.value != 0 && this.scrollbar.horizontal.value != maxHorizontal) {                e.preventDefault();                e.stopPropagation();            }        }    }    else {        if (this.verticalScrollVisible) {            var scrollY = e.deltaY / 5;            this.scrollVerticalScrollbar(this.scrollbar.vertical.value + scrollY);            let maxVertical = this.verticalScrollerContainer.offsetHeight - this.verticalScroller.offsetHeight;            if (this.scrollbar.vertical.value != 0 && this.scrollbar.vertical.value != maxVertical) {                e.preventDefault();                e.stopPropagation();            }        }    }};} addWheelAction(){if (!this.wheelAction) {    this.createWheelAction();}if (!this.touchWheelAction) {    this.createTouchWheelAction();}this.addEventListener("wheel", this.wheelAction);this.addEventListener("touchstart", this.touchWheelAction);} removeWheelAction(){if (this.wheelAction) {    this.removeEventListener("wheel", this.wheelAction);}if (this.touchWheelAction) {    this.removeEventListener("touchstart", this.touchWheelAction);}} scrollScrollbarTo(horizontalValue,verticalValue){this.scrollHorizontalScrollbar(horizontalValue);this.scrollVerticalScrollbar(verticalValue);} scrollHorizontalScrollbar(horizontalValue){if (!this.only_vertical) {    if (horizontalValue != undefined) {        var maxScroller = this.horizontalScrollerContainer.offsetWidth - this.horizontalScroller.offsetWidth;        this.scrollbar.horizontal.max = maxScroller;        var maxScrollContent = this.contentWrapper.scrollWidth - this.contentHidderWidth;        if (maxScrollContent < 0) {            maxScrollContent = 0;        }        this.content.horizontal.max = maxScrollContent;        if (horizontalValue < 0) {            horizontalValue = 0;        }        else if (horizontalValue > maxScroller) {            horizontalValue = maxScroller;        }        this.scrollbar.horizontal.value = horizontalValue;        this.horizontalScroller.style.left = horizontalValue + 'px';        if (maxScroller != 0) {            var percent = maxScrollContent / maxScroller;            this.content.horizontal.value = Math.round(horizontalValue * percent);        }        else {            this.content.horizontal.value = 0;        }        this.contentWrapper.style.left = -1 * this.content.horizontal.value + 'px';        this.emitScroll();    }}} scrollVerticalScrollbar(verticalValue){if (verticalValue != undefined) {    var maxScroller = this.verticalScrollerContainer.offsetHeight - this.verticalScroller.offsetHeight;    this.scrollbar.vertical.max = maxScroller;    var maxScrollContent = this.contentWrapper.scrollHeight - this.contentHidderHeight;    if (maxScrollContent < 0) {        maxScrollContent = 0;    }    this.content.vertical.max = maxScrollContent;    if (verticalValue < 0) {        verticalValue = 0;    }    else if (verticalValue > maxScroller) {        verticalValue = maxScroller;    }    this.scrollbar.vertical.value = verticalValue;    this.verticalScroller.style.top = verticalValue + 'px';    if (maxScroller != 0) {        var percent = maxScrollContent / maxScroller;        this.content.vertical.value = Math.round(verticalValue * percent);    }    else {        this.content.vertical.value = 0;    }    this.contentWrapper.style.top = -1 * this.content.vertical.value + 'px';    this.emitScroll();}} scrollHorizontal(horizontalValue){if (!this.only_vertical) {    if (horizontalValue != undefined) {        var maxScroller = this.horizontalScrollerContainer.offsetWidth - this.horizontalScroller.offsetWidth;        this.scrollbar.horizontal.max = maxScroller;        var maxScrollContent = this.contentWrapper.scrollWidth - this.contentHidderWidth;        if (maxScrollContent < 0) {            maxScrollContent = 0;        }        this.content.horizontal.max = maxScrollContent;        if (horizontalValue < 0) {            horizontalValue = 0;        }        else if (horizontalValue > maxScrollContent) {            horizontalValue = maxScrollContent;        }        this.content.horizontal.value = horizontalValue;        this.contentWrapper.style.left = -horizontalValue + 'px';        if (maxScroller != 0) {            var percent = maxScrollContent / maxScroller;            this.scrollbar.horizontal.value = Math.round(horizontalValue / percent);        }        else {            this.scrollbar.horizontal.value = 0;        }        this.horizontalScroller.style.left = this.scrollbar.horizontal.value + 'px';        this.emitScroll();    }}} scrollVertical(verticalValue){if (verticalValue != undefined) {    var maxScroller = this.verticalScrollerContainer.offsetHeight - this.verticalScroller.offsetHeight;    this.scrollbar.vertical.max = maxScroller;    var maxScrollContent = this.contentWrapper.scrollHeight - this.contentHidderHeight;    if (maxScrollContent < 0) {        maxScrollContent = 0;    }    this.content.vertical.max = maxScroller;    if (verticalValue < 0) {        verticalValue = 0;    }    else if (verticalValue > maxScrollContent) {        verticalValue = maxScrollContent;    }    this.content.vertical.value = verticalValue;    this.verticalScroller.style.top = -verticalValue + 'px';    if (maxScroller != 0) {        var percent = maxScrollContent / maxScroller;        this.scrollbar.vertical.value = Math.round(verticalValue / percent);    }    else {        this.scrollbar.vertical.value = 0;    }    this.verticalScroller.style.top = this.scrollbar.vertical.value + 'px';    this.contentWrapper.style.top = -1 * this.content.vertical.value + 'px';    this.emitScroll();}} scrollToPosition(horizontalValue,verticalValue){this.scrollHorizontal(horizontalValue);this.scrollVertical(verticalValue);} emitScroll(){var customEvent = new CustomEvent("scroll");this.dispatchEvent(customEvent);} preventDrag(e){e.preventDefault();return false;} postCreation(){if (!this.disable_scroll) {    this.addResizeObserver();    this.addWheelAction();}this.addVerticalScrollAction();this.addHorizontalScrollAction();this.contentHidder.addEventListener("scroll", () => {    if (this.contentHidder.scrollTop != 0) {        this.contentHidder.scrollTop = 0;    }});}}
 window.customElements.define('av-scrollable', AvScrollable);
+class AvRouterLink extends WebComponent {
+    get 'state'() {
+                        return this.getAttribute('state');
+                    }
+                    set 'state'(val) {
+                        this.setAttribute('state',val);
+                    }    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(``);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<slot></slot>`,
+            slots: {
+                'default':`<slot></slot>`
+            },
+            blocks: {
+                'default':`<slot></slot>`
+            }
+        }
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvRouterLink", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvRouterLink";
+    }
+    __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('state')){ this['state'] = ''; } }
+     postCreation(){StateManager.getInstance("navigation").subscribe(this.state, {    active: () => {        this.classList.add("active");    },    inactive: () => {        this.classList.remove("active");    }});new PressManager({    element: this,    onPress: () => {        StateManager.getInstance("navigation").setActiveState(this.state);    }});}}
+window.customElements.define('av-router-link', AvRouterLink);
+class AvRouter extends WebComponent {
+    constructor() { super(); if (this.constructor == AvRouter) { throw "can't instanciate an abstract class"; } }
+    __prepareVariables() { super.__prepareVariables(); if(this.oldPage === undefined) {this.oldPage = undefined;} }
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(``);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<slot name="before"></slot>
+<div class="content" _id="avrouter_0"></div>
+<slot name="after"></slot>`,
+            slots: {
+                'before':`<slot name="before"></slot>`,'after':`<slot name="after"></slot>`
+            },
+            blocks: {
+                'default':`<slot name="before"></slot>
+<div class="content" _id="avrouter_0"></div>
+<slot name="after"></slot>`
+            }
+        }
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvRouter", 1])
+        return temp;
+    }
+    __mapSelectedElement() { super.__mapSelectedElement(); this.contentEl = this.shadowRoot.querySelector('[_id="avrouter_0"]');}
+    getClassName() {
+        return "AvRouter";
+    }
+     register(){let routes = this.defineRoutes();for (let key in routes) {    this.initRoute(key, new routes[key]());}} initRoute(path,element){this.contentEl.appendChild(element);StateManager.getInstance("navigation").subscribe(path, {    active: (currentState) => {        if (this.oldPage && this.oldPage != element) {            this.oldPage.show = false;        }        element.show = true;        this.oldPage = element;        if (window.location.pathname != currentState) {            let newUrl = window.location.origin + currentState;            document.title = element.defineTitle();            window.history.pushState({}, element.defineTitle(), newUrl);        }    }});} postCreation(){this.register();if (window.localStorage.getItem("navigation_url")) {    StateManager.getInstance("navigation").setActiveState(window.localStorage.getItem("navigation_url"));    window.localStorage.removeItem("navigation_url");}else {    StateManager.getInstance("navigation").setActiveState(window.location.pathname);}window.onpopstate = (e) => {    if (window.location.pathname != StateManager.getInstance("navigation").getActiveState()) {        StateManager.getInstance("navigation").setActiveState(window.location.pathname);    }};}}
+window.customElements.define('av-router', AvRouter);
+class AvPage extends WebComponent {
+    constructor() { super(); if (this.constructor == AvPage) { throw "can't instanciate an abstract class"; } }
+    get 'show'() {
+                        return this.hasAttribute('show');
+                    }
+                    set 'show'(val) {
+                        if(val === 1 || val === 'true' || val === ''){
+                            val = true;
+                        }
+                        else if(val === 0 || val === 'false' || val === null || val === undefined){
+                            val = false;
+                        }
+                        if(val !== false && val !== true){
+                            console.error("error setting boolean in show");
+                            val = false;
+                        }
+                        if (val) {
+                            this.setAttribute('show', 'true');
+                        } else{
+                            this.removeAttribute('show');
+                        }
+                    }    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(`:host{display:none}:host([show]){display:block}`);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<slot></slot>`,
+            slots: {
+                'default':`<slot></slot>`
+            },
+            blocks: {
+                'default':`<slot></slot>`
+            }
+        }
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvPage", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvPage";
+    }
+    __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('show')) { this.attributeChangedCallback('show', false, false); } }
+    __listBoolProps() { return ["show"].concat(super.__listBoolProps()).filter((v, i, a) => a.indexOf(v) === i); }
+}
+window.customElements.define('av-page', AvPage);
 class AvHideable extends WebComponent {
     get 'isVisible'() {
 						return this.__watch["isVisible"];
@@ -9543,7 +9544,6 @@ class AvHideable extends WebComponent {
     async  defaultBeforeHide(){}async  defaultAfterHide(){}async  defaultCanHide(){return true;} configure(options){if (options.noHideItems) {    this.options.noHideItems = options.noHideItems;}if (options.beforeHide) {    this.options.beforeHide = options.beforeHide;}if (options.afterHide) {    this.options.afterHide = options.afterHide;}if (options.canHide) {    this.options.canHide = options.canHide;}if (options.container) {    this.options.container = options.container;}} show(){if (this.isVisible) {    return;}this.isVisible = true;this.oldParent = this.parentNode;if (this.shadowRoot.querySelector("style").innerText.indexOf(":host{--inserted: \"here\"}") != -1) {    let newStyle = "";    const parentShadowRoot = this.oldParent.findParentByType(ShadowRoot);    if (parentShadowRoot instanceof ShadowRoot) {        let matchingArr = parentShadowRoot.querySelector("style").innerText.match(/av-hideable.*?\{.*?\}/g);        if (matchingArr) {            newStyle = matchingArr.join("").replace(/av-hideable/g, ":host");        }    }    this.shadowRoot.querySelector("style").innerText = this.shadowRoot.querySelector("style").innerText.replace(":host{--inserted: \"here\"}", newStyle);}this.loadCSSVariables();this.style.display = 'block';this.options.container.appendChild(this);this.options.container.addEventListener("pressaction_trigger", this.checkCloseBinded);this.pressManager = new PressManager({    element: this.options.container,    onPress: (e) => {        this.checkCloseBinded(e);    }});} getVisibility(){return this.isVisible;} onVisibilityChange(callback){this.onVisibilityChangeCallbacks.push(callback);} offVisibilityChange(callback){this.onVisibilityChangeCallbacks = this.onVisibilityChangeCallbacks.filter(cb => cb !== callback);} loadCSSVariables(){let styleSheets = this.shadowRoot.styleSheets;let realStyle = getComputedStyle(this);let propsToAdd = {};for (let i = 0; i < styleSheets.length; i++) {    let rules = styleSheets[i].cssRules;    for (let j = 0; j < rules.length; j++) {        for (let indexTxt in rules[j]["style"]) {            let index = Number(indexTxt);            if (isNaN(index)) {                break;            }            let prop = rules[j]["style"][index];            let value = rules[j]["style"][prop];            if (value.startsWith("var(")) {                let varToDef = value.match(/var\(.*?(\,|\))/g)[0].replace("var(", "").slice(0, -1);                let realValue = realStyle.getPropertyValue(varToDef);                propsToAdd[varToDef] = realValue.trim();            }        }    }}for (let key in propsToAdd) {    this.style.setProperty(key, propsToAdd[key]);}}async  hide(options){if (this.isVisible) {    if ((options === null || options === void 0 ? void 0 : options.force) || await this.options.canHide(options === null || options === void 0 ? void 0 : options.target)) {        await this.options.beforeHide();        this.isVisible = false;        this.style.display = 'none';        this.oldParent.appendChild(this);        this.options.container.removeEventListener("pressaction_trigger", this.checkCloseBinded);        this.pressManager.destroy();        await this.options.afterHide();    }}} checkClose(e){let realTargetEl;if (e instanceof PointerEvent) {    realTargetEl = e.realTarget();}else {    realTargetEl = e.detail.realEvent.realTarget();}for (var i = 0; i < this.options.noHideItems.length; i++) {    if (this.options.noHideItems[i].containsChild(realTargetEl)) {        return;    }}this.hide({    target: realTargetEl});} postCreation(){var listChild = this.getElementsInSlot();for (let i = 0; i < listChild.length; i++) {    this.content.appendChild(listChild[i]);}}}
 window.customElements.define('av-hideable', AvHideable);
 class AvFormElement extends WebComponent {
-    static get observedAttributes() {return ["required", "name", "focusable"].concat(super.observedAttributes).filter((v, i, a) => a.indexOf(v) === i);}
     constructor() { super(); if (this.constructor == AvFormElement) { throw "can't instanciate an abstract class"; } }
     get 'required'() {
                         return this.hasAttribute('required');
@@ -9663,12 +9663,10 @@ class AvFormElement extends WebComponent {
         return "AvFormElement";
     }
     __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('required')) { this.attributeChangedCallback('required', false, false); }if(!this.hasAttribute('name')){ this['name'] = ''; }if(!this.hasAttribute('focusable')) { this.attributeChangedCallback('focusable', false, false); } }
-    __upgradeAttributes() { super.__upgradeAttributes(); this.__upgradeProperty('required');this.__upgradeProperty('name');this.__upgradeProperty('focusable'); }
     __listBoolProps() { return ["required","focusable"].concat(super.__listBoolProps()).filter((v, i, a) => a.indexOf(v) === i); }
      postCreation(){this.findParentByType(AvForm).subscribe(this);} onValueChanged(){this.dispatchEvent(new CustomEvent("change", {    detail: {        value: this.value    }}));} setFocus(){} validate(){return true;} setError(message){this.errors.push(message);} clearErrors(){this.errors = [];} displayErrors(){}}
 window.customElements.define('av-form-element', AvFormElement);
 class AvForm extends WebComponent {
-    static get observedAttributes() {return ["loading", "method", "action", "use_event"].concat(super.observedAttributes).filter((v, i, a) => a.indexOf(v) === i);}
     get 'loading'() {
                         return this.hasAttribute('loading');
                     }
@@ -9745,12 +9743,10 @@ class AvForm extends WebComponent {
         return "AvForm";
     }
     __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('loading')) { this.attributeChangedCallback('loading', false, false); }if(!this.hasAttribute('method')){ this['method'] = 'get'; }if(!this.hasAttribute('action')){ this['action'] = ''; }if(!this.hasAttribute('use_event')) { this.attributeChangedCallback('use_event', false, false); } }
-    __upgradeAttributes() { super.__upgradeAttributes(); this.__upgradeProperty('loading');this.__upgradeProperty('method');this.__upgradeProperty('action');this.__upgradeProperty('use_event'); }
     __listBoolProps() { return ["loading","use_event"].concat(super.__listBoolProps()).filter((v, i, a) => a.indexOf(v) === i); }
     async  submit(){if (!this.validate()) {    return;}const data = {};this.fields.forEach(field => {    if (field.required) {        data[field.name] = field.value;    }    else {        if (field.value) {            data[field.name] = field.value;        }    }});if (this.use_event) {    const customEvent = new CustomEvent("submit", {        detail: {            data,            action: this.action,            method: this.method        },        bubbles: true,        composed: true    });    this.dispatchEvent(customEvent);}else {    this.loading = true;    const formData = new FormData();    for (const key in data) {        formData.append(key, data[key]);    }    const request = new HttpRequest({        url: this.action,        method: HttpRequest.getMethod(this.method),        data: formData    });    this.loading = false;}} registerSubmit(submitElement){this.submits.push({    element: submitElement,    pressInstance: new PressManager({        element: submitElement,        onPress: () => {            this.submit();        }    })});} unregisterSubmit(submitElement){const index = this.submits.findIndex(submit => submit.element === submitElement);if (index !== -1) {    this.submits[index].pressInstance.destroy();    this.submits.splice(index, 1);}} subscribe(fieldHTML){const fieldIndex = this.fields.push(fieldHTML);const _goNext = (e, index = fieldIndex) => {    if (e.keyCode === 13) {        if (this.fields[index]) {            if (this.fields[index].focusable) {                this.fields[index].setFocus();            }            else {                _goNext(e, index + 1);            }        }        else {            this.submit();        }    }};fieldHTML.addEventListener("keydown", _goNext);} validate(){let valid = true;this.fields.forEach(field => {    if (!field.validate()) {        if (valid === true) {            field.setFocus();        }        valid = false;    }});return valid;} setFocus(){if (this.fields.length > 0) {    this.fields[0].setFocus();}}}
 window.customElements.define('av-form', AvForm);
 class AvFor extends WebComponent {
-    static get observedAttributes() {return ["item", "in", "index"].concat(super.observedAttributes).filter((v, i, a) => a.indexOf(v) === i);}
     get 'item'() {
                         return this.getAttribute('item');
                     }
@@ -9795,7 +9791,6 @@ class AvFor extends WebComponent {
         return "AvFor";
     }
     __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('item')){ this['item'] = ''; }if(!this.hasAttribute('in')){ this['in'] = ''; }if(!this.hasAttribute('index')){ this['index'] = ''; } }
-    __upgradeAttributes() { super.__upgradeAttributes(); this.__upgradeProperty('item');this.__upgradeProperty('in');this.__upgradeProperty('index'); }
      init(){if (!this.parent) {    let shadow = this.getRootNode();    if (shadow.host) {        this.parent = shadow.host;        let parentsFor = this.findParents("av-for", this.parent);        let inParts = this.in.split(".");        let firstPart = inParts.splice(0, 1)[0];        if (this.parent["__watchActions"].hasOwnProperty(firstPart)) {            this.watchActionArray = this.parent["__watchActions"][firstPart];            this.watchObjectArray = this.parent["__watch"];            this.watchObjectName = firstPart;        }        else {            for (let parentFor of parentsFor) {                if (parentFor.item == firstPart) {                    this.parentFor = parentFor;                    this.watchActionArray = this.parentFor.watchActionArray;                    this.watchObjectArray = this.parentFor.watchObjectArray;                    this.watchObjectName = this.parentFor.watchObjectName;                    this.otherPart = inParts;                    break;                }            }        }        if (this.watchActionArray) {            let fctCb = (target, type, path, element) => {                path = path.replace(this.watchObjectName, "");                if (type == WatchAction.SET || path == this.getParentKey()) {                    this.reset();                    this.watchElement = element;                    let currentCreate = Object.prepareByPath(this.watchElement, this.getParentKey());                    if (currentCreate.canApply) {                        if (Array.isArray(currentCreate.objToApply)) {                            for (let i = 0; i < currentCreate.objToApply.length; i++) {                                this.createForElement(currentCreate.objToApply[i], "[" + i + "]");                            }                        }                        else {                            for (let key in currentCreate.objToApply) {                                this.createForElement(currentCreate.objToApply[key], key);                            }                        }                    }                    else if (!Array.isArray(element) && element !== undefined) {                        console.error("something went wrong, but I don't understand how this is possible");                    }                }                else {                    let otherPartRegexp = this.getParentKey().replace(/\[/g, "\\[").replace(/\]/g, "\\]");                    let regexNumberLoop = new RegExp("^" + otherPartRegexp + "\\[(\\d*?)\\]$", "g");                    let testPath = new RegExp("^" + otherPartRegexp + "(\\[\\d*?\\].*)$", "g").exec(path);                    if (testPath) {                        let pathToUse = testPath[1];                        let matchTemp = path.match(regexNumberLoop);                        if (matchTemp) {                            if (type == WatchAction.CREATED) {                                this.createForElement(element, pathToUse);                            }                            else if (type == WatchAction.UPDATED) {                                this.updateForElement(element, pathToUse);                            }                            else if (type == WatchAction.DELETED) {                                this.deleteForElement(element, pathToUse);                            }                        }                        else {                            if (type == WatchAction.CREATED) {                                this.updateForElement(element, pathToUse);                            }                            else if (type == WatchAction.UPDATED) {                                this.updateForElement(element, pathToUse);                            }                            else if (type == WatchAction.DELETED) {                                this.updateForElement(undefined, pathToUse);                            }                        }                    }                }            };            this.watchActionArray.push(fctCb);            if (this.watchObjectArray[this.watchObjectName]) {                fctCb(this.parentElement, WatchAction.SET, '', this.watchObjectArray[this.watchObjectName]);            }        }        else {            console.error("variable " + this.in + " in parent can't be found");        }    }}} createForElement(data,key){let temp = document.createElement("DIV");temp.innerHTML = this.parent["__loopTemplate"][this.getAttribute("_id")];let index = Number(key.replace("[", "").replace("]", ""));if (index > this.maxIndex) {    this.maxIndex = index;}let maxSaved = this.maxIndex;for (let i = maxSaved; i >= index; i--) {    if (this.elementsRootByIndex.hasOwnProperty(i)) {        if (i + 1 > this.maxIndex) {            this.maxIndex = i + 1;        }        this.elementsRootByIndex[i + 1] = this.elementsRootByIndex[i];        this.elementsByPath[i + 1] = this.elementsByPath[i];        this.forInside[i + 1] = this.forInside[i];        for (let elements of Object.values(this.elementsByPath[i + 1])) {            for (let element of elements) {                if (element["__values"].hasOwnProperty("$index$_" + this.index)) {                    element["__values"]["$index$_" + this.index] = i + 1;                    element["__templates"]["$index$_" + this.index].forEach((cb) => {                        cb(element);                    });                }            }        }        for (let forEl of this.forInside[i + 1]) {            forEl.parentIndex = i + 1;            forEl.updateIndexes(this.index, i + 1);        }    }}let result = this.parent['__prepareForCreate'][this.getAttribute("_id")](temp, data, key, this.getAllIndexes(index));let forEls = Array.from(temp.querySelectorAll("av-for"));this.forInside[index] = [];for (let forEl of forEls) {    forEl.parentIndex = index;    this.forInside[index].push(forEl);}this.elementsByPath[index] = result;this.elementsRootByIndex[index] = [];let appendChild = (el) => { this.appendChild(el); };if (index != this.maxIndex) {    let previous = this.elementsRootByIndex[index + 1][0];    appendChild = (el) => { this.insertBefore(el, previous); };}while (temp.children.length > 0) {    let el = temp.children[0];    this.elementsRootByIndex[index].push(el);    appendChild(el);}} updateForElement(data,key){let idendity = key.match(/\[\d*?\]/g)[0];let index = Number(idendity.replace("[", "").replace("]", ""));if (index > this.maxIndex) {    this.maxIndex = index;}key = key.replace(idendity, "");if (key.startsWith(".")) {    key = key.slice(1);}if (this.elementsByPath[index]) {    for (let pathName in this.elementsByPath[index]) {        for (let element of this.elementsByPath[index][pathName]) {            for (let valueName in element["__values"]) {                if (valueName == "") {                    element["__templates"][valueName].forEach((cb) => {                        cb(element, true);                    });                }                else if (valueName == key) {                    element["__values"][valueName] = data;                    element["__templates"][valueName].forEach((cb) => {                        cb(element);                    });                }                else if (valueName.startsWith(key)) {                    let temp = Object.prepareByPath(data, valueName, key);                    if (temp.canApply) {                        element["__values"][valueName] = temp.objToApply;                        element["__templates"][valueName].forEach((cb) => {                            cb(element);                        });                    }                }            }        }    }}else {    this.createForElement(this.watchElement[index], idendity);}} deleteForElement(data,key){let index = Number(key.replace("[", "").replace("]", ""));if (index > this.maxIndex) {    this.maxIndex = index;}if (this.elementsRootByIndex[index]) {    for (let el of this.elementsRootByIndex[index]) {        el.remove();    }    delete this.elementsRootByIndex[index];    delete this.elementsByPath[index];    for (let i = index; i <= this.maxIndex; i++) {        if (i == this.maxIndex) {            this.maxIndex--;        }        if (this.elementsRootByIndex.hasOwnProperty(i)) {            this.elementsRootByIndex[i - 1] = this.elementsRootByIndex[i];            this.elementsByPath[i - 1] = this.elementsByPath[i];            this.forInside[i - 1] = this.forInside[i];            for (let elements of Object.values(this.elementsByPath[i - 1])) {                for (let element of elements) {                    if (element["__values"].hasOwnProperty("$index$_" + this.index)) {                        element["__values"]["$index$_" + this.index] = i - 1;                        element["__templates"]["$index$_" + this.index].forEach((cb) => {                            cb(element);                        });                    }                }            }            for (let forEl of this.forInside[i - 1]) {                forEl.parentIndex = i - 1;                forEl.updateIndexes(this.index, i - 1);            }        }    }}} reset(){this.elementsByPath = {};this.elementsRootByIndex = {};this.forInside = {};this.maxIndex = 0;this.innerHTML = "";} postCreation(){this.init();} getParentKey(){let el = this;let result = "";while (el.parentFor) {    result = result + "[" + el.parentIndex + "]." + this.otherPart.join(".");    el = el.parentFor;}return result;} updateIndexes(indexName,indexValue){for (let position in this.elementsByPath) {    for (let elements of Object.values(this.elementsByPath[position])) {        for (let element of elements) {            if (element["__values"].hasOwnProperty("$index$_" + indexName)) {                element["__values"]["$index$_" + indexName] = indexValue;                element["__templates"]["$index$_" + indexName].forEach((cb) => {                    cb(element);                });            }        }    }}for (let index in this.forInside) {    this.forInside[index].forEach((forEl) => {        forEl.updateIndexes(indexName, indexValue);    });}} getAllIndexes(currentIndex){let result = {};let el = this;while (el.parentFor) {    result[el.parentFor.index] = el.parentIndex;    el = el.parentFor;}result[this.index] = currentIndex;return result;}}
 window.customElements.define('av-for', AvFor);
 class DisplayElement extends WebComponent {
@@ -9831,11 +9826,58 @@ class DisplayElement extends WebComponent {
     }
      onDeleteFunction(data){} onUpdateFunction(data){} destroy(){if (this.currentInstance) {    this.unsubscribeFromInstance();}} subscribeToInstance(){this.currentInstance.offUpdate(this.eventsFunctions.onUpdate);this.currentInstance.offDelete(this.eventsFunctions["onDelete"]);} unsubscribeFromInstance(){this.currentInstance.offUpdate(this.eventsFunctions["onUpdate"]);this.currentInstance.offDelete(this.eventsFunctions["onDelete"]);} switchInstance(newInstance){if (this.currentInstance) {    this.unsubscribeFromInstance();}this.currentInstance = newInstance;this.subscribeToInstance();this.displayInfos(newInstance);}}
 window.customElements.define('display-element', DisplayElement);
+class AvRessourceManager {    static memory = {};    static waiting = {};    static async get(url) {        if (AvRessourceManager.memory.hasOwnProperty(url)) {            return AvRessourceManager.memory[url];        }        else if (AvRessourceManager.waiting.hasOwnProperty(url)) {            await this.awaitFct(url);            return AvRessourceManager.memory[url];        }        else {            AvRessourceManager.waiting[url] = [];            if (url.endsWith('.svg')) {                let result = await fetch(url);                let text = await result.text();                AvRessourceManager.memory[url] = text;                this.releaseAwaitFct(url);                return AvRessourceManager.memory[url];            }            else {                let result = await fetch(url, {                    headers: {                        responseType: 'blob'                    }                });                let blob = await result.blob();                AvRessourceManager.memory[url] = await this.readFile(blob);                ;                this.releaseAwaitFct(url);                return AvRessourceManager.memory[url];            }        }    }    static releaseAwaitFct(url) {        if (AvRessourceManager.waiting[url]) {            for (let i = 0; i < AvRessourceManager.waiting[url].length; i++) {                AvRessourceManager.waiting[url][i]();            }            delete AvRessourceManager.waiting[url];        }    }    static awaitFct(url) {        return new Promise((resolve) => {            AvRessourceManager.waiting[url].push(() => {                resolve('');            });        });    }    static readFile(blob) {        return new Promise((resolve) => {            var reader = new FileReader();            reader.onloadend = function () {                resolve(reader.result);            };            reader.readAsDataURL(blob);        });    }}
 
 
 
 
-class AvHome extends AvPage {
+class AvGenericPage extends AvPage {
+    constructor() { super(); if (this.constructor == AvGenericPage) { throw "can't instanciate an abstract class"; } }
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(`:host{height:100%}:host .content{height:100%;max-width:1000px;margin:0 auto}:host .content av-scrollable h1{margin-top:50px;text-align:center;display:inline-block;width:100%;color:var(--secondary-color);font-size:35px}:host .content av-scrollable h2{margin-left:0px;color:var(--secondary-color);font-size:25px}:host .content av-scrollable .table .header{font-weight:bold;border-bottom:1px solid var(--darker);padding:5px;font-size:20px}:host .content av-scrollable .table av-row{padding:10px;align-items:center}:host .content av-scrollable .table .title{font-size:18px;font-weight:600;margin-bottom:5px}:host .content av-scrollable av-router-link{color:blue;text-decoration:underline;cursor:pointer}:host .content av-scrollable>*:last-child{margin-bottom:30px}`);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<div class="content">
+    <av-scrollable>
+        <slot></slot>
+    </av-scrollable>
+</div>`,
+            slots: {
+                'default':`<slot></slot>`
+            },
+            blocks: {
+                'default':`<div class="content">
+    <av-scrollable>
+        <slot></slot>
+    </av-scrollable>
+</div>`
+            }
+        }
+                let newHtml = parentInfo.html
+                for (let blockName in info.blocks) {
+                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
+                        throw "can't found slot with name " + blockName;
+                    }
+                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
+                }
+                info.html = newHtml;
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvGenericPage", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvGenericPage";
+    }
+}
+window.customElements.define('av-generic-page', AvGenericPage);
+class AvInstallation extends AvGenericPage {
     __getStyle() {
         let arrStyle = super.__getStyle();
         arrStyle.push(``);
@@ -9844,14 +9886,155 @@ class AvHome extends AvPage {
     __getHtml() {
         let parentInfo = super.__getHtml();
         let info = {
-            html: `<slot></slot>
-home`,
+            html: `<h1>Aventus installation</h1>
+<p>
+    <span>Aventus is a vscode extension. You can download the installation file <i>(aventus-#version.vsix)</i></span>
+    <a href="https://github.com/max529/Aventus/releases" target="_blank">here</a>
+</p>
+<p>
+    <span>Then you can : </span>
+    </p><ul>
+        <li>Open your Visual Studio Code</li>
+        <li>Go on the extensions tab</li>
+        <li>Click on the three dots</li>
+        <li>Choose "Install from VSIX..."</li>
+        <li>Select the file you downloaded</li>
+    </ul>
+    <span>Well done! You are ready to use Aventus</span>
+    <p>
+        <span>Try the tutorial </span>
+        <av-router-link state="/introduction">here</av-router-link>
+    </p>
+<p></p>`,
             slots: {
-                'default':`<slot></slot>`
             },
             blocks: {
-                'default':`<slot></slot>
-home`
+                'default':`<h1>Aventus installation</h1>
+<p>
+    <span>Aventus is a vscode extension. You can download the installation file <i>(aventus-#version.vsix)</i></span>
+    <a href="https://github.com/max529/Aventus/releases" target="_blank">here</a>
+</p>
+<p>
+    <span>Then you can : </span>
+    </p><ul>
+        <li>Open your Visual Studio Code</li>
+        <li>Go on the extensions tab</li>
+        <li>Click on the three dots</li>
+        <li>Choose "Install from VSIX..."</li>
+        <li>Select the file you downloaded</li>
+    </ul>
+    <span>Well done! You are ready to use Aventus</span>
+    <p>
+        <span>Try the tutorial </span>
+        <av-router-link state="/introduction">here</av-router-link>
+    </p>
+<p></p>`
+            }
+        }
+                let newHtml = parentInfo.html
+                for (let blockName in info.blocks) {
+                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
+                        throw "can't found slot with name " + blockName;
+                    }
+                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
+                }
+                info.html = newHtml;
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvInstallation", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvInstallation";
+    }
+     defineTitle(){return "Aventus - Installation";}}
+window.customElements.define('av-installation', AvInstallation);
+class AvHome extends AvGenericPage {
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(`:host .logo{margin:50px auto;display:flex;align-items:center;justify-content:center;max-width:1000px}:host .logo av-img{width:50%}:host .logo .right-part{width:50%}:host .logo .right-part p{color:var(--darker);font-size:35px}:host .content{background-color:var(--lighter);box-shadow:0 -5px 5px var(--lighter);padding:50px 0}:host .content .advantages{max-width:1500px;margin:auto}:host .content .advantages av-col{padding:0 50px}:host .content .advantages av-col .title{font-weight:bold;margin-bottom:10px}:host .content .advantages av-col .description{text-align:justify}`);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<div class="logo">
+    <av-img src="/img/aventus.gif"></av-img>
+    <div class="right-part">
+        <p>Keep a link <br>with your data</p>
+        <av-router-link state="/introduction">
+            <av-button>Getting started</av-button>
+        </av-router-link>
+    </div>
+</div>
+<div class="content">
+    <div class="advantages">
+        <av-row>
+            <av-col size_xs="12" size_md="4">
+                <div class="title">Easy to use</div>
+                <div class="description">
+                    <p>You can easly create component to keep your code clean and reuse complex logical part.</p>
+                    <p>With the use of typescript, you will avoid a lot of mistakes and keep your code clean.</p>
+                </div>
+            </av-col>
+            <av-col size_xs="12" size_md="4">
+                <div class="title">Manage your data</div>
+                <div class="description">
+                    <p>You can easly write data and store to provide consistency inside your app.</p>
+                    <p>When a change occurs, everythink is updated by magic.</p>
+                </div>
+            </av-col>
+            <av-col size_xs="12" size_md="4">
+                <div class="title">Strong backend interaction</div>
+                <div class="description">
+                    <p>With aventus, you can find a lot of plugin to manage your backend like c#, firebase, etc</p>
+                    <p>A lot of code can be automatically generated. It's give you free time to focus on your design</p>
+                </div>
+            </av-col>
+        </av-row>
+    </div>
+</div>`,
+            slots: {
+            },
+            blocks: {
+                'default':`<div class="logo">
+    <av-img src="/img/aventus.gif"></av-img>
+    <div class="right-part">
+        <p>Keep a link <br>with your data</p>
+        <av-router-link state="/introduction">
+            <av-button>Getting started</av-button>
+        </av-router-link>
+    </div>
+</div>
+<div class="content">
+    <div class="advantages">
+        <av-row>
+            <av-col size_xs="12" size_md="4">
+                <div class="title">Easy to use</div>
+                <div class="description">
+                    <p>You can easly create component to keep your code clean and reuse complex logical part.</p>
+                    <p>With the use of typescript, you will avoid a lot of mistakes and keep your code clean.</p>
+                </div>
+            </av-col>
+            <av-col size_xs="12" size_md="4">
+                <div class="title">Manage your data</div>
+                <div class="description">
+                    <p>You can easly write data and store to provide consistency inside your app.</p>
+                    <p>When a change occurs, everythink is updated by magic.</p>
+                </div>
+            </av-col>
+            <av-col size_xs="12" size_md="4">
+                <div class="title">Strong backend interaction</div>
+                <div class="description">
+                    <p>With aventus, you can find a lot of plugin to manage your backend like c#, firebase, etc</p>
+                    <p>A lot of code can be automatically generated. It's give you free time to focus on your design</p>
+                </div>
+            </av-col>
+        </av-row>
+    </div>
+</div>`
             }
         }
                 let newHtml = parentInfo.html
@@ -9874,7 +10057,696 @@ home`
     }
      defineTitle(){return "Aventus";}}
 window.customElements.define('av-home', AvHome);
-class AvExample extends AvPage {
+class AvGettingStarted extends AvGenericPage {
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(``);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<section>
+    <h1>Getting started with Aventus</h1>
+    <p>Welcome to Aventus !</p>
+    <p>This tutorial introduces you to the essentials of Aventus by walking through building a Todo list.</p>
+    <p>Let's get started !!!</p>
+</section>
+<av-separation></av-separation>
+<section>
+    <h2>Prerequistes</h2>
+    <p>Before everythink you need to : </p>
+    <ul>
+        <li>Have knowledge of HTML, CSS and Javascript</li>
+        <li>Install Aventus : <av-router-link state="/installation">here</av-router-link>
+        </li>
+    </ul>
+</section>
+<av-separation>
+</av-separation>
+<section>
+    <h2>The concept</h2>
+    <p>Aventus is a framework that allow you to create complex user interfaces by splitting common parts of a
+        front-end application in several well knowned files. It builds on top of standard HTML, CSS, Javascript
+        and provide a way to keep your development under control.</p>
+    <p>The core features are :</p>
+    <ul>
+        <li>Data consistency based on store</li>
+        <li>Reusability with web component</li>
+        <li>Simplified communication with websocket</li>
+        <li>Reactivity</li>
+    </ul>
+</section>
+<av-separation></av-separation>
+<section>
+    <h2>Understand files</h2>
+    <p>
+        First of all, you need to understand all files you can use inside Aventus.
+    </p>
+    <div class="table">
+        <av-row class="header">
+            <av-col size_sm="4" center="">Extension</av-col>
+            <av-col size_sm="8" center="">Role</av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.wcl.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Web Component Logic</div>
+                <div class="description">Inside this file you can find the logical part in Typescript for your
+                    web
+                    component</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.wcs.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Web Component Style</div>
+                <div class="description">Inside this file you can find the style in SCSS for your web component
+                </div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.wcv.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Web Component View</div>
+                <div class="description">Inside this file you can find the structure in HTML for your web
+                    component
+                </div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.data.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Data</div>
+                <div class="description">This file is a class / interface / enum representing usable objects for
+                    your application</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.lib.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Library</div>
+                <div class="description">This file allow you to create some logical part for your project
+                    without
+                    web component</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.ram.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">RAM</div>
+                <div class="description">This file allow you to create store for your data</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.socket.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">WebSocket</div>
+                <div class="description">This file allow you to create websocket instance to send message to
+                    your
+                    backend</div>
+            </av-col>
+        </av-row>
+    </div>
+</section>`,
+            slots: {
+            },
+            blocks: {
+                'default':`<section>
+    <h1>Getting started with Aventus</h1>
+    <p>Welcome to Aventus !</p>
+    <p>This tutorial introduces you to the essentials of Aventus by walking through building a Todo list.</p>
+    <p>Let's get started !!!</p>
+</section>
+<av-separation></av-separation>
+<section>
+    <h2>Prerequistes</h2>
+    <p>Before everythink you need to : </p>
+    <ul>
+        <li>Have knowledge of HTML, CSS and Javascript</li>
+        <li>Install Aventus : <av-router-link state="/installation">here</av-router-link>
+        </li>
+    </ul>
+</section>
+<av-separation>
+</av-separation>
+<section>
+    <h2>The concept</h2>
+    <p>Aventus is a framework that allow you to create complex user interfaces by splitting common parts of a
+        front-end application in several well knowned files. It builds on top of standard HTML, CSS, Javascript
+        and provide a way to keep your development under control.</p>
+    <p>The core features are :</p>
+    <ul>
+        <li>Data consistency based on store</li>
+        <li>Reusability with web component</li>
+        <li>Simplified communication with websocket</li>
+        <li>Reactivity</li>
+    </ul>
+</section>
+<av-separation></av-separation>
+<section>
+    <h2>Understand files</h2>
+    <p>
+        First of all, you need to understand all files you can use inside Aventus.
+    </p>
+    <div class="table">
+        <av-row class="header">
+            <av-col size_sm="4" center="">Extension</av-col>
+            <av-col size_sm="8" center="">Role</av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.wcl.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Web Component Logic</div>
+                <div class="description">Inside this file you can find the logical part in Typescript for your
+                    web
+                    component</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.wcs.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Web Component Style</div>
+                <div class="description">Inside this file you can find the style in SCSS for your web component
+                </div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.wcv.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Web Component View</div>
+                <div class="description">Inside this file you can find the structure in HTML for your web
+                    component
+                </div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.data.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Data</div>
+                <div class="description">This file is a class / interface / enum representing usable objects for
+                    your application</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.lib.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Library</div>
+                <div class="description">This file allow you to create some logical part for your project
+                    without
+                    web component</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.ram.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">RAM</div>
+                <div class="description">This file allow you to create store for your data</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.socket.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">WebSocket</div>
+                <div class="description">This file allow you to create websocket instance to send message to
+                    your
+                    backend</div>
+            </av-col>
+        </av-row>
+    </div>
+</section>`
+            }
+        }
+                let newHtml = parentInfo.html
+                for (let blockName in info.blocks) {
+                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
+                        throw "can't found slot with name " + blockName;
+                    }
+                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
+                }
+                info.html = newHtml;
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvGettingStarted", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvGettingStarted";
+    }
+     defineTitle(){return "Aventus - Getting started";}}
+window.customElements.define('av-getting-started', AvGettingStarted);
+class AvApp extends AvRouter {
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(`:host{height:100%;width:100%;display:flex;flex-direction:column}:host .content{padding:15px 0;flex-grow:1}`);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<block name="before">
+    <av-navbar slot="before"></av-navbar>
+</block>`,
+            slots: {
+            },
+            blocks: {
+                'before':`
+    <av-navbar slot="before"></av-navbar>
+`
+            }
+        }
+                let newHtml = parentInfo.html
+                for (let blockName in info.blocks) {
+                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
+                        throw "can't found slot with name " + blockName;
+                    }
+                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
+                }
+                info.html = newHtml;
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvApp", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvApp";
+    }
+     defineRoutes(){return {    "/": AvHome,    "/example": AvExample,    "/introduction": AvGettingStarted,    "/installation": AvInstallation,};}}
+window.customElements.define('av-app', AvApp);
+class AvNavbar extends WebComponent {
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(`:host{height:70px;padding:10px;width:100%;background-color:var(--primary-color);box-shadow:0 5px 5px #c8c8c8;display:flex;justify-content:space-between}:host .routing{display:flex;height:100%}:host .routing av-router-link{margin:0 8px;padding:0 8px;display:flex;height:100%;align-items:center;color:var(--secondary-color);transition:background .4s var(--bezier-curve);cursor:pointer;border-radius:5px}:host .routing av-router-link:hover{background-color:var(--lighter)}:host .routing av-router-link.active{background-color:var(--lighter)}`);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<av-img src="/img/icon.png"></av-img>
+<div class="routing">
+    <av-router-link state="/">Home</av-router-link>
+    <av-router-link state="/example">Example</av-router-link>
+    <av-router-link state="/api">API</av-router-link>
+    <av-router-link state="/installation">Installation</av-router-link>
+</div>`,
+            slots: {
+            },
+            blocks: {
+                'default':`<av-img src="/img/icon.png"></av-img>
+<div class="routing">
+    <av-router-link state="/">Home</av-router-link>
+    <av-router-link state="/example">Example</av-router-link>
+    <av-router-link state="/api">API</av-router-link>
+    <av-router-link state="/installation">Installation</av-router-link>
+</div>`
+            }
+        }
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvNavbar", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvNavbar";
+    }
+}
+window.customElements.define('av-navbar', AvNavbar);
+class AvSeparation extends WebComponent {
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(`:host{height:1px;width:calc(100% - 50px);margin:25px;background-color:var(--darker)}`);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: ``,
+            slots: {
+            },
+            blocks: {
+            }
+        }
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvSeparation", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvSeparation";
+    }
+}
+window.customElements.define('av-separation', AvSeparation);
+class AvRow extends WebComponent {
+    get 'max_width'() {
+                        return this.getAttribute('max_width');
+                    }
+                    set 'max_width'(val) {
+                        this.setAttribute('max_width',val);
+                    }    __prepareVariables() { super.__prepareVariables(); if(this.sizes === undefined) {this.sizes = {"xs":300,"sm":540,"md":720,"lg":960,"xl":1140};} }
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(`:host{display:flex;width:100%;font-size:0}:host([max_width=""]) ::slotted(av-col[offset_xs="0"]){margin-left:0%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="0"]){margin-right:0%}:host([max_width=""]) ::slotted(av-col[size_xs="0"]){width:0%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="1"]){margin-left:8.3333333333%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="1"]){margin-right:8.3333333333%}:host([max_width=""]) ::slotted(av-col[size_xs="1"]){width:8.3333333333%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="2"]){margin-left:16.6666666667%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="2"]){margin-right:16.6666666667%}:host([max_width=""]) ::slotted(av-col[size_xs="2"]){width:16.6666666667%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="3"]){margin-left:25%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="3"]){margin-right:25%}:host([max_width=""]) ::slotted(av-col[size_xs="3"]){width:25%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="4"]){margin-left:33.3333333333%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="4"]){margin-right:33.3333333333%}:host([max_width=""]) ::slotted(av-col[size_xs="4"]){width:33.3333333333%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="5"]){margin-left:41.6666666667%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="5"]){margin-right:41.6666666667%}:host([max_width=""]) ::slotted(av-col[size_xs="5"]){width:41.6666666667%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="6"]){margin-left:50%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="6"]){margin-right:50%}:host([max_width=""]) ::slotted(av-col[size_xs="6"]){width:50%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="7"]){margin-left:58.3333333333%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="7"]){margin-right:58.3333333333%}:host([max_width=""]) ::slotted(av-col[size_xs="7"]){width:58.3333333333%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="8"]){margin-left:66.6666666667%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="8"]){margin-right:66.6666666667%}:host([max_width=""]) ::slotted(av-col[size_xs="8"]){width:66.6666666667%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="9"]){margin-left:75%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="9"]){margin-right:75%}:host([max_width=""]) ::slotted(av-col[size_xs="9"]){width:75%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="10"]){margin-left:83.3333333333%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="10"]){margin-right:83.3333333333%}:host([max_width=""]) ::slotted(av-col[size_xs="10"]){width:83.3333333333%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="11"]){margin-left:91.6666666667%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="11"]){margin-right:91.6666666667%}:host([max_width=""]) ::slotted(av-col[size_xs="11"]){width:91.6666666667%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="12"]){margin-left:100%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="12"]){margin-right:100%}:host([max_width=""]) ::slotted(av-col[size_xs="12"]){width:100%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="0"]){margin-left:0%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="0"]){margin-right:0%}:host([max_width~=xs]) ::slotted(av-col[size_xs="0"]){width:0%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="1"]){margin-left:8.3333333333%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="1"]){margin-right:8.3333333333%}:host([max_width~=xs]) ::slotted(av-col[size_xs="1"]){width:8.3333333333%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="2"]){margin-left:16.6666666667%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="2"]){margin-right:16.6666666667%}:host([max_width~=xs]) ::slotted(av-col[size_xs="2"]){width:16.6666666667%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="3"]){margin-left:25%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="3"]){margin-right:25%}:host([max_width~=xs]) ::slotted(av-col[size_xs="3"]){width:25%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="4"]){margin-left:33.3333333333%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="4"]){margin-right:33.3333333333%}:host([max_width~=xs]) ::slotted(av-col[size_xs="4"]){width:33.3333333333%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="5"]){margin-left:41.6666666667%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="5"]){margin-right:41.6666666667%}:host([max_width~=xs]) ::slotted(av-col[size_xs="5"]){width:41.6666666667%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="6"]){margin-left:50%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="6"]){margin-right:50%}:host([max_width~=xs]) ::slotted(av-col[size_xs="6"]){width:50%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="7"]){margin-left:58.3333333333%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="7"]){margin-right:58.3333333333%}:host([max_width~=xs]) ::slotted(av-col[size_xs="7"]){width:58.3333333333%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="8"]){margin-left:66.6666666667%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="8"]){margin-right:66.6666666667%}:host([max_width~=xs]) ::slotted(av-col[size_xs="8"]){width:66.6666666667%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="9"]){margin-left:75%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="9"]){margin-right:75%}:host([max_width~=xs]) ::slotted(av-col[size_xs="9"]){width:75%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="10"]){margin-left:83.3333333333%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="10"]){margin-right:83.3333333333%}:host([max_width~=xs]) ::slotted(av-col[size_xs="10"]){width:83.3333333333%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="11"]){margin-left:91.6666666667%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="11"]){margin-right:91.6666666667%}:host([max_width~=xs]) ::slotted(av-col[size_xs="11"]){width:91.6666666667%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="12"]){margin-left:100%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="12"]){margin-right:100%}:host([max_width~=xs]) ::slotted(av-col[size_xs="12"]){width:100%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="0"]){margin-left:0%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="0"]){margin-right:0%}:host([max_width~=sm]) ::slotted(av-col[size_sm="0"]){width:0%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="1"]){margin-left:8.3333333333%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="1"]){margin-right:8.3333333333%}:host([max_width~=sm]) ::slotted(av-col[size_sm="1"]){width:8.3333333333%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="2"]){margin-left:16.6666666667%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="2"]){margin-right:16.6666666667%}:host([max_width~=sm]) ::slotted(av-col[size_sm="2"]){width:16.6666666667%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="3"]){margin-left:25%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="3"]){margin-right:25%}:host([max_width~=sm]) ::slotted(av-col[size_sm="3"]){width:25%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="4"]){margin-left:33.3333333333%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="4"]){margin-right:33.3333333333%}:host([max_width~=sm]) ::slotted(av-col[size_sm="4"]){width:33.3333333333%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="5"]){margin-left:41.6666666667%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="5"]){margin-right:41.6666666667%}:host([max_width~=sm]) ::slotted(av-col[size_sm="5"]){width:41.6666666667%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="6"]){margin-left:50%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="6"]){margin-right:50%}:host([max_width~=sm]) ::slotted(av-col[size_sm="6"]){width:50%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="7"]){margin-left:58.3333333333%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="7"]){margin-right:58.3333333333%}:host([max_width~=sm]) ::slotted(av-col[size_sm="7"]){width:58.3333333333%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="8"]){margin-left:66.6666666667%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="8"]){margin-right:66.6666666667%}:host([max_width~=sm]) ::slotted(av-col[size_sm="8"]){width:66.6666666667%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="9"]){margin-left:75%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="9"]){margin-right:75%}:host([max_width~=sm]) ::slotted(av-col[size_sm="9"]){width:75%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="10"]){margin-left:83.3333333333%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="10"]){margin-right:83.3333333333%}:host([max_width~=sm]) ::slotted(av-col[size_sm="10"]){width:83.3333333333%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="11"]){margin-left:91.6666666667%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="11"]){margin-right:91.6666666667%}:host([max_width~=sm]) ::slotted(av-col[size_sm="11"]){width:91.6666666667%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="12"]){margin-left:100%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="12"]){margin-right:100%}:host([max_width~=sm]) ::slotted(av-col[size_sm="12"]){width:100%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="0"]){margin-left:0%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="0"]){margin-right:0%}:host([max_width~=md]) ::slotted(av-col[size_md="0"]){width:0%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="1"]){margin-left:8.3333333333%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="1"]){margin-right:8.3333333333%}:host([max_width~=md]) ::slotted(av-col[size_md="1"]){width:8.3333333333%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="2"]){margin-left:16.6666666667%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="2"]){margin-right:16.6666666667%}:host([max_width~=md]) ::slotted(av-col[size_md="2"]){width:16.6666666667%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="3"]){margin-left:25%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="3"]){margin-right:25%}:host([max_width~=md]) ::slotted(av-col[size_md="3"]){width:25%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="4"]){margin-left:33.3333333333%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="4"]){margin-right:33.3333333333%}:host([max_width~=md]) ::slotted(av-col[size_md="4"]){width:33.3333333333%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="5"]){margin-left:41.6666666667%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="5"]){margin-right:41.6666666667%}:host([max_width~=md]) ::slotted(av-col[size_md="5"]){width:41.6666666667%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="6"]){margin-left:50%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="6"]){margin-right:50%}:host([max_width~=md]) ::slotted(av-col[size_md="6"]){width:50%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="7"]){margin-left:58.3333333333%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="7"]){margin-right:58.3333333333%}:host([max_width~=md]) ::slotted(av-col[size_md="7"]){width:58.3333333333%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="8"]){margin-left:66.6666666667%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="8"]){margin-right:66.6666666667%}:host([max_width~=md]) ::slotted(av-col[size_md="8"]){width:66.6666666667%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="9"]){margin-left:75%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="9"]){margin-right:75%}:host([max_width~=md]) ::slotted(av-col[size_md="9"]){width:75%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="10"]){margin-left:83.3333333333%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="10"]){margin-right:83.3333333333%}:host([max_width~=md]) ::slotted(av-col[size_md="10"]){width:83.3333333333%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="11"]){margin-left:91.6666666667%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="11"]){margin-right:91.6666666667%}:host([max_width~=md]) ::slotted(av-col[size_md="11"]){width:91.6666666667%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="12"]){margin-left:100%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="12"]){margin-right:100%}:host([max_width~=md]) ::slotted(av-col[size_md="12"]){width:100%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="0"]){margin-left:0%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="0"]){margin-right:0%}:host([max_width~=lg]) ::slotted(av-col[size_lg="0"]){width:0%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="1"]){margin-left:8.3333333333%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="1"]){margin-right:8.3333333333%}:host([max_width~=lg]) ::slotted(av-col[size_lg="1"]){width:8.3333333333%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="2"]){margin-left:16.6666666667%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="2"]){margin-right:16.6666666667%}:host([max_width~=lg]) ::slotted(av-col[size_lg="2"]){width:16.6666666667%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="3"]){margin-left:25%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="3"]){margin-right:25%}:host([max_width~=lg]) ::slotted(av-col[size_lg="3"]){width:25%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="4"]){margin-left:33.3333333333%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="4"]){margin-right:33.3333333333%}:host([max_width~=lg]) ::slotted(av-col[size_lg="4"]){width:33.3333333333%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="5"]){margin-left:41.6666666667%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="5"]){margin-right:41.6666666667%}:host([max_width~=lg]) ::slotted(av-col[size_lg="5"]){width:41.6666666667%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="6"]){margin-left:50%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="6"]){margin-right:50%}:host([max_width~=lg]) ::slotted(av-col[size_lg="6"]){width:50%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="7"]){margin-left:58.3333333333%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="7"]){margin-right:58.3333333333%}:host([max_width~=lg]) ::slotted(av-col[size_lg="7"]){width:58.3333333333%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="8"]){margin-left:66.6666666667%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="8"]){margin-right:66.6666666667%}:host([max_width~=lg]) ::slotted(av-col[size_lg="8"]){width:66.6666666667%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="9"]){margin-left:75%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="9"]){margin-right:75%}:host([max_width~=lg]) ::slotted(av-col[size_lg="9"]){width:75%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="10"]){margin-left:83.3333333333%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="10"]){margin-right:83.3333333333%}:host([max_width~=lg]) ::slotted(av-col[size_lg="10"]){width:83.3333333333%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="11"]){margin-left:91.6666666667%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="11"]){margin-right:91.6666666667%}:host([max_width~=lg]) ::slotted(av-col[size_lg="11"]){width:91.6666666667%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="12"]){margin-left:100%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="12"]){margin-right:100%}:host([max_width~=lg]) ::slotted(av-col[size_lg="12"]){width:100%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="0"]){margin-left:0%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="0"]){margin-right:0%}:host([max_width~=xl]) ::slotted(av-col[size_xl="0"]){width:0%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="1"]){margin-left:8.3333333333%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="1"]){margin-right:8.3333333333%}:host([max_width~=xl]) ::slotted(av-col[size_xl="1"]){width:8.3333333333%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="2"]){margin-left:16.6666666667%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="2"]){margin-right:16.6666666667%}:host([max_width~=xl]) ::slotted(av-col[size_xl="2"]){width:16.6666666667%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="3"]){margin-left:25%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="3"]){margin-right:25%}:host([max_width~=xl]) ::slotted(av-col[size_xl="3"]){width:25%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="4"]){margin-left:33.3333333333%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="4"]){margin-right:33.3333333333%}:host([max_width~=xl]) ::slotted(av-col[size_xl="4"]){width:33.3333333333%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="5"]){margin-left:41.6666666667%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="5"]){margin-right:41.6666666667%}:host([max_width~=xl]) ::slotted(av-col[size_xl="5"]){width:41.6666666667%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="6"]){margin-left:50%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="6"]){margin-right:50%}:host([max_width~=xl]) ::slotted(av-col[size_xl="6"]){width:50%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="7"]){margin-left:58.3333333333%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="7"]){margin-right:58.3333333333%}:host([max_width~=xl]) ::slotted(av-col[size_xl="7"]){width:58.3333333333%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="8"]){margin-left:66.6666666667%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="8"]){margin-right:66.6666666667%}:host([max_width~=xl]) ::slotted(av-col[size_xl="8"]){width:66.6666666667%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="9"]){margin-left:75%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="9"]){margin-right:75%}:host([max_width~=xl]) ::slotted(av-col[size_xl="9"]){width:75%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="10"]){margin-left:83.3333333333%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="10"]){margin-right:83.3333333333%}:host([max_width~=xl]) ::slotted(av-col[size_xl="10"]){width:83.3333333333%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="11"]){margin-left:91.6666666667%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="11"]){margin-right:91.6666666667%}:host([max_width~=xl]) ::slotted(av-col[size_xl="11"]){width:91.6666666667%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="12"]){margin-left:100%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="12"]){margin-right:100%}:host([max_width~=xl]) ::slotted(av-col[size_xl="12"]){width:100%;display:inline-block}`);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<slot></slot>`,
+            slots: {
+                'default':`<slot></slot>`
+            },
+            blocks: {
+                'default':`<slot></slot>`
+            }
+        }
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvRow", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvRow";
+    }
+     _calculateWidth(){var size = this.offsetWidth;var labels = [];for (var key in this.sizes) {    var value = this.sizes[key];    if (size > value) {        labels.push(key);    }    else {        break;    }}this.max_width = labels.join(" ");} postCreation(){this._calculateWidth();new ResizeObserver(entries => {    this._calculateWidth();}).observe(this);}}
+window.customElements.define('av-row', AvRow);
+class AvCol extends WebComponent {
+    get 'size'() {
+                        return Number(this.getAttribute('size'));
+                    }
+                    set 'size'(val) {
+                        this.setAttribute('size',val);
+                    }get 'size_xs'() {
+                        return Number(this.getAttribute('size_xs'));
+                    }
+                    set 'size_xs'(val) {
+                        this.setAttribute('size_xs',val);
+                    }get 'size_sm'() {
+                        return Number(this.getAttribute('size_sm'));
+                    }
+                    set 'size_sm'(val) {
+                        this.setAttribute('size_sm',val);
+                    }get 'size_md'() {
+                        return Number(this.getAttribute('size_md'));
+                    }
+                    set 'size_md'(val) {
+                        this.setAttribute('size_md',val);
+                    }get 'size_lg'() {
+                        return Number(this.getAttribute('size_lg'));
+                    }
+                    set 'size_lg'(val) {
+                        this.setAttribute('size_lg',val);
+                    }get 'size_xl'() {
+                        return Number(this.getAttribute('size_xl'));
+                    }
+                    set 'size_xl'(val) {
+                        this.setAttribute('size_xl',val);
+                    }get 'offset'() {
+                        return Number(this.getAttribute('offset'));
+                    }
+                    set 'offset'(val) {
+                        this.setAttribute('offset',val);
+                    }get 'offset_xs'() {
+                        return Number(this.getAttribute('offset_xs'));
+                    }
+                    set 'offset_xs'(val) {
+                        this.setAttribute('offset_xs',val);
+                    }get 'offset_sm'() {
+                        return Number(this.getAttribute('offset_sm'));
+                    }
+                    set 'offset_sm'(val) {
+                        this.setAttribute('offset_sm',val);
+                    }get 'offset_md'() {
+                        return Number(this.getAttribute('offset_md'));
+                    }
+                    set 'offset_md'(val) {
+                        this.setAttribute('offset_md',val);
+                    }get 'offset_lg'() {
+                        return Number(this.getAttribute('offset_lg'));
+                    }
+                    set 'offset_lg'(val) {
+                        this.setAttribute('offset_lg',val);
+                    }get 'offset_xl'() {
+                        return Number(this.getAttribute('offset_xl'));
+                    }
+                    set 'offset_xl'(val) {
+                        this.setAttribute('offset_xl',val);
+                    }get 'offset_right'() {
+                        return Number(this.getAttribute('offset_right'));
+                    }
+                    set 'offset_right'(val) {
+                        this.setAttribute('offset_right',val);
+                    }get 'offset_right_xs'() {
+                        return Number(this.getAttribute('offset_right_xs'));
+                    }
+                    set 'offset_right_xs'(val) {
+                        this.setAttribute('offset_right_xs',val);
+                    }get 'offset_right_sm'() {
+                        return Number(this.getAttribute('offset_right_sm'));
+                    }
+                    set 'offset_right_sm'(val) {
+                        this.setAttribute('offset_right_sm',val);
+                    }get 'offset_right_md'() {
+                        return Number(this.getAttribute('offset_right_md'));
+                    }
+                    set 'offset_right_md'(val) {
+                        this.setAttribute('offset_right_md',val);
+                    }get 'offset_right_lg'() {
+                        return Number(this.getAttribute('offset_right_lg'));
+                    }
+                    set 'offset_right_lg'(val) {
+                        this.setAttribute('offset_right_lg',val);
+                    }get 'offset_right_xl'() {
+                        return Number(this.getAttribute('offset_right_xl'));
+                    }
+                    set 'offset_right_xl'(val) {
+                        this.setAttribute('offset_right_xl',val);
+                    }get 'nobreak'() {
+                        return this.hasAttribute('nobreak');
+                    }
+                    set 'nobreak'(val) {
+                        if(val === 1 || val === 'true' || val === ''){
+                            val = true;
+                        }
+                        else if(val === 0 || val === 'false' || val === null || val === undefined){
+                            val = false;
+                        }
+                        if(val !== false && val !== true){
+                            console.error("error setting boolean in nobreak");
+                            val = false;
+                        }
+                        if (val) {
+                            this.setAttribute('nobreak', 'true');
+                        } else{
+                            this.removeAttribute('nobreak');
+                        }
+                    }get 'center'() {
+                        return this.hasAttribute('center');
+                    }
+                    set 'center'(val) {
+                        if(val === 1 || val === 'true' || val === ''){
+                            val = true;
+                        }
+                        else if(val === 0 || val === 'false' || val === null || val === undefined){
+                            val = false;
+                        }
+                        if(val !== false && val !== true){
+                            console.error("error setting boolean in center");
+                            val = false;
+                        }
+                        if (val) {
+                            this.setAttribute('center', 'true');
+                        } else{
+                            this.removeAttribute('center');
+                        }
+                    }    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(`:host{display:flex;padding:0 10px;width:100%;margin-left:0;margin-right:0;font-size:16px}:host([nobreak]){white-space:nowrap;text-overflow:ellipsis;overflow:hidden}:host([center]){text-align:center}:host([size="1"]){width:8.3333333333%;display:inline-block}:host([offset="1"]){margin-left:8.3333333333%}:host([offset-right="1"]){margin-right:8.3333333333%}:host([size="2"]){width:16.6666666667%;display:inline-block}:host([offset="2"]){margin-left:16.6666666667%}:host([offset-right="2"]){margin-right:16.6666666667%}:host([size="3"]){width:25%;display:inline-block}:host([offset="3"]){margin-left:25%}:host([offset-right="3"]){margin-right:25%}:host([size="4"]){width:33.3333333333%;display:inline-block}:host([offset="4"]){margin-left:33.3333333333%}:host([offset-right="4"]){margin-right:33.3333333333%}:host([size="5"]){width:41.6666666667%;display:inline-block}:host([offset="5"]){margin-left:41.6666666667%}:host([offset-right="5"]){margin-right:41.6666666667%}:host([size="6"]){width:50%;display:inline-block}:host([offset="6"]){margin-left:50%}:host([offset-right="6"]){margin-right:50%}:host([size="7"]){width:58.3333333333%;display:inline-block}:host([offset="7"]){margin-left:58.3333333333%}:host([offset-right="7"]){margin-right:58.3333333333%}:host([size="8"]){width:66.6666666667%;display:inline-block}:host([offset="8"]){margin-left:66.6666666667%}:host([offset-right="8"]){margin-right:66.6666666667%}:host([size="9"]){width:75%;display:inline-block}:host([offset="9"]){margin-left:75%}:host([offset-right="9"]){margin-right:75%}:host([size="10"]){width:83.3333333333%;display:inline-block}:host([offset="10"]){margin-left:83.3333333333%}:host([offset-right="10"]){margin-right:83.3333333333%}:host([size="11"]){width:91.6666666667%;display:inline-block}:host([offset="11"]){margin-left:91.6666666667%}:host([offset-right="11"]){margin-right:91.6666666667%}:host([size="12"]){width:100%;display:inline-block}:host([offset="12"]){margin-left:100%}:host([offset-right="12"]){margin-right:100%}`);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<slot></slot>`,
+            slots: {
+                'default':`<slot></slot>`
+            },
+            blocks: {
+                'default':`<slot></slot>`
+            }
+        }
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvCol", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvCol";
+    }
+    __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('nobreak')) { this.attributeChangedCallback('nobreak', false, false); }if(!this.hasAttribute('center')) { this.attributeChangedCallback('center', false, false); } }
+    __listBoolProps() { return ["nobreak","center"].concat(super.__listBoolProps()).filter((v, i, a) => a.indexOf(v) === i); }
+     postCreation(){}}
+window.customElements.define('av-col', AvCol);
+class AvCode extends WebComponent {
+    static get observedAttributes() {return ["language"].concat(super.observedAttributes).filter((v, i, a) => a.indexOf(v) === i);}
+    static primsCSS = "";static isLoading = false;static waitingLoad = [];    get 'language'() {
+                        return this.getAttribute('language');
+                    }
+                    set 'language'(val) {
+                        this.setAttribute('language',val);
+                    }    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(`:host{display:flex}:host pre{border-radius:5px;width:100%}:host .hided{display:none}`);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<pre>    <code _id="avcode_0">
+    </code>
+</pre>
+<div class="hided">
+    <slot></slot>
+</div>`,
+            slots: {
+                'default':`<slot></slot>`
+            },
+            blocks: {
+                'default':`<pre>    <code _id="avcode_0">
+    </code>
+</pre>
+<div class="hided">
+    <slot></slot>
+</div>`
+            }
+        }
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvCode", 1])
+        return temp;
+    }
+    __mapSelectedElement() { super.__mapSelectedElement(); this.codeEl = this.shadowRoot.querySelector('[_id="avcode_0"]');}
+    __registerOnChange() { super.__registerOnChange(); this.__onChangeFct['language'] = []this.__onChangeFct['language'].push((path) => {((target) => {    if (window.Prism) {        if (!window.Prism.languages.hasOwnProperty(target.language)) {            target.language = 'plain';        }    }})(this);if("language".startsWith(path)){
+										for(var i = 0;i<this._components['avcode_0'].length;i++){
+											this._components['avcode_0'][i].setAttribute("class", "language-"+this.language+"");
+										}
+									}}) }
+    getClassName() {
+        return "AvCode";
+    }
+    __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('language')){ this['language'] = 'plain'; } }
+    __upgradeAttributes() { super.__upgradeAttributes(); this.__upgradeProperty('language'); }
+    static async  loadScript(src){return new Promise((resolve, reject) => {    let script = document.createElement('script');    script.setAttribute('src', src);    document.head.appendChild(script);    script.addEventListener("load", () => {        resolve();    });    script.addEventListener("error", (ev) => {        reject();    });});}static async  loadingPrism(){if (!AvCode.isLoading) {    AvCode.isLoading = true;    await AvCode.loadScript("/libs/prism.js");    await AvCode.loadScript("/libs/prism-normalize-whitespace.min.js");    AvCode.primsCSS = await(await fetch("/libs/prism_vscode_theme.css")).text();    AvCode.releaseAwaitFct();    AvCode.isLoading = false;}else {    await AvCode.awaitFct();}}static  releaseAwaitFct(){for (let waiting of AvCode.waitingLoad) {    waiting();}AvCode.waitingLoad = [];}static  awaitFct(){return new Promise((resolve) => {    AvCode.waitingLoad.push(() => {        resolve('');    });});}async  loadFiles(){await AvCode.loadingPrism();this.init();} init(){if (!window.Prism.languages.hasOwnProperty(this.language)) {    this.language = 'plain';}this.codeEl.innerHTML = this.innerHTML.trim().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");this.innerHTML = "";let style = this.shadowRoot.querySelector("style");style.innerHTML = style.innerHTML.trim() + AvCode.primsCSS;window.Prism.highlightElement(this.codeEl);} postCreation(){if (!window.Prism) {    this.loadFiles();}else {    this.init();}}}
+window.customElements.define('av-code', AvCode);
+class AvImg extends WebComponent {
+    static get observedAttributes() {return ["src", "mode"].concat(super.observedAttributes).filter((v, i, a) => a.indexOf(v) === i);}
+    get 'src'() {
+                        return this.getAttribute('src');
+                    }
+                    set 'src'(val) {
+                        this.setAttribute('src',val);
+                    }get 'display_bigger'() {
+                        return this.hasAttribute('display_bigger');
+                    }
+                    set 'display_bigger'(val) {
+                        if(val === 1 || val === 'true' || val === ''){
+                            val = true;
+                        }
+                        else if(val === 0 || val === 'false' || val === null || val === undefined){
+                            val = false;
+                        }
+                        if(val !== false && val !== true){
+                            console.error("error setting boolean in display_bigger");
+                            val = false;
+                        }
+                        if (val) {
+                            this.setAttribute('display_bigger', 'true');
+                        } else{
+                            this.removeAttribute('display_bigger');
+                        }
+                    }get 'mode'() {
+                        return this.getAttribute('mode');
+                    }
+                    set 'mode'(val) {
+                        this.setAttribute('mode',val);
+                    }    __prepareVariables() { super.__prepareVariables(); if(this.bigImg === undefined) {this.bigImg = "undefined";}if(this.ratio === undefined) {this.ratio = 1;}if(this._maxCalculateSize === undefined) {this._maxCalculateSize = 10;}if(this._isCalculing === undefined) {this._isCalculing = false;}if(this.checkClose === undefined) {this.checkClose = "(e:Event) => {\r\n        if(e instanceof KeyboardEvent) {\r\n            if(e.key == 'Escape') {\r\n                this.close();\r\n            }\r\n        }\r\n        else {\r\n            let realTargetEl = e.realTarget();\r\n            if(realTargetEl != this.bigImg) {\r\n                this.close();\r\n            }\r\n        }\r\n\r\n    }";} }
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(`:host{--internal-img-color: var(--img-color);--internal-img-stroke-color: var(--img-stroke-color, var(--internal-img-color));--internal-img-fill-color: var(--img-fill-color, var(--internal-img-color));--internal-img-color-transition: var(--img-color-transition, none)}:host{display:inline-block;overflow:hidden;font-size:0;height:100%}:host *{box-sizing:border-box}:host img{opacity:0;transition:filter .3s linear}:host .svg{display:none;height:100%;width:100%}:host .svg svg{height:100%;width:100%}:host([src$=".svg"]) img{display:none}:host([src$=".svg"]) .svg{display:flex}:host([src$=".svg"]) .svg svg{transition:var(--internal-img-color-transition);stroke:var(--internal-img-stroke-color);fill:var(--internal-img-fill-color)}:host([display_bigger=true]) img{cursor:pointer}:host([display_bigger=true]) img:hover{filter:brightness(50%)}`);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<img _id="avimg_0">
+<div class="svg" _id="avimg_1"></div>`,
+            slots: {
+            },
+            blocks: {
+                'default':`<img _id="avimg_0">
+<div class="svg" _id="avimg_1"></div>`
+            }
+        }
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvImg", 2])
+        return temp;
+    }
+    __mapSelectedElement() { super.__mapSelectedElement(); this.imgEl = this.shadowRoot.querySelector('[_id="avimg_0"]');this.svgEl = this.shadowRoot.querySelector('[_id="avimg_1"]');}
+    __registerOnChange() { super.__registerOnChange(); this.__onChangeFct['src'] = []this.__onChangeFct['src'].push((path) => {((target) => {    if (target.src.endsWith(".svg")) {        AvRessourceManager.get(target.src).then((svgContent) => {            target.svgEl.innerHTML = svgContent;            target.calculateSize();        });    }    else if (target.src != "") {        AvRessourceManager.get(target.src).then((base64) => {            target.imgEl.setAttribute("src", base64);            target.calculateSize();        });    }})(this);})this.__onChangeFct['mode'] = []this.__onChangeFct['mode'].push((path) => {((target) => {    if (target.src != "") {        target.calculateSize();    }})(this);}) }
+    getClassName() {
+        return "AvImg";
+    }
+    __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('display_bigger')) { this.attributeChangedCallback('display_bigger', false, false); }if(!this.hasAttribute('mode')){ this['mode'] = 'contains'; } }
+    __upgradeAttributes() { super.__upgradeAttributes(); this.__upgradeProperty('src');this.__upgradeProperty('mode'); }
+    __listBoolProps() { return ["display_bigger"].concat(super.__listBoolProps()).filter((v, i, a) => a.indexOf(v) === i); }
+     close(){this.bigImg.style.opacity = '0';document.body.removeEventListener('click', this.checkClose);setTimeout(() => {    this.bigImg.remove();}, 710);} calculateSize(attempt){if (this._isCalculing) {    return;}if (this.src == "") {    return;}this._isCalculing = true;if (getComputedStyle(this).display == 'none') {    return;}if (attempt == this._maxCalculateSize) {    this._isCalculing = false;    return;}let element = this.imgEl;if (this.src.endsWith(".svg")) {    element = this.svgEl;}this.style.width = '';this.style.height = '';element.style.width = '';element.style.height = '';if (element.offsetWidth == 0 && element.offsetHeight == 0) {    setTimeout(() => {        this._isCalculing = false;        this.calculateSize(attempt + 1);    }, 100);    return;}let style = getComputedStyle(this);let addedY = Number(style.paddingTop.replace("px", "")) + Number(style.paddingBottom.replace("px", "")) + Number(style.borderTopWidth.replace("px", "")) + Number(style.borderBottomWidth.replace("px", ""));let addedX = Number(style.paddingLeft.replace("px", "")) + Number(style.paddingRight.replace("px", "")) + Number(style.borderLeftWidth.replace("px", "")) + Number(style.borderRightWidth.replace("px", ""));let availableHeight = this.offsetHeight - addedY;let availableWidth = this.offsetWidth - addedX;let sameWidth = (element.offsetWidth == availableWidth);let sameHeight = (element.offsetHeight == availableHeight);this.ratio = element.offsetWidth / element.offsetHeight;if (sameWidth && !sameHeight) {    element.style.width = (availableHeight * this.ratio) + 'px';    element.style.height = availableHeight + 'px';}else if (!sameWidth && sameHeight) {    element.style.width = availableWidth + 'px';    element.style.height = (availableWidth / this.ratio) + 'px';}else if (!sameWidth && !sameHeight) {    if (this.mode == "stretch") {        element.style.width = '100%';        element.style.height = '100%';    }    else if (this.mode == "contains") {        let newWidth = (availableHeight * this.ratio);        if (newWidth <= availableWidth) {            element.style.width = newWidth + 'px';            element.style.height = availableHeight + 'px';        }        else {            element.style.width = availableWidth + 'px';            element.style.height = (availableWidth / this.ratio) + 'px';        }    }    else if (this.mode == "cover") {        let newWidth = (availableHeight * this.ratio);        if (newWidth >= availableWidth) {            element.style.width = newWidth + 'px';            element.style.height = availableHeight + 'px';        }        else {            element.style.width = availableWidth + 'px';            element.style.height = (availableWidth / this.ratio) + 'px';        }    }}let diffTop = (this.offsetHeight - element.offsetHeight - addedY) / 2;let diffLeft = (this.offsetWidth - element.offsetWidth - addedX) / 2;element.style.transform = "translate(" + diffLeft + "px, " + diffTop + "px)";element.style.opacity = '1';this._isCalculing = false;} showImg(e){if (this.display_bigger) {    let target = e.currentTarget;    let position = target.getPositionOnScreen();    let div = new HTMLDivElement();    div.style.position = 'absolute';    div.style.top = position.y + 'px';    div.style.left = position.x + 'px';    div.style.width = target.offsetWidth + 'px';    div.style.height = target.offsetHeight + 'px';    div.style.backgroundImage = 'url(' + this.src + ')';    div.style.backgroundSize = 'contain';    div.style.backgroundRepeat = 'no-repeat';    div.style.zIndex = '502';    div.style.transition = 'all 0.7s cubic-bezier(0.65, 0, 0.15, 1)';    div.style.backgroundPosition = 'center';    div.style.backgroundColor = 'black';    this.bigImg = div;    document.body.appendChild(div);    setTimeout(() => {        div.style.top = '50px';        div.style.left = '50px';        div.style.width = 'calc(100% - 100px)';        div.style.height = 'calc(100% - 100px)';        document.body.addEventListener('click', this.checkClose);        document.body.addEventListener('keydown', this.checkClose);    }, 100);}} postCreation(){this.addEventListener("click", (e) => { this.showImg(e); });new ResizeObserver(() => {    this.calculateSize();}).observe(this);}}
+window.customElements.define('av-img', AvImg);
+class AvButton extends WebComponent {
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(`:host{background-color:var(--primary-color);color:var(--secondary-color);border-radius:900px;padding:10px 30px;cursor:pointer;box-shadow:0 0 2px var(--darker);transition:filter .4s var(--bezier-curve)}:host(:hover){filter:brightness(0.9)}`);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<slot></slot>`,
+            slots: {
+                'default':`<slot></slot>`
+            },
+            blocks: {
+                'default':`<slot></slot>`
+            }
+        }
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvButton", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvButton";
+    }
+}
+window.customElements.define('av-button', AvButton);
+class AvExample extends AvGenericPage {
     __getStyle() {
         let arrStyle = super.__getStyle();
         arrStyle.push(``);
@@ -9913,75 +10785,3 @@ example`
     }
      defineTitle(){return "Aventus - Examples";}}
 window.customElements.define('av-example', AvExample);
-class AvApp extends AvRouter {
-    __getStyle() {
-        let arrStyle = super.__getStyle();
-        arrStyle.push(`:host{height:100%;width:100%}:host av-scrollable{height:calc(100% - 75px);width:100%}`);
-        return arrStyle;
-    }
-    __getHtml() {
-        let parentInfo = super.__getHtml();
-        let info = {
-            html: `<av-navbar>
-</av-navbar>`,
-            slots: {
-            },
-            blocks: {
-                'default':`<av-navbar>
-</av-navbar>`
-            }
-        }
-                let newHtml = parentInfo.html
-                for (let blockName in info.blocks) {
-                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
-                        throw "can't found slot with name " + blockName;
-                    }
-                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
-                }
-                info.html = newHtml;
-        return info;
-    }
-    __getMaxId() {
-        let temp = super.__getMaxId();
-        temp.push(["AvApp", 0])
-        return temp;
-    }
-    getClassName() {
-        return "AvApp";
-    }
-     defineRoutes(){return {    "/": AvHome,    "/example": AvExample};}}
-window.customElements.define('av-app', AvApp);
-class AvNavbar extends WebComponent {
-    __getStyle() {
-        let arrStyle = super.__getStyle();
-        arrStyle.push(`:host{height:50px;width:100%;background-color:var(--primary-color);box-shadow:0 5px 5px #c8c8c8}:host .routing{display:flex;height:100%}:host .routing av-router-link{margin:0 8px;padding:0 8px;display:flex;height:100%;align-items:center;color:#fff;transition:background .4s var(--bezier-curve);cursor:pointer}:host .routing av-router-link:hover{background-color:var(--lighter)}:host .routing av-router-link.active{background-color:var(--lighter)}`);
-        return arrStyle;
-    }
-    __getHtml() {
-        let parentInfo = super.__getHtml();
-        let info = {
-            html: `<div class="routing">
-    <av-router-link state="/">Home</av-router-link>
-    <av-router-link state="/example">Example</av-router-link>
-</div>`,
-            slots: {
-            },
-            blocks: {
-                'default':`<div class="routing">
-    <av-router-link state="/">Home</av-router-link>
-    <av-router-link state="/example">Example</av-router-link>
-</div>`
-            }
-        }
-        return info;
-    }
-    __getMaxId() {
-        let temp = super.__getMaxId();
-        temp.push(["AvNavbar", 0])
-        return temp;
-    }
-    getClassName() {
-        return "AvNavbar";
-    }
-}
-window.customElements.define('av-navbar', AvNavbar);

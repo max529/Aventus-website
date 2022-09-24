@@ -1,7 +1,4 @@
-import { AvGenericPage } from "../genericPage/genericPage.wcl.avt";
-
-export class AvExample extends AvGenericPage implements DefaultComponent {
-    
+export abstract class AvGenericPage extends AvPage implements DefaultComponent {
 
 	//#region static
 
@@ -29,9 +26,7 @@ export class AvExample extends AvGenericPage implements DefaultComponent {
 
 
 	//#region methods
-	defineTitle(): string {
-        return "Aventus - Examples";
-    }
+
 	//#endregion
 	
 }

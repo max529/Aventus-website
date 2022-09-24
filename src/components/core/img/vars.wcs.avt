@@ -1,0 +1,7 @@
+:host {
+    --internal-img-color: var(--img-color);
+    --internal-img-stroke-color: var(--img-stroke-color, var(--internal-img-color));
+    --internal-img-fill-color: var(--img-fill-color, var(--internal-img-color));
+
+    --internal-img-color-transition: var(--img-color-transition, none);
+}
