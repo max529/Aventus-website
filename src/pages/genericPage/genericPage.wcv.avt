@@ -1,5 +1,5 @@
 <div class="content">
-    <av-scrollable>
+    <av-scrollable @element="scrollElement">
         <slot></slot>
     </av-scrollable>
 </div>

@@ -87,7 +87,7 @@ export class AvCode extends WebComponent implements DefaultComponent {
         if(!window.Prism.languages.hasOwnProperty(this.language)) {
             this.language = 'plain';
         }
-        this.codeEl.innerHTML = this.innerHTML.trim().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        this.codeEl.innerHTML = this.innerHTML.trim().replace(/</g, "&lt;").replace(/>/g, "&gt;");
         this.innerHTML = "";
         let style = this.shadowRoot.querySelector("style");
         style.innerHTML = style.innerHTML.trim() + AvCode.primsCSS;

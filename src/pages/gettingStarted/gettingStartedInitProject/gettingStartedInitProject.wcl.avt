@@ -1,0 +1,41 @@
+import { AvGenericPage } from "../../genericPage/genericPage.wcl.avt";
+
+export class AvGettingStartedInitProject extends AvGenericPage implements DefaultComponent {
+
+	//#region static
+
+	//#endregion
+
+
+	//#region props
+
+	//#endregion
+
+
+	//#region variables
+
+	//#endregion
+
+
+	//#region states
+
+	//#endregion
+			
+			
+	//#region constructor
+
+	//#endregion
+
+
+	//#region methods
+	defineTitle(): string {
+        return "Aventus - Init project";
+    }
+	protected override postCreation(): void {
+		setTimeout(() => {
+			this.scrollElement.scrollToPosition(0, 99999);
+		}, 100)
+	}
+	//#endregion
+	
+}

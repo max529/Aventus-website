@@ -14,9 +14,7 @@
         </li>
     </ul>
 </section>
-<av-separation>
-
-</av-separation>
+<av-separation></av-separation>
 <section>
     <h2>The concept</h2>
     <p>Aventus is a framework that allow you to create complex user interfaces by splitting common parts of a
@@ -34,12 +32,20 @@
 <section>
     <h2>Understand files</h2>
     <p>
-        First of all, you need to understand all files you can use inside Aventus.
+        First of all, you need to understand all files you can use inside Aventus. This is just a summary, a better
+        explanation will be provided later
     </p>
     <div class="table">
         <av-row class="header">
             <av-col size_sm="4" center>Extension</av-col>
             <av-col size_sm="8" center>Role</av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center>aventus.conf.json</av-col>
+            <av-col size_sm="8">
+                <div class="title">Configuration</div>
+                <div class="description">Inside this file you can find configuration for your project</div>
+            </av-col>
         </av-row>
         <av-row>
             <av-col size_sm="4" center>*.wcl.avt</av-col>
@@ -101,4 +107,21 @@
             </av-col>
         </av-row>
     </div>
+</section>
+<av-separation></av-separation>
+<section>
+    <av-row class="navigation">
+        <av-col class="previous" offset_md="2" size_md="4">
+            <av-router-link state="/">
+                <av-img src="/img/angle-left.svg"></av-img>
+                <span>Previous</span>
+            </av-router-link>
+        </av-col>
+        <av-col class="next" size_md="4">
+            <av-router-link state="/introduction/init">
+                <span>Next</span>
+                <av-img src="/img/angle-right.svg"></av-img>
+            </av-router-link>
+        </av-col>
+    </av-row>
 </section>

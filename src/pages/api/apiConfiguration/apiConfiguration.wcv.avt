@@ -1,0 +1,244 @@
+<section>
+    <h1>Configuration</h1>
+    <p>The configuration file for all your aventus project is "aventus.conf.json". You can find below a full configuration file</p>
+    <av-code language="json">
+{
+    "identifier": "Av",
+    "components": {
+        "disableIdentifier": false
+    },
+    "data": {
+        "disableIdentifier": false
+    },
+    "libs": {
+        "disableIdentifier": false
+    },
+    "ram": {
+        "disableIdentifier": false
+    },
+    "build": [
+        {
+            "name": "example",
+            "version": "0.0.1",
+            "inputPath": [
+                "./src/*"
+            ],
+            "outputFile": "./dist/example.js",
+            "generateDefinition": true,
+            "includeBase": true,
+            "compileOnSave": true,
+            "include": [
+                {
+                    "libraryName": "MyLib",
+                    "definition": "./import/myLib.def.avt",
+                    "src": "'./import.myLib.js"
+                }
+            ]
+        }
+    ],
+    "static": [
+        {
+            "name": "static_files",
+            "inputPath": "./src/static",
+            "outputPath": "./dist/"
+        }
+    ]
+}
+    </av-code>
+    <div class="table table-row">
+        <av-row class="header">
+            <av-col size="3" center>Key</av-col>
+            <av-col size="2" center>Mandatory</av-col>
+            <av-col size="7" center>Meaning</av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">identifier</av-col>
+            <av-col size="2" center>True</av-col>
+            <av-col size="7">
+                This is the identifier used to prefix all your classes. It allows you to keep consistency inside your project.
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">components</av-col>
+            <av-col size="2" center>False</av-col>
+            <av-col size="7">
+                In this section you can define special configuration for your web components
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;disableIdentifier</av-col>
+            <av-col size="2" center>False</av-col>
+            <av-col size="7">
+                Set it to true if you want to disable identifier check for all your web components
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">data</av-col>
+            <av-col size="2" center>False</av-col>
+            <av-col size="7">
+                In this section you can define special configuration for your web data
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;disableIdentifier</av-col>
+            <av-col size="2" center>False</av-col>
+            <av-col size="7">
+                Set it to true if you want to disable identifier check for all your web data
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">libs</av-col>
+            <av-col size="2" center>False</av-col>
+            <av-col size="7">
+                In this section you can define special configuration for your web libs
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;disableIdentifier</av-col>
+            <av-col size="2" center>False</av-col>
+            <av-col size="7">
+                Set it to true if you want to disable identifier check for all your web libs
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">ram</av-col>
+            <av-col size="2" center>False</av-col>
+            <av-col size="7">
+                In this section you can define special configuration for your web ram
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;disableIdentifier</av-col>
+            <av-col size="2" center>False</av-col>
+            <av-col size="7">
+                Set it to true if you want to disable identifier check for all your web ram
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">build</av-col>
+            <av-col size="2" center>True</av-col>
+            <av-col size="7">
+                In this section you can define builds needed. A build = one output file
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;name</av-col>
+            <av-col size="2" center>True</av-col>
+            <av-col size="7">
+                The name of the build
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;version</av-col>
+            <av-col size="2" center>True</av-col>
+            <av-col size="7">
+                The version of your build
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;inputPath</av-col>
+            <av-col size="2" center>True</av-col>
+            <av-col size="7">
+                An array of all paths to look for Avt files to compile
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;outputFile</av-col>
+            <av-col size="2" center>True</av-col>
+            <av-col size="7">
+                The location and the name of your output file
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;generateDefinition</av-col>
+            <av-col size="2" center>False</av-col>
+            <av-col size="7">
+                Set it to true if you need the definition file as output. The definition file is used in other project to import your lib and use it
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;includeBase</av-col>
+            <av-col size="2" center>False</av-col>
+            <av-col size="7">
+                Set it to true if you need to include Aventus core JS inside this build. You need import aventus only once in your final rendering
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;compileOnSave</av-col>
+            <av-col size="2" center>False</av-col>
+            <av-col size="7">
+                Set it to false if you need to disable compilation when you save your file
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;include</av-col>
+            <av-col size="2" center>False</av-col>
+            <av-col size="7">
+                An array where you can import other aventus library
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;&nbsp;&nbsp;definition</av-col>
+            <av-col size="2" center>True</av-col>
+            <av-col size="7">
+                The path / url to the *.def.avt file
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;&nbsp;&nbsp;src</av-col>
+            <av-col size="2" center>False</av-col>
+            <av-col size="7">
+                The path / url to the js file of the library. If defines, it ll import this js build in your final build
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;&nbsp;&nbsp;libraryName</av-col>
+            <av-col size="2" center>False</av-col>
+            <av-col size="7">
+                ???
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">static</av-col>
+            <av-col size="2" center>False</av-col>
+            <av-col size="7">
+                In this section you can define static file to copy. Scss file are compiled in css
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;name</av-col>
+            <av-col size="2" center>True</av-col>
+            <av-col size="7">
+                The name of the static part
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;exportOnChange</av-col>
+            <av-col size="2" center>False</av-col>
+            <av-col size="7">
+                Set it to false if you want to disable auto exporting
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;inputPath</av-col>
+            <av-col size="2" center>True</av-col>
+            <av-col size="7">
+                The path to the input static folder
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;outputPath</av-col>
+            <av-col size="2" center>True</av-col>
+            <av-col size="7">
+                The path to the output static folder
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;colorsMap</av-col>
+            <av-col size="2" center>False</av-col>
+            <av-col size="7">
+                TColor to map when transpile svg
+            </av-col>
+        </av-row>
+    </div>
+</section>

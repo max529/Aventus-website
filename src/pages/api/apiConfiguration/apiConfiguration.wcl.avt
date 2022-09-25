@@ -1,0 +1,37 @@
+import { AvGenericPage } from "../../genericPage/genericPage.wcl.avt";
+
+export class AvApiConfiguration extends AvGenericPage implements DefaultComponent {
+
+	//#region static
+
+	//#endregion
+
+
+	//#region props
+
+	//#endregion
+
+
+	//#region variables
+
+	//#endregion
+
+
+	//#region states
+
+	//#endregion
+			
+			
+	//#region constructor
+
+	//#endregion
+
+
+	//#region methods
+    defineTitle(): string {
+        return "Aventus - API Configuration";
+    }
+
+	//#endregion
+	
+}

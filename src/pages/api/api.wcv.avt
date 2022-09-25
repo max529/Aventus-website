@@ -1,0 +1,11 @@
+<section>
+    <h1>API</h1>
+    <p>In the part you can find informations about all parts</p>
+    <ul>
+        <li>Configuration</li>
+        <li>WebComponent</li>
+        <li>Data</li>
+        <li>RAM</li>
+        <li>WebScoket</li>
+    </ul>
+</section>

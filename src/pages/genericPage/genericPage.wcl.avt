@@ -11,7 +11,7 @@ export abstract class AvGenericPage extends AvPage implements DefaultComponent {
 
 
 	//#region variables
-
+	public scrollElement:AvScrollable;
 	//#endregion
 
 

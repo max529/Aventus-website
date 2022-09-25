@@ -1,0 +1,116 @@
+<section>
+    <h1>Init new Aventus project</h1>
+    <p>In your file explorer create a new folder and open it with vscode. <br>For this tutorial the folder is called
+        <i>aventus_todo</i></p>
+    <p>You can right click inside the explorer part and click on <b>Aventus : Create...</b></p>
+    <av-row>
+        <av-col size="12" center>
+            <av-img src="/img/gettingStarted/init_right_click.PNG"></av-img>
+        </av-col>
+    </av-row>
+    <p>A dropdown appears. You must select the option : <b>Init</b></p>
+    <av-row>
+        <av-col size="12" center>
+            <av-img src="/img/gettingStarted/init_select_create.PNG"></av-img>
+        </av-col>
+    </av-row>
+    <p>Then you must enter the name for your project, by default the name used is the folder name</p>
+    <av-row>
+        <av-col size="12" center>
+            <av-img src="/img/gettingStarted/init_create_name.PNG"></av-img>
+        </av-col>
+    </av-row>
+    <p>The extension will create for you the configuration file and the default structure. Then the config file is displayed</p>
+</section>
+<av-separation></av-separation>
+<section>
+    <h2>Definition of configuration file</h2>
+    <p>The default configuration file. An explanation of each part of this JSON is provided below</p>
+    <av-code language="json">
+{
+    "identifier": "Av",
+    "build": [
+        {
+            "name": "aventus_todo",
+            "version": "0.0.1",
+            "inputPath": [
+                "./src/*"
+            ],
+            "outputFile": "./dist/aventus_todo.js",
+            "generateDefinition": true,
+            "includeBase": true
+        }
+    ]
+}
+    </av-code>
+    <p>First of all, we need to define an <b>identifier</b> for our project. This <b>identifier</b> is a prefix for all you Typescript
+        classes. Futhermore, you will find it before each web component. For example if I created a button web
+        component, I can use it in my HTML like that</p>
+    <av-code language="html">
+        <av-button></av-button>
+    </av-code>
+    <p>
+        The section <b>build</b> allows you to define all Aventus input files you need to compile in a single Javascript file.
+        You must provide two meta data fields : <b>build.name</b> and <b>build.version</b>.
+        Then you can add all your input paths with the field <b>build.inputPath</b> and define the output file to generate with the field 
+        <b>build.outputFile</b>. Conventionally your source code will be inside the folder <i>src/</i> and the output will be inside the folder
+        <i>dist/</i>
+    </p>
+    <p>
+        If the field <b>generateDefinition</b> is set to true, a definition file will be generated beside your javascript output file. This is useful
+        if you want to share your code with someone else
+    </p>
+    <p>
+        The field <b>includeBase</b> configure if you want the Aventus core JS file inside this build. You need to include Aventus core JS file
+        only once on your final rendering.
+    </p>
+    <p>
+        If you need more informations about others configuration options. You can check the <av-router-link state="/api/configuration">api section.</av-router-link>
+    </p>
+</section>
+<section>
+    <h2>Transform the configuration file</h2>
+    <p>For this tutorial, we need a single page application (SPA) so we need a static index.html file as an entry point</p>
+    <ul>
+        <li>Change the field <b>generateDefinition</b> to False. We don't need a definition file because this is the final project</li>
+        <li>Create a new directory <i>static</i> inside the src/ directory</li>
+        <li>
+            <span>Inside the configuration file add the section <i>static</i> to the root</span>
+            <av-code language="json">
+"static": [
+    {
+        "name": "Static files",
+        "inputPath": "./src/static/",
+        "outputPath": "./dist/"
+    }
+]
+            </av-code>
+        </li>
+        <li>
+            <span>Create a new file <i>index.html</i> insdie the static directory</span>
+            <av-code language="html">
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta http-equiv="X-UA-Compatible" content="IE=edge"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Aventus - Todo list&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    
+&lt;/body&gt;
+&lt;/html&gt;
+            </av-code>
+        </li>
+    </ul>
+    <p>Save all files. You can check inside you dist directory and see two files : <b>aventus_todo.js</b> and <b>index.html</b></p>
+    <p>We must link the HTML and the Javascript. Inside the index.html, add this code</p>
+    <av-code language="js">
+        <script src="/aventus_todo.js"></script>
+    </av-code>
+    <p>Because of the SPA, we must create an entry point inside Aventus. Right click on the <i>src/</i> directory 
+        and click on <b>Aventus : Create...</b>. <br />
+        Select <b>Component</b> and fill the input with <i>App</i>
+    </p>
+</section>
