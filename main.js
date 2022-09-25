@@ -9941,14 +9941,14 @@ class AvGenericPage extends AvPage {
     constructor() { super(); if (this.constructor == AvGenericPage) { throw "can't instanciate an abstract class"; } }
     __getStyle() {
         let arrStyle = super.__getStyle();
-        arrStyle.push(`:host{height:100%}:host .content{height:100%;max-width:1000px;margin:0 auto}:host .content av-scrollable h1{margin-top:50px;text-align:center;display:inline-block;width:100%;color:var(--secondary-color);font-size:35px}:host .content av-scrollable h2{margin-left:0px;color:var(--secondary-color);font-size:25px}:host .content av-scrollable .table .header{font-weight:bold;border-bottom:1px solid var(--darker);padding:5px;font-size:20px}:host .content av-scrollable .table av-row{padding:10px;align-items:center}:host .content av-scrollable .table .title{font-size:18px;font-weight:600;margin-bottom:5px}:host .content av-scrollable av-router-link{color:blue;text-decoration:underline;cursor:pointer}:host .content av-scrollable>*:last-child{margin-bottom:30px}`);
+        arrStyle.push(`:host{height:100%}:host .content{height:100%;max-width:1000px;margin:0 auto}:host .content av-scrollable h1{margin-top:50px;text-align:center;display:inline-block;width:100%;color:var(--secondary-color);font-size:35px}:host .content av-scrollable h2{margin-left:0px;color:var(--secondary-color);font-size:25px}:host .content av-scrollable .table .header{font-weight:bold;border-bottom:1px solid var(--darker);padding:5px;font-size:20px}:host .content av-scrollable .table av-row{padding:10px;align-items:center}:host .content av-scrollable .table .title{font-size:18px;font-weight:600;margin-bottom:5px}:host .content av-scrollable .table.table-row av-row{border-bottom:1px solid #ddd}:host .content av-scrollable av-router-link{color:blue;text-decoration:underline;cursor:pointer}:host .content av-scrollable>*:last-child{margin-bottom:30px}:host .content av-scrollable section p{text-align:justify}:host .content av-scrollable .navigation av-img{height:40px}:host .content av-scrollable .navigation .previous{display:flex;align-items:center;justify-content:center}:host .content av-scrollable .navigation .previous av-router-link{display:flex;align-items:center;justify-content:center;cursor:pointer;color:#000;text-decoration:none}:host .content av-scrollable .navigation .previous av-router-link span{margin-left:15px}:host .content av-scrollable .navigation .next{display:flex;align-items:center;justify-content:center}:host .content av-scrollable .navigation .next av-router-link{display:flex;align-items:center;justify-content:center;cursor:pointer;color:#000;text-decoration:none}:host .content av-scrollable .navigation .next av-router-link span{margin-right:15px}`);
         return arrStyle;
     }
     __getHtml() {
         let parentInfo = super.__getHtml();
         let info = {
             html: `<div class="content">
-    <av-scrollable>
+    <av-scrollable _id="avgenericpage_0">
         <slot></slot>
     </av-scrollable>
 </div>`,
@@ -9957,7 +9957,7 @@ class AvGenericPage extends AvPage {
             },
             blocks: {
                 'default':`<div class="content">
-    <av-scrollable>
+    <av-scrollable _id="avgenericpage_0">
         <slot></slot>
     </av-scrollable>
 </div>`
@@ -9975,14 +9975,537 @@ class AvGenericPage extends AvPage {
     }
     __getMaxId() {
         let temp = super.__getMaxId();
-        temp.push(["AvGenericPage", 0])
+        temp.push(["AvGenericPage", 1])
         return temp;
     }
+    __mapSelectedElement() { super.__mapSelectedElement(); this.scrollElement = this.shadowRoot.querySelector('[_id="avgenericpage_0"]');}
     getClassName() {
         return "AvGenericPage";
     }
 }
 window.customElements.define('av-generic-page', AvGenericPage);
+class AvApiConfiguration extends AvGenericPage {
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(``);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<section>
+    <h1>Configuration</h1>
+    <p>The configuration file for all your aventus project is "aventus.conf.json". You can find below a full configuration file</p>
+    <av-code language="json">
+{
+    "identifier": "Av",
+    "components": {
+        "disableIdentifier": false
+    },
+    "data": {
+        "disableIdentifier": false
+    },
+    "libs": {
+        "disableIdentifier": false
+    },
+    "ram": {
+        "disableIdentifier": false
+    },
+    "build": [
+        {
+            "name": "example",
+            "version": "0.0.1",
+            "inputPath": [
+                "./src/*"
+            ],
+            "outputFile": "./dist/example.js",
+            "generateDefinition": true,
+            "includeBase": true,
+            "compileOnSave": true,
+            "include": [
+                {
+                    "libraryName": "MyLib",
+                    "definition": "./import/myLib.def.avt",
+                    "src": "'./import.myLib.js"
+                }
+            ]
+        }
+    ],
+    "static": [
+        {
+            "name": "static_files",
+            "inputPath": "./src/static",
+            "outputPath": "./dist/"
+        }
+    ]
+}
+    </av-code>
+    <div class="table table-row">
+        <av-row class="header">
+            <av-col size="3" center="">Key</av-col>
+            <av-col size="2" center="">Mandatory</av-col>
+            <av-col size="7" center="">Meaning</av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">identifier</av-col>
+            <av-col size="2" center="">True</av-col>
+            <av-col size="7">
+                This is the identifier used to prefix all your classes. It allows you to keep consistency inside your project.
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">components</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                In this section you can define special configuration for your web components
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;disableIdentifier</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                Set it to true if you want to disable identifier check for all your web components
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">data</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                In this section you can define special configuration for your web data
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;disableIdentifier</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                Set it to true if you want to disable identifier check for all your web data
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">libs</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                In this section you can define special configuration for your web libs
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;disableIdentifier</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                Set it to true if you want to disable identifier check for all your web libs
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">ram</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                In this section you can define special configuration for your web ram
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;disableIdentifier</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                Set it to true if you want to disable identifier check for all your web ram
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">build</av-col>
+            <av-col size="2" center="">True</av-col>
+            <av-col size="7">
+                In this section you can define builds needed. A build = one output file
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;name</av-col>
+            <av-col size="2" center="">True</av-col>
+            <av-col size="7">
+                The name of the build
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;version</av-col>
+            <av-col size="2" center="">True</av-col>
+            <av-col size="7">
+                The version of your build
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;inputPath</av-col>
+            <av-col size="2" center="">True</av-col>
+            <av-col size="7">
+                An array of all paths to look for Avt files to compile
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;outputFile</av-col>
+            <av-col size="2" center="">True</av-col>
+            <av-col size="7">
+                The location and the name of your output file
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;generateDefinition</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                Set it to true if you need the definition file as output. The definition file is used in other project to import your lib and use it
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;includeBase</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                Set it to true if you need to include Aventus core JS inside this build. You need import aventus only once in your final rendering
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;compileOnSave</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                Set it to false if you need to disable compilation when you save your file
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;include</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                An array where you can import other aventus library
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;&nbsp;&nbsp;definition</av-col>
+            <av-col size="2" center="">True</av-col>
+            <av-col size="7">
+                The path / url to the *.def.avt file
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;&nbsp;&nbsp;src</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                The path / url to the js file of the library. If defines, it ll import this js build in your final build
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;&nbsp;&nbsp;libraryName</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                ???
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">static</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                In this section you can define static file to copy. Scss file are compiled in css
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;name</av-col>
+            <av-col size="2" center="">True</av-col>
+            <av-col size="7">
+                The name of the static part
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;exportOnChange</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                Set it to false if you want to disable auto exporting
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;inputPath</av-col>
+            <av-col size="2" center="">True</av-col>
+            <av-col size="7">
+                The path to the input static folder
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;outputPath</av-col>
+            <av-col size="2" center="">True</av-col>
+            <av-col size="7">
+                The path to the output static folder
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;colorsMap</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                TColor to map when transpile svg
+            </av-col>
+        </av-row>
+    </div>
+</section>`,
+            slots: {
+            },
+            blocks: {
+                'default':`<section>
+    <h1>Configuration</h1>
+    <p>The configuration file for all your aventus project is "aventus.conf.json". You can find below a full configuration file</p>
+    <av-code language="json">
+{
+    "identifier": "Av",
+    "components": {
+        "disableIdentifier": false
+    },
+    "data": {
+        "disableIdentifier": false
+    },
+    "libs": {
+        "disableIdentifier": false
+    },
+    "ram": {
+        "disableIdentifier": false
+    },
+    "build": [
+        {
+            "name": "example",
+            "version": "0.0.1",
+            "inputPath": [
+                "./src/*"
+            ],
+            "outputFile": "./dist/example.js",
+            "generateDefinition": true,
+            "includeBase": true,
+            "compileOnSave": true,
+            "include": [
+                {
+                    "libraryName": "MyLib",
+                    "definition": "./import/myLib.def.avt",
+                    "src": "'./import.myLib.js"
+                }
+            ]
+        }
+    ],
+    "static": [
+        {
+            "name": "static_files",
+            "inputPath": "./src/static",
+            "outputPath": "./dist/"
+        }
+    ]
+}
+    </av-code>
+    <div class="table table-row">
+        <av-row class="header">
+            <av-col size="3" center="">Key</av-col>
+            <av-col size="2" center="">Mandatory</av-col>
+            <av-col size="7" center="">Meaning</av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">identifier</av-col>
+            <av-col size="2" center="">True</av-col>
+            <av-col size="7">
+                This is the identifier used to prefix all your classes. It allows you to keep consistency inside your project.
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">components</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                In this section you can define special configuration for your web components
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;disableIdentifier</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                Set it to true if you want to disable identifier check for all your web components
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">data</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                In this section you can define special configuration for your web data
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;disableIdentifier</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                Set it to true if you want to disable identifier check for all your web data
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">libs</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                In this section you can define special configuration for your web libs
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;disableIdentifier</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                Set it to true if you want to disable identifier check for all your web libs
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">ram</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                In this section you can define special configuration for your web ram
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;disableIdentifier</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                Set it to true if you want to disable identifier check for all your web ram
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">build</av-col>
+            <av-col size="2" center="">True</av-col>
+            <av-col size="7">
+                In this section you can define builds needed. A build = one output file
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;name</av-col>
+            <av-col size="2" center="">True</av-col>
+            <av-col size="7">
+                The name of the build
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;version</av-col>
+            <av-col size="2" center="">True</av-col>
+            <av-col size="7">
+                The version of your build
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;inputPath</av-col>
+            <av-col size="2" center="">True</av-col>
+            <av-col size="7">
+                An array of all paths to look for Avt files to compile
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;outputFile</av-col>
+            <av-col size="2" center="">True</av-col>
+            <av-col size="7">
+                The location and the name of your output file
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;generateDefinition</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                Set it to true if you need the definition file as output. The definition file is used in other project to import your lib and use it
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;includeBase</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                Set it to true if you need to include Aventus core JS inside this build. You need import aventus only once in your final rendering
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;compileOnSave</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                Set it to false if you need to disable compilation when you save your file
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;include</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                An array where you can import other aventus library
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;&nbsp;&nbsp;definition</av-col>
+            <av-col size="2" center="">True</av-col>
+            <av-col size="7">
+                The path / url to the *.def.avt file
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;&nbsp;&nbsp;src</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                The path / url to the js file of the library. If defines, it ll import this js build in your final build
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;&nbsp;&nbsp;libraryName</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                ???
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">static</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                In this section you can define static file to copy. Scss file are compiled in css
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;name</av-col>
+            <av-col size="2" center="">True</av-col>
+            <av-col size="7">
+                The name of the static part
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;exportOnChange</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                Set it to false if you want to disable auto exporting
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;inputPath</av-col>
+            <av-col size="2" center="">True</av-col>
+            <av-col size="7">
+                The path to the input static folder
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;outputPath</av-col>
+            <av-col size="2" center="">True</av-col>
+            <av-col size="7">
+                The path to the output static folder
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="3">&nbsp;&nbsp;colorsMap</av-col>
+            <av-col size="2" center="">False</av-col>
+            <av-col size="7">
+                TColor to map when transpile svg
+            </av-col>
+        </av-row>
+    </div>
+</section>`
+            }
+        }
+                let newHtml = parentInfo.html
+                for (let blockName in info.blocks) {
+                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
+                        throw "can't found slot with name " + blockName;
+                    }
+                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
+                }
+                info.html = newHtml;
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvApiConfiguration", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvApiConfiguration";
+    }
+     defineTitle(){return "Aventus - API Configuration";}}
+window.customElements.define('av-api-configuration', AvApiConfiguration);
 class AvInstallation extends AvGenericPage {
     __getStyle() {
         let arrStyle = super.__getStyle();
@@ -10057,6 +10580,270 @@ class AvInstallation extends AvGenericPage {
     }
      defineTitle(){return "Aventus - Installation";}}
 window.customElements.define('av-installation', AvInstallation);
+class AvGettingStartedInitProject extends AvGenericPage {
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(`:host av-img{max-width:100%}`);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<section>
+    <h1>Init new Aventus project</h1>
+    <p>In your file explorer create a new folder and open it with vscode. <br>For this tutorial the folder is called
+        <i>aventus_todo</i></p>
+    <p>You can right click inside the explorer part and click on <b>Aventus : Create...</b></p>
+    <av-row>
+        <av-col size="12" center="">
+            <av-img src="/img/gettingStarted/init_right_click.PNG"></av-img>
+        </av-col>
+    </av-row>
+    <p>A dropdown appears. You must select the option : <b>Init</b></p>
+    <av-row>
+        <av-col size="12" center="">
+            <av-img src="/img/gettingStarted/init_select_create.PNG"></av-img>
+        </av-col>
+    </av-row>
+    <p>Then you must enter the name for your project, by default the name used is the folder name</p>
+    <av-row>
+        <av-col size="12" center="">
+            <av-img src="/img/gettingStarted/init_create_name.PNG"></av-img>
+        </av-col>
+    </av-row>
+    <p>The extension will create for you the configuration file and the default structure. Then the config file is displayed</p>
+</section>
+<av-separation></av-separation>
+<section>
+    <h2>Definition of configuration file</h2>
+    <p>The default configuration file. An explanation of each part of this JSON is provided below</p>
+    <av-code language="json">
+{
+    "identifier": "Av",
+    "build": [
+        {
+            "name": "aventus_todo",
+            "version": "0.0.1",
+            "inputPath": [
+                "./src/*"
+            ],
+            "outputFile": "./dist/aventus_todo.js",
+            "generateDefinition": true,
+            "includeBase": true
+        }
+    ]
+}
+    </av-code>
+    <p>First of all, we need to define an <b>identifier</b> for our project. This <b>identifier</b> is a prefix for all you Typescript
+        classes. Futhermore, you will find it before each web component. For example if I created a button web
+        component, I can use it in my HTML like that</p>
+    <av-code language="html">
+        <av-button></av-button>
+    </av-code>
+    <p>
+        The section <b>build</b> allows you to define all Aventus input files you need to compile in a single Javascript file.
+        You must provide two meta data fields : <b>build.name</b> and <b>build.version</b>.
+        Then you can add all your input paths with the field <b>build.inputPath</b> and define the output file to generate with the field 
+        <b>build.outputFile</b>. Conventionally your source code will be inside the folder <i>src/</i> and the output will be inside the folder
+        <i>dist/</i>
+    </p>
+    <p>
+        If the field <b>generateDefinition</b> is set to true, a definition file will be generated beside your javascript output file. This is useful
+        if you want to share your code with someone else
+    </p>
+    <p>
+        The field <b>includeBase</b> configure if you want the Aventus core JS file inside this build. You need to include Aventus core JS file
+        only once on your final rendering.
+    </p>
+    <p>
+        If you need more informations about others configuration options. You can check the <av-router-link state="/api/configuration">api section.</av-router-link>
+    </p>
+</section>
+<section>
+    <h2>Transform the configuration file</h2>
+    <p>For this tutorial, we need a single page application (SPA) so we need a static index.html file as an entry point</p>
+    <ul>
+        <li>Change the field <b>generateDefinition</b> to False. We don't need a definition file because this is the final project</li>
+        <li>Create a new directory <i>static</i> inside the src/ directory</li>
+        <li>
+            <span>Inside the configuration file add the section <i>static</i> to the root</span>
+            <av-code language="json">
+"static": [
+    {
+        "name": "Static files",
+        "inputPath": "./src/static/",
+        "outputPath": "./dist/"
+    }
+]
+            </av-code>
+        </li>
+        <li>
+            <span>Create a new file <i>index.html</i> insdie the static directory</span>
+            <av-code language="html">
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta http-equiv="X-UA-Compatible" content="IE=edge"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Aventus - Todo list&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+            </av-code>
+        </li>
+    </ul>
+    <p>Save all files. You can check inside you dist directory and see two files : <b>aventus_todo.js</b> and <b>index.html</b></p>
+    <p>We must link the HTML and the Javascript. Inside the index.html, add this code</p>
+    <av-code language="js">
+        <script src="/aventus_todo.js"></script>
+    </av-code>
+    <p>Because of the SPA, we must create an entry point inside Aventus. Right click on the <i>src/</i> directory 
+        and click on <b>Aventus : Create...</b>. <br>
+        Select <b>Component</b> and fill the input with <i>App</i>
+    </p>
+</section>`,
+            slots: {
+            },
+            blocks: {
+                'default':`<section>
+    <h1>Init new Aventus project</h1>
+    <p>In your file explorer create a new folder and open it with vscode. <br>For this tutorial the folder is called
+        <i>aventus_todo</i></p>
+    <p>You can right click inside the explorer part and click on <b>Aventus : Create...</b></p>
+    <av-row>
+        <av-col size="12" center="">
+            <av-img src="/img/gettingStarted/init_right_click.PNG"></av-img>
+        </av-col>
+    </av-row>
+    <p>A dropdown appears. You must select the option : <b>Init</b></p>
+    <av-row>
+        <av-col size="12" center="">
+            <av-img src="/img/gettingStarted/init_select_create.PNG"></av-img>
+        </av-col>
+    </av-row>
+    <p>Then you must enter the name for your project, by default the name used is the folder name</p>
+    <av-row>
+        <av-col size="12" center="">
+            <av-img src="/img/gettingStarted/init_create_name.PNG"></av-img>
+        </av-col>
+    </av-row>
+    <p>The extension will create for you the configuration file and the default structure. Then the config file is displayed</p>
+</section>
+<av-separation></av-separation>
+<section>
+    <h2>Definition of configuration file</h2>
+    <p>The default configuration file. An explanation of each part of this JSON is provided below</p>
+    <av-code language="json">
+{
+    "identifier": "Av",
+    "build": [
+        {
+            "name": "aventus_todo",
+            "version": "0.0.1",
+            "inputPath": [
+                "./src/*"
+            ],
+            "outputFile": "./dist/aventus_todo.js",
+            "generateDefinition": true,
+            "includeBase": true
+        }
+    ]
+}
+    </av-code>
+    <p>First of all, we need to define an <b>identifier</b> for our project. This <b>identifier</b> is a prefix for all you Typescript
+        classes. Futhermore, you will find it before each web component. For example if I created a button web
+        component, I can use it in my HTML like that</p>
+    <av-code language="html">
+        <av-button></av-button>
+    </av-code>
+    <p>
+        The section <b>build</b> allows you to define all Aventus input files you need to compile in a single Javascript file.
+        You must provide two meta data fields : <b>build.name</b> and <b>build.version</b>.
+        Then you can add all your input paths with the field <b>build.inputPath</b> and define the output file to generate with the field 
+        <b>build.outputFile</b>. Conventionally your source code will be inside the folder <i>src/</i> and the output will be inside the folder
+        <i>dist/</i>
+    </p>
+    <p>
+        If the field <b>generateDefinition</b> is set to true, a definition file will be generated beside your javascript output file. This is useful
+        if you want to share your code with someone else
+    </p>
+    <p>
+        The field <b>includeBase</b> configure if you want the Aventus core JS file inside this build. You need to include Aventus core JS file
+        only once on your final rendering.
+    </p>
+    <p>
+        If you need more informations about others configuration options. You can check the <av-router-link state="/api/configuration">api section.</av-router-link>
+    </p>
+</section>
+<section>
+    <h2>Transform the configuration file</h2>
+    <p>For this tutorial, we need a single page application (SPA) so we need a static index.html file as an entry point</p>
+    <ul>
+        <li>Change the field <b>generateDefinition</b> to False. We don't need a definition file because this is the final project</li>
+        <li>Create a new directory <i>static</i> inside the src/ directory</li>
+        <li>
+            <span>Inside the configuration file add the section <i>static</i> to the root</span>
+            <av-code language="json">
+"static": [
+    {
+        "name": "Static files",
+        "inputPath": "./src/static/",
+        "outputPath": "./dist/"
+    }
+]
+            </av-code>
+        </li>
+        <li>
+            <span>Create a new file <i>index.html</i> insdie the static directory</span>
+            <av-code language="html">
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta http-equiv="X-UA-Compatible" content="IE=edge"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Aventus - Todo list&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+            </av-code>
+        </li>
+    </ul>
+    <p>Save all files. You can check inside you dist directory and see two files : <b>aventus_todo.js</b> and <b>index.html</b></p>
+    <p>We must link the HTML and the Javascript. Inside the index.html, add this code</p>
+    <av-code language="js">
+        <script src="/aventus_todo.js"></script>
+    </av-code>
+    <p>Because of the SPA, we must create an entry point inside Aventus. Right click on the <i>src/</i> directory 
+        and click on <b>Aventus : Create...</b>. <br>
+        Select <b>Component</b> and fill the input with <i>App</i>
+    </p>
+</section>`
+            }
+        }
+                let newHtml = parentInfo.html
+                for (let blockName in info.blocks) {
+                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
+                        throw "can't found slot with name " + blockName;
+                    }
+                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
+                }
+                info.html = newHtml;
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvGettingStartedInitProject", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvGettingStartedInitProject";
+    }
+     defineTitle(){return "Aventus - Init project";} postCreation(){setTimeout(() => {    this.scrollElement.scrollToPosition(0, 99999);}, 100);}}
+window.customElements.define('av-getting-started-init-project', AvGettingStartedInitProject);
 class AvGettingStarted extends AvGenericPage {
     __getStyle() {
         let arrStyle = super.__getStyle();
@@ -10082,8 +10869,7 @@ class AvGettingStarted extends AvGenericPage {
         </li>
     </ul>
 </section>
-<av-separation>
-</av-separation>
+<av-separation></av-separation>
 <section>
     <h2>The concept</h2>
     <p>Aventus is a framework that allow you to create complex user interfaces by splitting common parts of a
@@ -10101,12 +10887,20 @@ class AvGettingStarted extends AvGenericPage {
 <section>
     <h2>Understand files</h2>
     <p>
-        First of all, you need to understand all files you can use inside Aventus.
+        First of all, you need to understand all files you can use inside Aventus. This is just a summary, a better
+        explanation will be provided later
     </p>
     <div class="table">
         <av-row class="header">
             <av-col size_sm="4" center="">Extension</av-col>
             <av-col size_sm="8" center="">Role</av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">aventus.conf.json</av-col>
+            <av-col size_sm="8">
+                <div class="title">Configuration</div>
+                <div class="description">Inside this file you can find configuration for your project</div>
+            </av-col>
         </av-row>
         <av-row>
             <av-col size_sm="4" center="">*.wcl.avt</av-col>
@@ -10168,6 +10962,23 @@ class AvGettingStarted extends AvGenericPage {
             </av-col>
         </av-row>
     </div>
+</section>
+<av-separation></av-separation>
+<section>
+    <av-row class="navigation">
+        <av-col class="previous" offset_md="2" size_md="4">
+            <av-router-link state="/">
+                <av-img src="/img/angle-left.svg"></av-img>
+                <span>Previous</span>
+            </av-router-link>
+        </av-col>
+        <av-col class="next" size_md="4">
+            <av-router-link state="/introduction/init">
+                <span>Next</span>
+                <av-img src="/img/angle-right.svg"></av-img>
+            </av-router-link>
+        </av-col>
+    </av-row>
 </section>`,
             slots: {
             },
@@ -10188,8 +10999,7 @@ class AvGettingStarted extends AvGenericPage {
         </li>
     </ul>
 </section>
-<av-separation>
-</av-separation>
+<av-separation></av-separation>
 <section>
     <h2>The concept</h2>
     <p>Aventus is a framework that allow you to create complex user interfaces by splitting common parts of a
@@ -10207,12 +11017,20 @@ class AvGettingStarted extends AvGenericPage {
 <section>
     <h2>Understand files</h2>
     <p>
-        First of all, you need to understand all files you can use inside Aventus.
+        First of all, you need to understand all files you can use inside Aventus. This is just a summary, a better
+        explanation will be provided later
     </p>
     <div class="table">
         <av-row class="header">
             <av-col size_sm="4" center="">Extension</av-col>
             <av-col size_sm="8" center="">Role</av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">aventus.conf.json</av-col>
+            <av-col size_sm="8">
+                <div class="title">Configuration</div>
+                <div class="description">Inside this file you can find configuration for your project</div>
+            </av-col>
         </av-row>
         <av-row>
             <av-col size_sm="4" center="">*.wcl.avt</av-col>
@@ -10274,6 +11092,23 @@ class AvGettingStarted extends AvGenericPage {
             </av-col>
         </av-row>
     </div>
+</section>
+<av-separation></av-separation>
+<section>
+    <av-row class="navigation">
+        <av-col class="previous" offset_md="2" size_md="4">
+            <av-router-link state="/">
+                <av-img src="/img/angle-left.svg"></av-img>
+                <span>Previous</span>
+            </av-router-link>
+        </av-col>
+        <av-col class="next" size_md="4">
+            <av-router-link state="/introduction/init">
+                <span>Next</span>
+                <av-img src="/img/angle-right.svg"></av-img>
+            </av-router-link>
+        </av-col>
+    </av-row>
 </section>`
             }
         }
@@ -10297,24 +11132,23 @@ class AvGettingStarted extends AvGenericPage {
     }
      defineTitle(){return "Aventus - Getting started";}}
 window.customElements.define('av-getting-started', AvGettingStarted);
-class AvApp extends AvRouter {
+class AvExample extends AvGenericPage {
     __getStyle() {
         let arrStyle = super.__getStyle();
-        arrStyle.push(`:host{height:100%;width:100%;display:flex;flex-direction:column}:host .content{padding:15px 0;flex-grow:1}`);
+        arrStyle.push(``);
         return arrStyle;
     }
     __getHtml() {
         let parentInfo = super.__getHtml();
         let info = {
-            html: `<block name="before">
-    <av-navbar slot="before"></av-navbar>
-</block>`,
+            html: `<slot></slot>
+example`,
             slots: {
+                'default':`<slot></slot>`
             },
             blocks: {
-                'before':`
-    <av-navbar slot="before"></av-navbar>
-`
+                'default':`<slot></slot>
+example`
             }
         }
                 let newHtml = parentInfo.html
@@ -10329,14 +11163,14 @@ class AvApp extends AvRouter {
     }
     __getMaxId() {
         let temp = super.__getMaxId();
-        temp.push(["AvApp", 0])
+        temp.push(["AvExample", 0])
         return temp;
     }
     getClassName() {
-        return "AvApp";
+        return "AvExample";
     }
-     defineRoutes(){return {    "/": AvHome,    "/example": AvExample,    "/introduction": AvGettingStarted,    "/installation": AvInstallation,};}}
-window.customElements.define('av-app', AvApp);
+     defineTitle(){return "Aventus - Examples";}}
+window.customElements.define('av-example', AvExample);
 class AvNavbar extends WebComponent {
     __getStyle() {
         let arrStyle = super.__getStyle();
@@ -10649,7 +11483,7 @@ class AvCode extends WebComponent {
     }
     __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('language')){ this['language'] = 'plain'; } }
     __upgradeAttributes() { super.__upgradeAttributes(); this.__upgradeProperty('language'); }
-    static async  loadScript(src){return new Promise((resolve, reject) => {    let script = document.createElement('script');    script.setAttribute('src', src);    document.head.appendChild(script);    script.addEventListener("load", () => {        resolve();    });    script.addEventListener("error", (ev) => {        reject();    });});}static async  loadingPrism(){if (!AvCode.isLoading) {    AvCode.isLoading = true;    await AvCode.loadScript("/libs/prism.js");    await AvCode.loadScript("/libs/prism-normalize-whitespace.min.js");    AvCode.primsCSS = await(await fetch("/libs/prism_vscode_theme.css")).text();    AvCode.releaseAwaitFct();    AvCode.isLoading = false;}else {    await AvCode.awaitFct();}}static  releaseAwaitFct(){for (let waiting of AvCode.waitingLoad) {    waiting();}AvCode.waitingLoad = [];}static  awaitFct(){return new Promise((resolve) => {    AvCode.waitingLoad.push(() => {        resolve('');    });});}async  loadFiles(){await AvCode.loadingPrism();this.init();} init(){if (!window.Prism.languages.hasOwnProperty(this.language)) {    this.language = 'plain';}this.codeEl.innerHTML = this.innerHTML.trim().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");this.innerHTML = "";let style = this.shadowRoot.querySelector("style");style.innerHTML = style.innerHTML.trim() + AvCode.primsCSS;window.Prism.highlightElement(this.codeEl);} postCreation(){if (!window.Prism) {    this.loadFiles();}else {    this.init();}}}
+    static async  loadScript(src){return new Promise((resolve, reject) => {    let script = document.createElement('script');    script.setAttribute('src', src);    document.head.appendChild(script);    script.addEventListener("load", () => {        resolve();    });    script.addEventListener("error", (ev) => {        reject();    });});}static async  loadingPrism(){if (!AvCode.isLoading) {    AvCode.isLoading = true;    await AvCode.loadScript("/libs/prism.js");    await AvCode.loadScript("/libs/prism-normalize-whitespace.min.js");    AvCode.primsCSS = await(await fetch("/libs/prism_vscode_theme.css")).text();    AvCode.releaseAwaitFct();    AvCode.isLoading = false;}else {    await AvCode.awaitFct();}}static  releaseAwaitFct(){for (let waiting of AvCode.waitingLoad) {    waiting();}AvCode.waitingLoad = [];}static  awaitFct(){return new Promise((resolve) => {    AvCode.waitingLoad.push(() => {        resolve('');    });});}async  loadFiles(){await AvCode.loadingPrism();this.init();} init(){if (!window.Prism.languages.hasOwnProperty(this.language)) {    this.language = 'plain';}this.codeEl.innerHTML = this.innerHTML.trim().replace(/</g, "&lt;").replace(/>/g, "&gt;");this.innerHTML = "";let style = this.shadowRoot.querySelector("style");style.innerHTML = style.innerHTML.trim() + AvCode.primsCSS;window.Prism.highlightElement(this.codeEl);} postCreation(){if (!window.Prism) {    this.loadFiles();}else {    this.init();}}}
 window.customElements.define('av-code', AvCode);
 class AvImg extends WebComponent {
     static get observedAttributes() {return ["src", "mode"].concat(super.observedAttributes).filter((v, i, a) => a.indexOf(v) === i);}
@@ -10746,23 +11580,24 @@ class AvButton extends WebComponent {
     }
 }
 window.customElements.define('av-button', AvButton);
-class AvExample extends AvGenericPage {
+class AvApp extends AvRouter {
     __getStyle() {
         let arrStyle = super.__getStyle();
-        arrStyle.push(``);
+        arrStyle.push(`:host{height:100%;width:100%;display:flex;flex-direction:column}:host .content{padding:15px 0;flex-grow:1}`);
         return arrStyle;
     }
     __getHtml() {
         let parentInfo = super.__getHtml();
         let info = {
-            html: `<slot></slot>
-example`,
+            html: `<block name="before">
+    <av-navbar slot="before"></av-navbar>
+</block>`,
             slots: {
-                'default':`<slot></slot>`
             },
             blocks: {
-                'default':`<slot></slot>
-example`
+                'before':`
+    <av-navbar slot="before"></av-navbar>
+`
             }
         }
                 let newHtml = parentInfo.html
@@ -10777,11 +11612,67 @@ example`
     }
     __getMaxId() {
         let temp = super.__getMaxId();
-        temp.push(["AvExample", 0])
+        temp.push(["AvApp", 0])
         return temp;
     }
     getClassName() {
-        return "AvExample";
+        return "AvApp";
     }
-     defineTitle(){return "Aventus - Examples";}}
-window.customElements.define('av-example', AvExample);
+     defineRoutes(){return {    "/": AvHome,    "/example": AvExample,    "/introduction": AvGettingStarted,    "/introduction/init": AvGettingStartedInitProject,    "/installation": AvInstallation,    "/api": AvApi,    "/api/configuration": AvApiConfiguration,};}}
+window.customElements.define('av-app', AvApp);
+class AvApi extends AvGenericPage {
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(``);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<section>
+    <h1>API</h1>
+    <p>In the part you can find informations about all parts</p>
+    <ul>
+        <li>Configuration</li>
+        <li>WebComponent</li>
+        <li>Data</li>
+        <li>RAM</li>
+        <li>WebScoket</li>
+    </ul>
+</section>`,
+            slots: {
+            },
+            blocks: {
+                'default':`<section>
+    <h1>API</h1>
+    <p>In the part you can find informations about all parts</p>
+    <ul>
+        <li>Configuration</li>
+        <li>WebComponent</li>
+        <li>Data</li>
+        <li>RAM</li>
+        <li>WebScoket</li>
+    </ul>
+</section>`
+            }
+        }
+                let newHtml = parentInfo.html
+                for (let blockName in info.blocks) {
+                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
+                        throw "can't found slot with name " + blockName;
+                    }
+                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
+                }
+                info.html = newHtml;
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvApi", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvApi";
+    }
+     defineTitle(){return 'Aventus - API';}}
+window.customElements.define('av-api', AvApi);

@@ -12,20 +12,28 @@ declare class AvHome extends AvPage implements DefaultComponent {
 }
 
 declare abstract class AvGenericPage extends AvPage implements DefaultComponent {
+    scrollElement: AvScrollable;
+}
+
+declare class AvApiConfiguration extends AvGenericPage implements DefaultComponent {
+    defineTitle(): string;
 }
 
 declare class AvInstallation extends AvGenericPage implements DefaultComponent {
     defineTitle(): string;
 }
 
+declare class AvGettingStartedInitProject extends AvGenericPage implements DefaultComponent {
+    defineTitle(): string;
+    protected postCreation(): void;
+}
+
 declare class AvGettingStarted extends AvGenericPage implements DefaultComponent {
     defineTitle(): string;
 }
 
-declare class AvApp extends AvRouter implements DefaultComponent {
-    protected defineRoutes(): {
-        [key: string]: new () => AvPage;
-    };
+declare class AvExample extends AvGenericPage implements DefaultComponent {
+    defineTitle(): string;
 }
 
 declare class AvNavbar extends WebComponent implements DefaultComponent {
@@ -103,14 +111,20 @@ declare class AvImg extends WebComponent implements DefaultComponent {
 declare class AvButton extends WebComponent implements DefaultComponent {
 }
 
-declare class AvExample extends AvGenericPage implements DefaultComponent {
+declare class AvApp extends AvRouter implements DefaultComponent {
+    protected defineRoutes(): {
+        [key: string]: new () => AvPage;
+    };
+}
+
+declare class AvApi extends AvGenericPage implements DefaultComponent {
     defineTitle(): string;
 }
 
 // end region js //
 // region css //
-{"av-button":[],"av-img":[{"name":"--img-color"},{"name":"--img-stroke-color"},{"name":"--img-fill-color"},{"name":"--img-color-transition"},{"name":"--img-color"},{"name":"--img-stroke-color"},{"name":"--img-fill-color"},{"name":"--img-color-transition"}],"av-code":[],"av-col":[],"av-row":[],"av-separation":[],"av-navbar":[],"av-app":[],"av-example":[],"av-getting-started":[],"av-home":[],"av-installation":[],"av-generic-page":[]}
+{"av-app":[],"av-button":[],"av-img":[{"name":"--img-color"},{"name":"--img-stroke-color"},{"name":"--img-fill-color"},{"name":"--img-color-transition"},{"name":"--img-color"},{"name":"--img-stroke-color"},{"name":"--img-fill-color"},{"name":"--img-color-transition"}],"av-code":[],"av-col":[],"av-row":[],"av-separation":[],"av-navbar":[],"av-api":[],"av-example":[],"av-generic-page":[],"av-getting-started":[],"av-getting-started-init-project":[],"av-home":[],"av-installation":[],"av-api-configuration":[]}
 // end region css //
 // region html //
-{"av-button":{"name":"av-button","description":"","attributes":{}},"av-img":{"name":"av-img","description":"","attributes":{"src":{"name":"src","description":"Define the source for your image","values":[]},"display_bigger":{"name":"display_bigger","description":"","values":[]},"mode":{"name":"mode","description":"","values":[]}}},"av-code":{"name":"av-code","description":"","attributes":{"language":{"name":"language","description":"","values":[]}}},"av-col":{"name":"av-col","description":"","attributes":{"size":{"name":"size","description":"","values":[]},"size_xs":{"name":"size_xs","description":"","values":[]},"size_sm":{"name":"size_sm","description":"","values":[]},"size_md":{"name":"size_md","description":"","values":[]},"size_lg":{"name":"size_lg","description":"","values":[]},"size_xl":{"name":"size_xl","description":"","values":[]},"offset":{"name":"offset","description":"","values":[]},"offset_xs":{"name":"offset_xs","description":"","values":[]},"offset_sm":{"name":"offset_sm","description":"","values":[]},"offset_md":{"name":"offset_md","description":"","values":[]},"offset_lg":{"name":"offset_lg","description":"","values":[]},"offset_xl":{"name":"offset_xl","description":"","values":[]},"offset_right":{"name":"offset_right","description":"","values":[]},"offset_right_xs":{"name":"offset_right_xs","description":"","values":[]},"offset_right_sm":{"name":"offset_right_sm","description":"","values":[]},"offset_right_md":{"name":"offset_right_md","description":"","values":[]},"offset_right_lg":{"name":"offset_right_lg","description":"","values":[]},"offset_right_xl":{"name":"offset_right_xl","description":"","values":[]},"nobreak":{"name":"nobreak","description":"","values":[]},"center":{"name":"center","description":"","values":[]}}},"av-row":{"name":"av-row","description":"","attributes":{"max_width":{"name":"max_width","description":"","values":[]}}},"av-separation":{"name":"av-separation","description":"","attributes":{}},"av-navbar":{"name":"av-navbar","description":"","attributes":{}},"av-app":{"name":"av-app","description":"","attributes":{}},"av-example":{"name":"av-example","description":"","attributes":{}},"av-getting-started":{"name":"av-getting-started","description":"","attributes":{}},"av-home":{"name":"av-home","description":"","attributes":{}},"av-installation":{"name":"av-installation","description":"","attributes":{}},"av-generic-page":{"name":"av-generic-page","description":"","attributes":{}}}
+{"av-app":{"name":"av-app","description":"","attributes":{}},"av-button":{"name":"av-button","description":"","attributes":{}},"av-img":{"name":"av-img","description":"","attributes":{"src":{"name":"src","description":"Define the source for your image","values":[]},"display_bigger":{"name":"display_bigger","description":"","values":[]},"mode":{"name":"mode","description":"","values":[]}}},"av-code":{"name":"av-code","description":"","attributes":{"language":{"name":"language","description":"","values":[]}}},"av-col":{"name":"av-col","description":"","attributes":{"size":{"name":"size","description":"","values":[]},"size_xs":{"name":"size_xs","description":"","values":[]},"size_sm":{"name":"size_sm","description":"","values":[]},"size_md":{"name":"size_md","description":"","values":[]},"size_lg":{"name":"size_lg","description":"","values":[]},"size_xl":{"name":"size_xl","description":"","values":[]},"offset":{"name":"offset","description":"","values":[]},"offset_xs":{"name":"offset_xs","description":"","values":[]},"offset_sm":{"name":"offset_sm","description":"","values":[]},"offset_md":{"name":"offset_md","description":"","values":[]},"offset_lg":{"name":"offset_lg","description":"","values":[]},"offset_xl":{"name":"offset_xl","description":"","values":[]},"offset_right":{"name":"offset_right","description":"","values":[]},"offset_right_xs":{"name":"offset_right_xs","description":"","values":[]},"offset_right_sm":{"name":"offset_right_sm","description":"","values":[]},"offset_right_md":{"name":"offset_right_md","description":"","values":[]},"offset_right_lg":{"name":"offset_right_lg","description":"","values":[]},"offset_right_xl":{"name":"offset_right_xl","description":"","values":[]},"nobreak":{"name":"nobreak","description":"","values":[]},"center":{"name":"center","description":"","values":[]}}},"av-row":{"name":"av-row","description":"","attributes":{"max_width":{"name":"max_width","description":"","values":[]}}},"av-separation":{"name":"av-separation","description":"","attributes":{}},"av-navbar":{"name":"av-navbar","description":"","attributes":{}},"av-api":{"name":"av-api","description":"","attributes":{}},"av-example":{"name":"av-example","description":"","attributes":{}},"av-generic-page":{"name":"av-generic-page","description":"","attributes":{}},"av-getting-started":{"name":"av-getting-started","description":"","attributes":{}},"av-getting-started-init-project":{"name":"av-getting-started-init-project","description":"","attributes":{}},"av-home":{"name":"av-home","description":"","attributes":{}},"av-installation":{"name":"av-installation","description":"","attributes":{}},"av-api-configuration":{"name":"av-api-configuration","description":"","attributes":{}}}
 // end region html //
