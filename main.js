@@ -9831,6 +9831,47 @@ class AvRessourceManager {    static memory = {};    static waiting = {};    
 
 
 
+class AvApp extends AvRouter {
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(`:host{height:100%;width:100%;display:flex;flex-direction:column}:host .content{padding:15px 0;flex-grow:1}`);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<block name="before">
+	    <av-navbar slot="before"></av-navbar>
+	</block>
+`,
+            slots: {
+            },
+            blocks: {
+                'before':`
+	    <av-navbar slot="before"></av-navbar>
+	`
+            }
+        }
+                let newHtml = parentInfo.html
+                for (let blockName in info.blocks) {
+                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
+                        throw "can't found slot with name " + blockName;
+                    }
+                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
+                }
+                info.html = newHtml;
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvApp", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvApp";
+    }
+     defineRoutes(){return {    "/": AvHome,    "/example": AvExample,    "/introduction": AvGettingStarted,    "/introduction/init": AvGettingStartedInitProject,    "/introduction/routing": AvGettingStartedRouting,    "/installation": AvInstallation,    "/api": AvApi,    "/api/configuration": AvApiConfiguration,};}}
+window.customElements.define('av-app', AvApp);
 class AvHome extends AvPage {
     __getStyle() {
         let arrStyle = super.__getStyle();
@@ -9984,6 +10025,707 @@ class AvGenericPage extends AvPage {
     }
 }
 window.customElements.define('av-generic-page', AvGenericPage);
+class AvInstallation extends AvGenericPage {
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(``);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<h1>Aventus installation</h1>
+<p>
+    <span>Aventus is a vscode extension. You can download the installation file <i>(aventus-#version.vsix)</i></span>
+    <a href="https://github.com/max529/Aventus/releases" target="_blank">here</a>
+</p>
+<p>
+    <span>Then you can : </span>
+    </p><ul>
+        <li>Open your Visual Studio Code</li>
+        <li>Go on the extensions tab</li>
+        <li>Click on the three dots</li>
+        <li>Choose "Install from VSIX..."</li>
+        <li>Select the file you downloaded</li>
+    </ul>
+    <span>Well done! You are ready to use Aventus</span>
+    <p>
+        <span>Try the tutorial </span>
+        <av-router-link state="/introduction">here</av-router-link>
+    </p>
+<p></p>`,
+            slots: {
+            },
+            blocks: {
+                'default':`<h1>Aventus installation</h1>
+<p>
+    <span>Aventus is a vscode extension. You can download the installation file <i>(aventus-#version.vsix)</i></span>
+    <a href="https://github.com/max529/Aventus/releases" target="_blank">here</a>
+</p>
+<p>
+    <span>Then you can : </span>
+    </p><ul>
+        <li>Open your Visual Studio Code</li>
+        <li>Go on the extensions tab</li>
+        <li>Click on the three dots</li>
+        <li>Choose "Install from VSIX..."</li>
+        <li>Select the file you downloaded</li>
+    </ul>
+    <span>Well done! You are ready to use Aventus</span>
+    <p>
+        <span>Try the tutorial </span>
+        <av-router-link state="/introduction">here</av-router-link>
+    </p>
+<p></p>`
+            }
+        }
+                let newHtml = parentInfo.html
+                for (let blockName in info.blocks) {
+                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
+                        throw "can't found slot with name " + blockName;
+                    }
+                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
+                }
+                info.html = newHtml;
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvInstallation", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvInstallation";
+    }
+     defineTitle(){return "Aventus - Installation";}}
+window.customElements.define('av-installation', AvInstallation);
+class AvGettingStartedRouting extends AvGenericPage {
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(``);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<section>
+    <h1>Route configuration</h1>
+</section>`,
+            slots: {
+            },
+            blocks: {
+                'default':`<section>
+    <h1>Route configuration</h1>
+</section>`
+            }
+        }
+                let newHtml = parentInfo.html
+                for (let blockName in info.blocks) {
+                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
+                        throw "can't found slot with name " + blockName;
+                    }
+                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
+                }
+                info.html = newHtml;
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvGettingStartedRouting", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvGettingStartedRouting";
+    }
+     defineTitle(){return "Aventus - Routing";} postCreation(){setTimeout(() => {    this.scrollElement.scrollToPosition(0, 99999);}, 100);}}
+window.customElements.define('av-getting-started-routing', AvGettingStartedRouting);
+class AvGettingStartedInitProject extends AvGenericPage {
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(`:host av-img{max-width:100%}`);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<section>
+    <h1>Init new Aventus project</h1>
+    <p>In your file explorer create a new folder and open it with vscode. <br>For this tutorial the folder is called
+        <i>aventus_todo</i></p>
+    <p>You can right click inside the explorer part and click on <b>Aventus : Create...</b></p>
+    <av-row>
+        <av-col size="12" center="">
+            <av-img src="/img/gettingStarted/init_right_click.PNG"></av-img>
+        </av-col>
+    </av-row>
+    <p>A dropdown appears. You must select the option : <b>Init</b></p>
+    <av-row>
+        <av-col size="12" center="">
+            <av-img src="/img/gettingStarted/init_select_create.PNG"></av-img>
+        </av-col>
+    </av-row>
+    <p>Then you must enter the name for your project, by default the name used is the folder name</p>
+    <av-row>
+        <av-col size="12" center="">
+            <av-img src="/img/gettingStarted/init_create_name.PNG"></av-img>
+        </av-col>
+    </av-row>
+    <p>The extension will create for you the configuration file and the default structure. Then the config file is displayed</p>
+</section>
+<av-separation></av-separation>
+<section>
+    <h2>Definition of configuration file</h2>
+    <p>The default configuration file. An explanation of each part of this JSON is provided below</p>
+    <av-code language="json">
+{
+    "identifier": "Av",
+    "build": [
+        {
+            "name": "aventus_todo",
+            "version": "0.0.1",
+            "inputPath": [
+                "./src/*"
+            ],
+            "outputFile": "./dist/aventus_todo.js",
+            "generateDefinition": true,
+            "includeBase": true
+        }
+    ]
+}
+    </av-code>
+    <p>First of all, we need to define an <b>identifier</b> for our project. This <b>identifier</b> is a prefix for all you Typescript
+        classes. Futhermore, you will find it before each web component. For example if I created a button web
+        component, I can use it in my HTML like that</p>
+    <av-code language="html">
+        <av-button></av-button>
+    </av-code>
+    <p>
+        The section <b>build</b> allows you to define all Aventus input files you need to compile in a single Javascript file.
+        You must provide two meta data fields : <b>build.name</b> and <b>build.version</b>.
+        Then you can add all your input paths with the field <b>build.inputPath</b> and define the output file to generate with the field 
+        <b>build.outputFile</b>. Conventionally your source code will be inside the folder <i>src/</i> and the output will be inside the folder
+        <i>dist/</i>
+    </p>
+    <p>
+        If the field <b>generateDefinition</b> is set to true, a definition file will be generated beside your javascript output file. This is useful
+        if you want to share your code with someone else
+    </p>
+    <p>
+        The field <b>includeBase</b> configure if you want the Aventus core JS file inside this build. You need to include Aventus core JS file
+        only once on your final rendering.
+    </p>
+    <p>
+        If you need more informations about others configuration options. You can check the <av-router-link state="/api/configuration">api section.</av-router-link>
+    </p>
+</section>
+<section>
+    <h2>Transform the configuration file</h2>
+    <p>For this tutorial, we need a single page application (SPA) so we need a static index.html file as an entry point</p>
+    <ul>
+        <li>Change the field <b>generateDefinition</b> to False. We don't need a definition file because this is the final project</li>
+        <li>Create a new directory <i>static</i> inside the src/ directory</li>
+        <li>
+            <span>Inside the configuration file add the section <i>static</i> to the root</span>
+            <av-code language="json">
+"static": [
+    {
+        "name": "Static files",
+        "inputPath": "./src/static/",
+        "outputPath": "./dist/"
+    }
+]
+            </av-code>
+        </li>
+        <li>
+            <span>Create a new file <i>index.html</i> insdie the static directory</span>
+            <av-code language="html">
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta http-equiv="X-UA-Compatible" content="IE=edge"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Aventus - Todo list&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+            </av-code>
+        </li>
+    </ul>
+    <p>Save all files. You can check inside you dist directory and see two files : <b>aventus_todo.js</b> and <b>index.html</b></p>
+    <p>We must link the HTML and the Javascript. Inside the index.html, add this code</p>
+    <av-code language="js">
+        <script src="/aventus_todo.js"></script>
+    </av-code>
+    <p>Because of the SPA, we must create an entry point inside Aventus. Right click on the <i>src/</i> directory 
+        and click on <b>Aventus : Create...</b>. <br>
+        Select <b>Component</b> and fill the input with <i>App</i> and finally select <b>Single</b>
+    </p>
+    <p>A new folder <i>App/</i> and a new file <i>App/App.wc.avt</i> are created. This allows you to use the tag &lt;av-app&gt; in your html</p>
+    <p>Go back inside <i>index.html</i> and update it like so: </p>
+    <av-code language="html">
+&lt;body&gt;
+    <av-app></av-app>
+&lt;/body&gt;
+    </av-code>
+    <p>In the next section, you will understand how you can use web component inside your porject and how to setup a router to navigate inside your app</p>
+</section>
+<section>
+    <av-navigation-footer previous_state="/introduction" previous_name="Introduction" next_state="/introduction/routing" next_name="Routing"></av-navigation-footer>
+</section>`,
+            slots: {
+            },
+            blocks: {
+                'default':`<section>
+    <h1>Init new Aventus project</h1>
+    <p>In your file explorer create a new folder and open it with vscode. <br>For this tutorial the folder is called
+        <i>aventus_todo</i></p>
+    <p>You can right click inside the explorer part and click on <b>Aventus : Create...</b></p>
+    <av-row>
+        <av-col size="12" center="">
+            <av-img src="/img/gettingStarted/init_right_click.PNG"></av-img>
+        </av-col>
+    </av-row>
+    <p>A dropdown appears. You must select the option : <b>Init</b></p>
+    <av-row>
+        <av-col size="12" center="">
+            <av-img src="/img/gettingStarted/init_select_create.PNG"></av-img>
+        </av-col>
+    </av-row>
+    <p>Then you must enter the name for your project, by default the name used is the folder name</p>
+    <av-row>
+        <av-col size="12" center="">
+            <av-img src="/img/gettingStarted/init_create_name.PNG"></av-img>
+        </av-col>
+    </av-row>
+    <p>The extension will create for you the configuration file and the default structure. Then the config file is displayed</p>
+</section>
+<av-separation></av-separation>
+<section>
+    <h2>Definition of configuration file</h2>
+    <p>The default configuration file. An explanation of each part of this JSON is provided below</p>
+    <av-code language="json">
+{
+    "identifier": "Av",
+    "build": [
+        {
+            "name": "aventus_todo",
+            "version": "0.0.1",
+            "inputPath": [
+                "./src/*"
+            ],
+            "outputFile": "./dist/aventus_todo.js",
+            "generateDefinition": true,
+            "includeBase": true
+        }
+    ]
+}
+    </av-code>
+    <p>First of all, we need to define an <b>identifier</b> for our project. This <b>identifier</b> is a prefix for all you Typescript
+        classes. Futhermore, you will find it before each web component. For example if I created a button web
+        component, I can use it in my HTML like that</p>
+    <av-code language="html">
+        <av-button></av-button>
+    </av-code>
+    <p>
+        The section <b>build</b> allows you to define all Aventus input files you need to compile in a single Javascript file.
+        You must provide two meta data fields : <b>build.name</b> and <b>build.version</b>.
+        Then you can add all your input paths with the field <b>build.inputPath</b> and define the output file to generate with the field 
+        <b>build.outputFile</b>. Conventionally your source code will be inside the folder <i>src/</i> and the output will be inside the folder
+        <i>dist/</i>
+    </p>
+    <p>
+        If the field <b>generateDefinition</b> is set to true, a definition file will be generated beside your javascript output file. This is useful
+        if you want to share your code with someone else
+    </p>
+    <p>
+        The field <b>includeBase</b> configure if you want the Aventus core JS file inside this build. You need to include Aventus core JS file
+        only once on your final rendering.
+    </p>
+    <p>
+        If you need more informations about others configuration options. You can check the <av-router-link state="/api/configuration">api section.</av-router-link>
+    </p>
+</section>
+<section>
+    <h2>Transform the configuration file</h2>
+    <p>For this tutorial, we need a single page application (SPA) so we need a static index.html file as an entry point</p>
+    <ul>
+        <li>Change the field <b>generateDefinition</b> to False. We don't need a definition file because this is the final project</li>
+        <li>Create a new directory <i>static</i> inside the src/ directory</li>
+        <li>
+            <span>Inside the configuration file add the section <i>static</i> to the root</span>
+            <av-code language="json">
+"static": [
+    {
+        "name": "Static files",
+        "inputPath": "./src/static/",
+        "outputPath": "./dist/"
+    }
+]
+            </av-code>
+        </li>
+        <li>
+            <span>Create a new file <i>index.html</i> insdie the static directory</span>
+            <av-code language="html">
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta http-equiv="X-UA-Compatible" content="IE=edge"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Aventus - Todo list&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+            </av-code>
+        </li>
+    </ul>
+    <p>Save all files. You can check inside you dist directory and see two files : <b>aventus_todo.js</b> and <b>index.html</b></p>
+    <p>We must link the HTML and the Javascript. Inside the index.html, add this code</p>
+    <av-code language="js">
+        <script src="/aventus_todo.js"></script>
+    </av-code>
+    <p>Because of the SPA, we must create an entry point inside Aventus. Right click on the <i>src/</i> directory 
+        and click on <b>Aventus : Create...</b>. <br>
+        Select <b>Component</b> and fill the input with <i>App</i> and finally select <b>Single</b>
+    </p>
+    <p>A new folder <i>App/</i> and a new file <i>App/App.wc.avt</i> are created. This allows you to use the tag &lt;av-app&gt; in your html</p>
+    <p>Go back inside <i>index.html</i> and update it like so: </p>
+    <av-code language="html">
+&lt;body&gt;
+    <av-app></av-app>
+&lt;/body&gt;
+    </av-code>
+    <p>In the next section, you will understand how you can use web component inside your porject and how to setup a router to navigate inside your app</p>
+</section>
+<section>
+    <av-navigation-footer previous_state="/introduction" previous_name="Introduction" next_state="/introduction/routing" next_name="Routing"></av-navigation-footer>
+</section>`
+            }
+        }
+                let newHtml = parentInfo.html
+                for (let blockName in info.blocks) {
+                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
+                        throw "can't found slot with name " + blockName;
+                    }
+                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
+                }
+                info.html = newHtml;
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvGettingStartedInitProject", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvGettingStartedInitProject";
+    }
+     defineTitle(){return "Aventus - Init project";}}
+window.customElements.define('av-getting-started-init-project', AvGettingStartedInitProject);
+class AvGettingStarted extends AvGenericPage {
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(``);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<section>
+    <h1>Getting started with Aventus</h1>
+    <p>Welcome to Aventus !</p>
+    <p>This tutorial introduces you to the essentials of Aventus by walking through building a Todo list.</p>
+    <p>Let's get started !!!</p>
+</section>
+<av-separation></av-separation>
+<section>
+    <h2>Prerequistes</h2>
+    <p>Before everythink you need to : </p>
+    <ul>
+        <li>Have knowledge of HTML, CSS and Javascript</li>
+        <li>Install Aventus : <av-router-link state="/installation">here</av-router-link>
+        </li>
+    </ul>
+</section>
+<av-separation></av-separation>
+<section>
+    <h2>The concept</h2>
+    <p>Aventus is a framework that allow you to create complex user interfaces by splitting common parts of a
+        front-end application in several well knowned files. It builds on top of standard HTML, CSS, Javascript
+        and provide a way to keep your development under control.</p>
+    <p>The core features are :</p>
+    <ul>
+        <li>Data consistency based on store</li>
+        <li>Reusability with web component</li>
+        <li>Simplified communication with websocket</li>
+        <li>Reactivity</li>
+    </ul>
+</section>
+<av-separation></av-separation>
+<section>
+    <h2>Understand files</h2>
+    <p>
+        First of all, you need to understand all files you can use inside Aventus. This is just a summary, a better
+        explanation will be provided later
+    </p>
+    <div class="table">
+        <av-row class="header">
+            <av-col size_sm="4" center="">Extension</av-col>
+            <av-col size_sm="8" center="">Role</av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">aventus.conf.json</av-col>
+            <av-col size_sm="8">
+                <div class="title">Configuration</div>
+                <div class="description">Inside this file you can find configuration for your project</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.wcl.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Web Component Logic</div>
+                <div class="description">Inside this file you can find the logical part in Typescript for your
+                    web
+                    component</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.wcs.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Web Component Style</div>
+                <div class="description">Inside this file you can find the style in SCSS for your web component
+                </div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.wcv.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Web Component View</div>
+                <div class="description">Inside this file you can find the structure in HTML for your web
+                    component
+                </div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.data.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Data</div>
+                <div class="description">This file is a class / interface / enum representing usable objects for
+                    your application</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.lib.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Library</div>
+                <div class="description">This file allow you to create some logical part for your project
+                    without
+                    web component</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.ram.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">RAM</div>
+                <div class="description">This file allow you to create store for your data</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.socket.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">WebSocket</div>
+                <div class="description">This file allow you to create websocket instance to send message to
+                    your
+                    backend</div>
+            </av-col>
+        </av-row>
+    </div>
+</section>
+<av-separation></av-separation>
+<section>
+    <av-navigation-footer no_previous="" next_state="/introduction/init" next_name="Init"></av-navigation-footer>
+</section>`,
+            slots: {
+            },
+            blocks: {
+                'default':`<section>
+    <h1>Getting started with Aventus</h1>
+    <p>Welcome to Aventus !</p>
+    <p>This tutorial introduces you to the essentials of Aventus by walking through building a Todo list.</p>
+    <p>Let's get started !!!</p>
+</section>
+<av-separation></av-separation>
+<section>
+    <h2>Prerequistes</h2>
+    <p>Before everythink you need to : </p>
+    <ul>
+        <li>Have knowledge of HTML, CSS and Javascript</li>
+        <li>Install Aventus : <av-router-link state="/installation">here</av-router-link>
+        </li>
+    </ul>
+</section>
+<av-separation></av-separation>
+<section>
+    <h2>The concept</h2>
+    <p>Aventus is a framework that allow you to create complex user interfaces by splitting common parts of a
+        front-end application in several well knowned files. It builds on top of standard HTML, CSS, Javascript
+        and provide a way to keep your development under control.</p>
+    <p>The core features are :</p>
+    <ul>
+        <li>Data consistency based on store</li>
+        <li>Reusability with web component</li>
+        <li>Simplified communication with websocket</li>
+        <li>Reactivity</li>
+    </ul>
+</section>
+<av-separation></av-separation>
+<section>
+    <h2>Understand files</h2>
+    <p>
+        First of all, you need to understand all files you can use inside Aventus. This is just a summary, a better
+        explanation will be provided later
+    </p>
+    <div class="table">
+        <av-row class="header">
+            <av-col size_sm="4" center="">Extension</av-col>
+            <av-col size_sm="8" center="">Role</av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">aventus.conf.json</av-col>
+            <av-col size_sm="8">
+                <div class="title">Configuration</div>
+                <div class="description">Inside this file you can find configuration for your project</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.wcl.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Web Component Logic</div>
+                <div class="description">Inside this file you can find the logical part in Typescript for your
+                    web
+                    component</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.wcs.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Web Component Style</div>
+                <div class="description">Inside this file you can find the style in SCSS for your web component
+                </div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.wcv.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Web Component View</div>
+                <div class="description">Inside this file you can find the structure in HTML for your web
+                    component
+                </div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.data.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Data</div>
+                <div class="description">This file is a class / interface / enum representing usable objects for
+                    your application</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.lib.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">Library</div>
+                <div class="description">This file allow you to create some logical part for your project
+                    without
+                    web component</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.ram.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">RAM</div>
+                <div class="description">This file allow you to create store for your data</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size_sm="4" center="">*.socket.avt</av-col>
+            <av-col size_sm="8">
+                <div class="title">WebSocket</div>
+                <div class="description">This file allow you to create websocket instance to send message to
+                    your
+                    backend</div>
+            </av-col>
+        </av-row>
+    </div>
+</section>
+<av-separation></av-separation>
+<section>
+    <av-navigation-footer no_previous="" next_state="/introduction/init" next_name="Init"></av-navigation-footer>
+</section>`
+            }
+        }
+                let newHtml = parentInfo.html
+                for (let blockName in info.blocks) {
+                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
+                        throw "can't found slot with name " + blockName;
+                    }
+                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
+                }
+                info.html = newHtml;
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvGettingStarted", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvGettingStarted";
+    }
+     defineTitle(){return "Aventus - Getting started";}}
+window.customElements.define('av-getting-started', AvGettingStarted);
+class AvExample extends AvGenericPage {
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(``);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<slot></slot>
+example`,
+            slots: {
+                'default':`<slot></slot>`
+            },
+            blocks: {
+                'default':`<slot></slot>
+example`
+            }
+        }
+                let newHtml = parentInfo.html
+                for (let blockName in info.blocks) {
+                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
+                        throw "can't found slot with name " + blockName;
+                    }
+                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
+                }
+                info.html = newHtml;
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvExample", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvExample";
+    }
+     defineTitle(){return "Aventus - Examples";}}
+window.customElements.define('av-example', AvExample);
 class AvApiConfiguration extends AvGenericPage {
     __getStyle() {
         let arrStyle = super.__getStyle();
@@ -10506,671 +11248,139 @@ class AvApiConfiguration extends AvGenericPage {
     }
      defineTitle(){return "Aventus - API Configuration";}}
 window.customElements.define('av-api-configuration', AvApiConfiguration);
-class AvInstallation extends AvGenericPage {
-    __getStyle() {
+class AvNavigationFooter extends WebComponent {
+    static get observedAttributes() {return ["previous_state", "previous_name", "next_state", "next_name"].concat(super.observedAttributes).filter((v, i, a) => a.indexOf(v) === i);}
+    get 'no_previous'() {
+                        return this.hasAttribute('no_previous');
+                    }
+                    set 'no_previous'(val) {
+                        if(val === 1 || val === 'true' || val === ''){
+                            val = true;
+                        }
+                        else if(val === 0 || val === 'false' || val === null || val === undefined){
+                            val = false;
+                        }
+                        if(val !== false && val !== true){
+                            console.error("error setting boolean in no_previous");
+                            val = false;
+                        }
+                        if (val) {
+                            this.setAttribute('no_previous', 'true');
+                        } else{
+                            this.removeAttribute('no_previous');
+                        }
+                    }get 'previous_state'() {
+                        return this.getAttribute('previous_state');
+                    }
+                    set 'previous_state'(val) {
+                        this.setAttribute('previous_state',val);
+                    }get 'previous_name'() {
+                        return this.getAttribute('previous_name');
+                    }
+                    set 'previous_name'(val) {
+                        this.setAttribute('previous_name',val);
+                    }get 'no_next'() {
+                        return this.hasAttribute('no_next');
+                    }
+                    set 'no_next'(val) {
+                        if(val === 1 || val === 'true' || val === ''){
+                            val = true;
+                        }
+                        else if(val === 0 || val === 'false' || val === null || val === undefined){
+                            val = false;
+                        }
+                        if(val !== false && val !== true){
+                            console.error("error setting boolean in no_next");
+                            val = false;
+                        }
+                        if (val) {
+                            this.setAttribute('no_next', 'true');
+                        } else{
+                            this.removeAttribute('no_next');
+                        }
+                    }get 'next_state'() {
+                        return this.getAttribute('next_state');
+                    }
+                    set 'next_state'(val) {
+                        this.setAttribute('next_state',val);
+                    }get 'next_name'() {
+                        return this.getAttribute('next_name');
+                    }
+                    set 'next_name'(val) {
+                        this.setAttribute('next_name',val);
+                    }    __getStyle() {
         let arrStyle = super.__getStyle();
-        arrStyle.push(``);
+        arrStyle.push(`:host{display:flex;width:100%}:host .navigation av-img{height:40px}:host .navigation .previous{display:flex;align-items:center;justify-content:center}:host .navigation .previous av-router-link{display:flex;align-items:center;justify-content:center;cursor:pointer;color:#000;text-decoration:none}:host .navigation .previous av-router-link span{margin-left:15px}:host .navigation .next{display:flex;align-items:center;justify-content:center}:host .navigation .next av-router-link{display:flex;align-items:center;justify-content:center;cursor:pointer;color:#000;text-decoration:none}:host .navigation .next av-router-link span{margin-right:15px}:host([no_previous]) .previous{opacity:0;pointer-events:none}:host([no_next]) .next{opacity:0;pointer-events:none}`);
         return arrStyle;
     }
     __getHtml() {
         let parentInfo = super.__getHtml();
         let info = {
-            html: `<h1>Aventus installation</h1>
-<p>
-    <span>Aventus is a vscode extension. You can download the installation file <i>(aventus-#version.vsix)</i></span>
-    <a href="https://github.com/max529/Aventus/releases" target="_blank">here</a>
-</p>
-<p>
-    <span>Then you can : </span>
-    </p><ul>
-        <li>Open your Visual Studio Code</li>
-        <li>Go on the extensions tab</li>
-        <li>Click on the three dots</li>
-        <li>Choose "Install from VSIX..."</li>
-        <li>Select the file you downloaded</li>
-    </ul>
-    <span>Well done! You are ready to use Aventus</span>
-    <p>
-        <span>Try the tutorial </span>
-        <av-router-link state="/introduction">here</av-router-link>
-    </p>
-<p></p>`,
+            html: `<av-row class="navigation">
+    <av-col class="previous" offset_md="2" size_md="4">
+        <av-router-link _id="avnavigationfooter_0">
+            <av-img src="/img/angle-left.svg"></av-img>
+            <span _id="avnavigationfooter_1"></span>
+        </av-router-link>
+    </av-col>
+    <av-col class="next" size_md="4">
+        <av-router-link _id="avnavigationfooter_2">
+            <span _id="avnavigationfooter_3"></span>
+            <av-img src="/img/angle-right.svg"></av-img>
+        </av-router-link>
+    </av-col>
+</av-row>`,
             slots: {
             },
             blocks: {
-                'default':`<h1>Aventus installation</h1>
-<p>
-    <span>Aventus is a vscode extension. You can download the installation file <i>(aventus-#version.vsix)</i></span>
-    <a href="https://github.com/max529/Aventus/releases" target="_blank">here</a>
-</p>
-<p>
-    <span>Then you can : </span>
-    </p><ul>
-        <li>Open your Visual Studio Code</li>
-        <li>Go on the extensions tab</li>
-        <li>Click on the three dots</li>
-        <li>Choose "Install from VSIX..."</li>
-        <li>Select the file you downloaded</li>
-    </ul>
-    <span>Well done! You are ready to use Aventus</span>
-    <p>
-        <span>Try the tutorial </span>
-        <av-router-link state="/introduction">here</av-router-link>
-    </p>
-<p></p>`
+                'default':`<av-row class="navigation">
+    <av-col class="previous" offset_md="2" size_md="4">
+        <av-router-link _id="avnavigationfooter_0">
+            <av-img src="/img/angle-left.svg"></av-img>
+            <span _id="avnavigationfooter_1"></span>
+        </av-router-link>
+    </av-col>
+    <av-col class="next" size_md="4">
+        <av-router-link _id="avnavigationfooter_2">
+            <span _id="avnavigationfooter_3"></span>
+            <av-img src="/img/angle-right.svg"></av-img>
+        </av-router-link>
+    </av-col>
+</av-row>`
             }
         }
-                let newHtml = parentInfo.html
-                for (let blockName in info.blocks) {
-                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
-                        throw "can't found slot with name " + blockName;
-                    }
-                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
-                }
-                info.html = newHtml;
         return info;
     }
     __getMaxId() {
         let temp = super.__getMaxId();
-        temp.push(["AvInstallation", 0])
+        temp.push(["AvNavigationFooter", 4])
         return temp;
     }
+    __registerOnChange() { super.__registerOnChange(); this.__onChangeFct['previous_state'] = []this.__onChangeFct['previous_state'].push((path) => {if("previous_state".startsWith(path)){
+										for(var i = 0;i<this._components['avnavigationfooter_0'].length;i++){
+											this._components['avnavigationfooter_0'][i].setAttribute("state", ""+this.previous_state+"");
+										}
+									}})this.__onChangeFct['previous_name'] = []this.__onChangeFct['previous_name'].push((path) => {if("previous_name".startsWith(path)){
+									for(var i = 0;i<this._components['avnavigationfooter_1'].length;i++){
+									this._components['avnavigationfooter_1'][i].innerHTML = ""+this.previous_name+"".toString();
+								}
+							}})this.__onChangeFct['next_state'] = []this.__onChangeFct['next_state'].push((path) => {if("next_state".startsWith(path)){
+										for(var i = 0;i<this._components['avnavigationfooter_2'].length;i++){
+											this._components['avnavigationfooter_2'][i].setAttribute("state", ""+this.next_state+"");
+										}
+									}})this.__onChangeFct['next_name'] = []this.__onChangeFct['next_name'].push((path) => {if("next_name".startsWith(path)){
+									for(var i = 0;i<this._components['avnavigationfooter_3'].length;i++){
+									this._components['avnavigationfooter_3'][i].innerHTML = ""+this.next_name+"".toString();
+								}
+							}}) }
     getClassName() {
-        return "AvInstallation";
+        return "AvNavigationFooter";
     }
-     defineTitle(){return "Aventus - Installation";}}
-window.customElements.define('av-installation', AvInstallation);
-class AvGettingStartedInitProject extends AvGenericPage {
-    __getStyle() {
-        let arrStyle = super.__getStyle();
-        arrStyle.push(`:host av-img{max-width:100%}`);
-        return arrStyle;
-    }
-    __getHtml() {
-        let parentInfo = super.__getHtml();
-        let info = {
-            html: `<section>
-    <h1>Init new Aventus project</h1>
-    <p>In your file explorer create a new folder and open it with vscode. <br>For this tutorial the folder is called
-        <i>aventus_todo</i></p>
-    <p>You can right click inside the explorer part and click on <b>Aventus : Create...</b></p>
-    <av-row>
-        <av-col size="12" center="">
-            <av-img src="/img/gettingStarted/init_right_click.PNG"></av-img>
-        </av-col>
-    </av-row>
-    <p>A dropdown appears. You must select the option : <b>Init</b></p>
-    <av-row>
-        <av-col size="12" center="">
-            <av-img src="/img/gettingStarted/init_select_create.PNG"></av-img>
-        </av-col>
-    </av-row>
-    <p>Then you must enter the name for your project, by default the name used is the folder name</p>
-    <av-row>
-        <av-col size="12" center="">
-            <av-img src="/img/gettingStarted/init_create_name.PNG"></av-img>
-        </av-col>
-    </av-row>
-    <p>The extension will create for you the configuration file and the default structure. Then the config file is displayed</p>
-</section>
-<av-separation></av-separation>
-<section>
-    <h2>Definition of configuration file</h2>
-    <p>The default configuration file. An explanation of each part of this JSON is provided below</p>
-    <av-code language="json">
-{
-    "identifier": "Av",
-    "build": [
-        {
-            "name": "aventus_todo",
-            "version": "0.0.1",
-            "inputPath": [
-                "./src/*"
-            ],
-            "outputFile": "./dist/aventus_todo.js",
-            "generateDefinition": true,
-            "includeBase": true
-        }
-    ]
+    __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('no_previous')) { this.attributeChangedCallback('no_previous', false, false); }if(!this.hasAttribute('previous_state')){ this['previous_state'] = '/'; }if(!this.hasAttribute('previous_name')){ this['previous_name'] = 'Previous'; }if(!this.hasAttribute('no_next')) { this.attributeChangedCallback('no_next', false, false); }if(!this.hasAttribute('next_state')){ this['next_state'] = '/'; }if(!this.hasAttribute('next_name')){ this['next_name'] = 'Next'; } }
+    __upgradeAttributes() { super.__upgradeAttributes(); this.__upgradeProperty('previous_state');this.__upgradeProperty('previous_name');this.__upgradeProperty('next_state');this.__upgradeProperty('next_name'); }
+    __listBoolProps() { return ["no_previous","no_next"].concat(super.__listBoolProps()).filter((v, i, a) => a.indexOf(v) === i); }
 }
-    </av-code>
-    <p>First of all, we need to define an <b>identifier</b> for our project. This <b>identifier</b> is a prefix for all you Typescript
-        classes. Futhermore, you will find it before each web component. For example if I created a button web
-        component, I can use it in my HTML like that</p>
-    <av-code language="html">
-        <av-button></av-button>
-    </av-code>
-    <p>
-        The section <b>build</b> allows you to define all Aventus input files you need to compile in a single Javascript file.
-        You must provide two meta data fields : <b>build.name</b> and <b>build.version</b>.
-        Then you can add all your input paths with the field <b>build.inputPath</b> and define the output file to generate with the field 
-        <b>build.outputFile</b>. Conventionally your source code will be inside the folder <i>src/</i> and the output will be inside the folder
-        <i>dist/</i>
-    </p>
-    <p>
-        If the field <b>generateDefinition</b> is set to true, a definition file will be generated beside your javascript output file. This is useful
-        if you want to share your code with someone else
-    </p>
-    <p>
-        The field <b>includeBase</b> configure if you want the Aventus core JS file inside this build. You need to include Aventus core JS file
-        only once on your final rendering.
-    </p>
-    <p>
-        If you need more informations about others configuration options. You can check the <av-router-link state="/api/configuration">api section.</av-router-link>
-    </p>
-</section>
-<section>
-    <h2>Transform the configuration file</h2>
-    <p>For this tutorial, we need a single page application (SPA) so we need a static index.html file as an entry point</p>
-    <ul>
-        <li>Change the field <b>generateDefinition</b> to False. We don't need a definition file because this is the final project</li>
-        <li>Create a new directory <i>static</i> inside the src/ directory</li>
-        <li>
-            <span>Inside the configuration file add the section <i>static</i> to the root</span>
-            <av-code language="json">
-"static": [
-    {
-        "name": "Static files",
-        "inputPath": "./src/static/",
-        "outputPath": "./dist/"
-    }
-]
-            </av-code>
-        </li>
-        <li>
-            <span>Create a new file <i>index.html</i> insdie the static directory</span>
-            <av-code language="html">
-&lt;!DOCTYPE html&gt;
-&lt;html lang="en"&gt;
-&lt;head&gt;
-    &lt;meta charset="UTF-8"&gt;
-    &lt;meta http-equiv="X-UA-Compatible" content="IE=edge"&gt;
-    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
-    &lt;title&gt;Aventus - Todo list&lt;/title&gt;
-&lt;/head&gt;
-&lt;body&gt;
-&lt;/body&gt;
-&lt;/html&gt;
-            </av-code>
-        </li>
-    </ul>
-    <p>Save all files. You can check inside you dist directory and see two files : <b>aventus_todo.js</b> and <b>index.html</b></p>
-    <p>We must link the HTML and the Javascript. Inside the index.html, add this code</p>
-    <av-code language="js">
-        <script src="/aventus_todo.js"></script>
-    </av-code>
-    <p>Because of the SPA, we must create an entry point inside Aventus. Right click on the <i>src/</i> directory 
-        and click on <b>Aventus : Create...</b>. <br>
-        Select <b>Component</b> and fill the input with <i>App</i>
-    </p>
-</section>`,
-            slots: {
-            },
-            blocks: {
-                'default':`<section>
-    <h1>Init new Aventus project</h1>
-    <p>In your file explorer create a new folder and open it with vscode. <br>For this tutorial the folder is called
-        <i>aventus_todo</i></p>
-    <p>You can right click inside the explorer part and click on <b>Aventus : Create...</b></p>
-    <av-row>
-        <av-col size="12" center="">
-            <av-img src="/img/gettingStarted/init_right_click.PNG"></av-img>
-        </av-col>
-    </av-row>
-    <p>A dropdown appears. You must select the option : <b>Init</b></p>
-    <av-row>
-        <av-col size="12" center="">
-            <av-img src="/img/gettingStarted/init_select_create.PNG"></av-img>
-        </av-col>
-    </av-row>
-    <p>Then you must enter the name for your project, by default the name used is the folder name</p>
-    <av-row>
-        <av-col size="12" center="">
-            <av-img src="/img/gettingStarted/init_create_name.PNG"></av-img>
-        </av-col>
-    </av-row>
-    <p>The extension will create for you the configuration file and the default structure. Then the config file is displayed</p>
-</section>
-<av-separation></av-separation>
-<section>
-    <h2>Definition of configuration file</h2>
-    <p>The default configuration file. An explanation of each part of this JSON is provided below</p>
-    <av-code language="json">
-{
-    "identifier": "Av",
-    "build": [
-        {
-            "name": "aventus_todo",
-            "version": "0.0.1",
-            "inputPath": [
-                "./src/*"
-            ],
-            "outputFile": "./dist/aventus_todo.js",
-            "generateDefinition": true,
-            "includeBase": true
-        }
-    ]
-}
-    </av-code>
-    <p>First of all, we need to define an <b>identifier</b> for our project. This <b>identifier</b> is a prefix for all you Typescript
-        classes. Futhermore, you will find it before each web component. For example if I created a button web
-        component, I can use it in my HTML like that</p>
-    <av-code language="html">
-        <av-button></av-button>
-    </av-code>
-    <p>
-        The section <b>build</b> allows you to define all Aventus input files you need to compile in a single Javascript file.
-        You must provide two meta data fields : <b>build.name</b> and <b>build.version</b>.
-        Then you can add all your input paths with the field <b>build.inputPath</b> and define the output file to generate with the field 
-        <b>build.outputFile</b>. Conventionally your source code will be inside the folder <i>src/</i> and the output will be inside the folder
-        <i>dist/</i>
-    </p>
-    <p>
-        If the field <b>generateDefinition</b> is set to true, a definition file will be generated beside your javascript output file. This is useful
-        if you want to share your code with someone else
-    </p>
-    <p>
-        The field <b>includeBase</b> configure if you want the Aventus core JS file inside this build. You need to include Aventus core JS file
-        only once on your final rendering.
-    </p>
-    <p>
-        If you need more informations about others configuration options. You can check the <av-router-link state="/api/configuration">api section.</av-router-link>
-    </p>
-</section>
-<section>
-    <h2>Transform the configuration file</h2>
-    <p>For this tutorial, we need a single page application (SPA) so we need a static index.html file as an entry point</p>
-    <ul>
-        <li>Change the field <b>generateDefinition</b> to False. We don't need a definition file because this is the final project</li>
-        <li>Create a new directory <i>static</i> inside the src/ directory</li>
-        <li>
-            <span>Inside the configuration file add the section <i>static</i> to the root</span>
-            <av-code language="json">
-"static": [
-    {
-        "name": "Static files",
-        "inputPath": "./src/static/",
-        "outputPath": "./dist/"
-    }
-]
-            </av-code>
-        </li>
-        <li>
-            <span>Create a new file <i>index.html</i> insdie the static directory</span>
-            <av-code language="html">
-&lt;!DOCTYPE html&gt;
-&lt;html lang="en"&gt;
-&lt;head&gt;
-    &lt;meta charset="UTF-8"&gt;
-    &lt;meta http-equiv="X-UA-Compatible" content="IE=edge"&gt;
-    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
-    &lt;title&gt;Aventus - Todo list&lt;/title&gt;
-&lt;/head&gt;
-&lt;body&gt;
-&lt;/body&gt;
-&lt;/html&gt;
-            </av-code>
-        </li>
-    </ul>
-    <p>Save all files. You can check inside you dist directory and see two files : <b>aventus_todo.js</b> and <b>index.html</b></p>
-    <p>We must link the HTML and the Javascript. Inside the index.html, add this code</p>
-    <av-code language="js">
-        <script src="/aventus_todo.js"></script>
-    </av-code>
-    <p>Because of the SPA, we must create an entry point inside Aventus. Right click on the <i>src/</i> directory 
-        and click on <b>Aventus : Create...</b>. <br>
-        Select <b>Component</b> and fill the input with <i>App</i>
-    </p>
-</section>`
-            }
-        }
-                let newHtml = parentInfo.html
-                for (let blockName in info.blocks) {
-                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
-                        throw "can't found slot with name " + blockName;
-                    }
-                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
-                }
-                info.html = newHtml;
-        return info;
-    }
-    __getMaxId() {
-        let temp = super.__getMaxId();
-        temp.push(["AvGettingStartedInitProject", 0])
-        return temp;
-    }
-    getClassName() {
-        return "AvGettingStartedInitProject";
-    }
-     defineTitle(){return "Aventus - Init project";} postCreation(){setTimeout(() => {    this.scrollElement.scrollToPosition(0, 99999);}, 100);}}
-window.customElements.define('av-getting-started-init-project', AvGettingStartedInitProject);
-class AvGettingStarted extends AvGenericPage {
-    __getStyle() {
-        let arrStyle = super.__getStyle();
-        arrStyle.push(``);
-        return arrStyle;
-    }
-    __getHtml() {
-        let parentInfo = super.__getHtml();
-        let info = {
-            html: `<section>
-    <h1>Getting started with Aventus</h1>
-    <p>Welcome to Aventus !</p>
-    <p>This tutorial introduces you to the essentials of Aventus by walking through building a Todo list.</p>
-    <p>Let's get started !!!</p>
-</section>
-<av-separation></av-separation>
-<section>
-    <h2>Prerequistes</h2>
-    <p>Before everythink you need to : </p>
-    <ul>
-        <li>Have knowledge of HTML, CSS and Javascript</li>
-        <li>Install Aventus : <av-router-link state="/installation">here</av-router-link>
-        </li>
-    </ul>
-</section>
-<av-separation></av-separation>
-<section>
-    <h2>The concept</h2>
-    <p>Aventus is a framework that allow you to create complex user interfaces by splitting common parts of a
-        front-end application in several well knowned files. It builds on top of standard HTML, CSS, Javascript
-        and provide a way to keep your development under control.</p>
-    <p>The core features are :</p>
-    <ul>
-        <li>Data consistency based on store</li>
-        <li>Reusability with web component</li>
-        <li>Simplified communication with websocket</li>
-        <li>Reactivity</li>
-    </ul>
-</section>
-<av-separation></av-separation>
-<section>
-    <h2>Understand files</h2>
-    <p>
-        First of all, you need to understand all files you can use inside Aventus. This is just a summary, a better
-        explanation will be provided later
-    </p>
-    <div class="table">
-        <av-row class="header">
-            <av-col size_sm="4" center="">Extension</av-col>
-            <av-col size_sm="8" center="">Role</av-col>
-        </av-row>
-        <av-row>
-            <av-col size_sm="4" center="">aventus.conf.json</av-col>
-            <av-col size_sm="8">
-                <div class="title">Configuration</div>
-                <div class="description">Inside this file you can find configuration for your project</div>
-            </av-col>
-        </av-row>
-        <av-row>
-            <av-col size_sm="4" center="">*.wcl.avt</av-col>
-            <av-col size_sm="8">
-                <div class="title">Web Component Logic</div>
-                <div class="description">Inside this file you can find the logical part in Typescript for your
-                    web
-                    component</div>
-            </av-col>
-        </av-row>
-        <av-row>
-            <av-col size_sm="4" center="">*.wcs.avt</av-col>
-            <av-col size_sm="8">
-                <div class="title">Web Component Style</div>
-                <div class="description">Inside this file you can find the style in SCSS for your web component
-                </div>
-            </av-col>
-        </av-row>
-        <av-row>
-            <av-col size_sm="4" center="">*.wcv.avt</av-col>
-            <av-col size_sm="8">
-                <div class="title">Web Component View</div>
-                <div class="description">Inside this file you can find the structure in HTML for your web
-                    component
-                </div>
-            </av-col>
-        </av-row>
-        <av-row>
-            <av-col size_sm="4" center="">*.data.avt</av-col>
-            <av-col size_sm="8">
-                <div class="title">Data</div>
-                <div class="description">This file is a class / interface / enum representing usable objects for
-                    your application</div>
-            </av-col>
-        </av-row>
-        <av-row>
-            <av-col size_sm="4" center="">*.lib.avt</av-col>
-            <av-col size_sm="8">
-                <div class="title">Library</div>
-                <div class="description">This file allow you to create some logical part for your project
-                    without
-                    web component</div>
-            </av-col>
-        </av-row>
-        <av-row>
-            <av-col size_sm="4" center="">*.ram.avt</av-col>
-            <av-col size_sm="8">
-                <div class="title">RAM</div>
-                <div class="description">This file allow you to create store for your data</div>
-            </av-col>
-        </av-row>
-        <av-row>
-            <av-col size_sm="4" center="">*.socket.avt</av-col>
-            <av-col size_sm="8">
-                <div class="title">WebSocket</div>
-                <div class="description">This file allow you to create websocket instance to send message to
-                    your
-                    backend</div>
-            </av-col>
-        </av-row>
-    </div>
-</section>
-<av-separation></av-separation>
-<section>
-    <av-row class="navigation">
-        <av-col class="previous" offset_md="2" size_md="4">
-            <av-router-link state="/">
-                <av-img src="/img/angle-left.svg"></av-img>
-                <span>Previous</span>
-            </av-router-link>
-        </av-col>
-        <av-col class="next" size_md="4">
-            <av-router-link state="/introduction/init">
-                <span>Next</span>
-                <av-img src="/img/angle-right.svg"></av-img>
-            </av-router-link>
-        </av-col>
-    </av-row>
-</section>`,
-            slots: {
-            },
-            blocks: {
-                'default':`<section>
-    <h1>Getting started with Aventus</h1>
-    <p>Welcome to Aventus !</p>
-    <p>This tutorial introduces you to the essentials of Aventus by walking through building a Todo list.</p>
-    <p>Let's get started !!!</p>
-</section>
-<av-separation></av-separation>
-<section>
-    <h2>Prerequistes</h2>
-    <p>Before everythink you need to : </p>
-    <ul>
-        <li>Have knowledge of HTML, CSS and Javascript</li>
-        <li>Install Aventus : <av-router-link state="/installation">here</av-router-link>
-        </li>
-    </ul>
-</section>
-<av-separation></av-separation>
-<section>
-    <h2>The concept</h2>
-    <p>Aventus is a framework that allow you to create complex user interfaces by splitting common parts of a
-        front-end application in several well knowned files. It builds on top of standard HTML, CSS, Javascript
-        and provide a way to keep your development under control.</p>
-    <p>The core features are :</p>
-    <ul>
-        <li>Data consistency based on store</li>
-        <li>Reusability with web component</li>
-        <li>Simplified communication with websocket</li>
-        <li>Reactivity</li>
-    </ul>
-</section>
-<av-separation></av-separation>
-<section>
-    <h2>Understand files</h2>
-    <p>
-        First of all, you need to understand all files you can use inside Aventus. This is just a summary, a better
-        explanation will be provided later
-    </p>
-    <div class="table">
-        <av-row class="header">
-            <av-col size_sm="4" center="">Extension</av-col>
-            <av-col size_sm="8" center="">Role</av-col>
-        </av-row>
-        <av-row>
-            <av-col size_sm="4" center="">aventus.conf.json</av-col>
-            <av-col size_sm="8">
-                <div class="title">Configuration</div>
-                <div class="description">Inside this file you can find configuration for your project</div>
-            </av-col>
-        </av-row>
-        <av-row>
-            <av-col size_sm="4" center="">*.wcl.avt</av-col>
-            <av-col size_sm="8">
-                <div class="title">Web Component Logic</div>
-                <div class="description">Inside this file you can find the logical part in Typescript for your
-                    web
-                    component</div>
-            </av-col>
-        </av-row>
-        <av-row>
-            <av-col size_sm="4" center="">*.wcs.avt</av-col>
-            <av-col size_sm="8">
-                <div class="title">Web Component Style</div>
-                <div class="description">Inside this file you can find the style in SCSS for your web component
-                </div>
-            </av-col>
-        </av-row>
-        <av-row>
-            <av-col size_sm="4" center="">*.wcv.avt</av-col>
-            <av-col size_sm="8">
-                <div class="title">Web Component View</div>
-                <div class="description">Inside this file you can find the structure in HTML for your web
-                    component
-                </div>
-            </av-col>
-        </av-row>
-        <av-row>
-            <av-col size_sm="4" center="">*.data.avt</av-col>
-            <av-col size_sm="8">
-                <div class="title">Data</div>
-                <div class="description">This file is a class / interface / enum representing usable objects for
-                    your application</div>
-            </av-col>
-        </av-row>
-        <av-row>
-            <av-col size_sm="4" center="">*.lib.avt</av-col>
-            <av-col size_sm="8">
-                <div class="title">Library</div>
-                <div class="description">This file allow you to create some logical part for your project
-                    without
-                    web component</div>
-            </av-col>
-        </av-row>
-        <av-row>
-            <av-col size_sm="4" center="">*.ram.avt</av-col>
-            <av-col size_sm="8">
-                <div class="title">RAM</div>
-                <div class="description">This file allow you to create store for your data</div>
-            </av-col>
-        </av-row>
-        <av-row>
-            <av-col size_sm="4" center="">*.socket.avt</av-col>
-            <av-col size_sm="8">
-                <div class="title">WebSocket</div>
-                <div class="description">This file allow you to create websocket instance to send message to
-                    your
-                    backend</div>
-            </av-col>
-        </av-row>
-    </div>
-</section>
-<av-separation></av-separation>
-<section>
-    <av-row class="navigation">
-        <av-col class="previous" offset_md="2" size_md="4">
-            <av-router-link state="/">
-                <av-img src="/img/angle-left.svg"></av-img>
-                <span>Previous</span>
-            </av-router-link>
-        </av-col>
-        <av-col class="next" size_md="4">
-            <av-router-link state="/introduction/init">
-                <span>Next</span>
-                <av-img src="/img/angle-right.svg"></av-img>
-            </av-router-link>
-        </av-col>
-    </av-row>
-</section>`
-            }
-        }
-                let newHtml = parentInfo.html
-                for (let blockName in info.blocks) {
-                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
-                        throw "can't found slot with name " + blockName;
-                    }
-                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
-                }
-                info.html = newHtml;
-        return info;
-    }
-    __getMaxId() {
-        let temp = super.__getMaxId();
-        temp.push(["AvGettingStarted", 0])
-        return temp;
-    }
-    getClassName() {
-        return "AvGettingStarted";
-    }
-     defineTitle(){return "Aventus - Getting started";}}
-window.customElements.define('av-getting-started', AvGettingStarted);
-class AvExample extends AvGenericPage {
-    __getStyle() {
-        let arrStyle = super.__getStyle();
-        arrStyle.push(``);
-        return arrStyle;
-    }
-    __getHtml() {
-        let parentInfo = super.__getHtml();
-        let info = {
-            html: `<slot></slot>
-example`,
-            slots: {
-                'default':`<slot></slot>`
-            },
-            blocks: {
-                'default':`<slot></slot>
-example`
-            }
-        }
-                let newHtml = parentInfo.html
-                for (let blockName in info.blocks) {
-                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
-                        throw "can't found slot with name " + blockName;
-                    }
-                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
-                }
-                info.html = newHtml;
-        return info;
-    }
-    __getMaxId() {
-        let temp = super.__getMaxId();
-        temp.push(["AvExample", 0])
-        return temp;
-    }
-    getClassName() {
-        return "AvExample";
-    }
-     defineTitle(){return "Aventus - Examples";}}
-window.customElements.define('av-example', AvExample);
+window.customElements.define('av-navigation-footer', AvNavigationFooter);
 class AvNavbar extends WebComponent {
     __getStyle() {
         let arrStyle = super.__getStyle();
@@ -11580,46 +11790,6 @@ class AvButton extends WebComponent {
     }
 }
 window.customElements.define('av-button', AvButton);
-class AvApp extends AvRouter {
-    __getStyle() {
-        let arrStyle = super.__getStyle();
-        arrStyle.push(`:host{height:100%;width:100%;display:flex;flex-direction:column}:host .content{padding:15px 0;flex-grow:1}`);
-        return arrStyle;
-    }
-    __getHtml() {
-        let parentInfo = super.__getHtml();
-        let info = {
-            html: `<block name="before">
-    <av-navbar slot="before"></av-navbar>
-</block>`,
-            slots: {
-            },
-            blocks: {
-                'before':`
-    <av-navbar slot="before"></av-navbar>
-`
-            }
-        }
-                let newHtml = parentInfo.html
-                for (let blockName in info.blocks) {
-                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
-                        throw "can't found slot with name " + blockName;
-                    }
-                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
-                }
-                info.html = newHtml;
-        return info;
-    }
-    __getMaxId() {
-        let temp = super.__getMaxId();
-        temp.push(["AvApp", 0])
-        return temp;
-    }
-    getClassName() {
-        return "AvApp";
-    }
-     defineRoutes(){return {    "/": AvHome,    "/example": AvExample,    "/introduction": AvGettingStarted,    "/introduction/init": AvGettingStartedInitProject,    "/installation": AvInstallation,    "/api": AvApi,    "/api/configuration": AvApiConfiguration,};}}
-window.customElements.define('av-app', AvApp);
 class AvApi extends AvGenericPage {
     __getStyle() {
         let arrStyle = super.__getStyle();
