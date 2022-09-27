@@ -1,0 +1,49 @@
+
+<script>
+	import { AvGettingStarted } from "../pages/gettingStarted/gettingStarted.wcl.avt";
+	import { AvExample } from "../pages/example/example.wcl.avt";
+	import { AvHome } from "../pages/home/home.wcl.avt";
+	import { AvGettingStartedInitProject } from "../pages/gettingStarted/gettingStartedInitProject/gettingStartedInitProject.wcl.avt";
+	import { AvGettingStartedRouting } from "../pages/gettingStarted/gettingStartedRouting/gettingStartedRouting.wcl.avt";
+	import { AvInstallation } from "../pages/installation/installation.wcl.avt";
+	import { AvApi } from "../pages/api/api.wcl.avt";
+	import { AvApiConfiguration } from "../pages/api/apiConfiguration/apiConfiguration.wcl.avt";
+	
+	export class AvApp extends AvRouter implements DefaultComponent {
+	
+	    protected defineRoutes(): { [key: string]: new () => AvPage; } {
+	        return {
+	            "/": AvHome,
+	            "/example": AvExample,
+	            "/introduction": AvGettingStarted,
+	            "/introduction/init": AvGettingStartedInitProject,
+	            "/introduction/routing": AvGettingStartedRouting,
+	            "/installation": AvInstallation,
+	            "/api": AvApi,
+	            "/api/configuration": AvApiConfiguration,
+	        };
+	    }
+	
+	}
+</script>
+
+<template>
+	<block name="before">
+	    <av-navbar slot="before"></av-navbar>
+	</block>
+</template>
+
+<style>
+	:host {
+		height: 100%;
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+	
+		.content {
+			padding: 15px 0;
+			flex-grow: 1;
+		}
+	}
+	
+</style>

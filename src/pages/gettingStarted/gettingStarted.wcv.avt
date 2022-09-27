@@ -110,18 +110,5 @@
 </section>
 <av-separation></av-separation>
 <section>
-    <av-row class="navigation">
-        <av-col class="previous" offset_md="2" size_md="4">
-            <av-router-link state="/">
-                <av-img src="/img/angle-left.svg"></av-img>
-                <span>Previous</span>
-            </av-router-link>
-        </av-col>
-        <av-col class="next" size_md="4">
-            <av-router-link state="/introduction/init">
-                <span>Next</span>
-                <av-img src="/img/angle-right.svg"></av-img>
-            </av-router-link>
-        </av-col>
-    </av-row>
+    <av-navigation-footer no_previous next_state="/introduction/init" next_name="Init"></av-navigation-footer>
 </section>

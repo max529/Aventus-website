@@ -111,6 +111,17 @@
     </av-code>
     <p>Because of the SPA, we must create an entry point inside Aventus. Right click on the <i>src/</i> directory 
         and click on <b>Aventus : Create...</b>. <br />
-        Select <b>Component</b> and fill the input with <i>App</i>
+        Select <b>Component</b> and fill the input with <i>App</i> and finally select <b>Single</b>
     </p>
+    <p>A new folder <i>App/</i> and a new file <i>App/App.wc.avt</i> are created. This allows you to use the tag &lt;av-app&gt; in your html</p>
+    <p>Go back inside <i>index.html</i> and update it like so: </p>
+    <av-code language="html">
+&lt;body&gt;
+    <av-app></av-app>
+&lt;/body&gt;
+    </av-code>
+    <p>In the next section, you will understand how you can use web component inside your porject and how to setup a router to navigate inside your app</p>
+</section>
+<section>
+    <av-navigation-footer previous_state="/introduction" previous_name="Introduction" next_state="/introduction/routing" next_name="Routing"></av-navigation-footer>
 </section>

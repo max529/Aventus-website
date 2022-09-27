@@ -1,3 +1,0 @@
-<block name="before">
-    <av-navbar slot="before"></av-navbar>
-</block>

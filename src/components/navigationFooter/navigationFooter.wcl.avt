@@ -1,0 +1,44 @@
+export class AvNavigationFooter extends WebComponent implements DefaultComponent {
+
+    //#region static
+
+    //#endregion
+
+
+    //#region props
+    @attribute()
+    public no_previous: boolean;
+	@property()
+	public previous_state:string = "/";
+	@property()
+	public previous_name:string = "Previous";
+
+	@attribute()
+    public no_next: boolean;
+	@property()
+	public next_state:string = "/";
+	@property()
+	public next_name:string = "Next";
+	//#endregion
+
+
+	//#region variables
+
+	//#endregion
+
+
+	//#region states
+
+	//#endregion
+			
+			
+	//#region constructor
+
+	//#endregion
+
+
+	//#region methods
+
+	//#endregion
+	
+}
