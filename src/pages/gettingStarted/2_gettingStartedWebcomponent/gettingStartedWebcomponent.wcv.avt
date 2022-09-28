@@ -1,0 +1,145 @@
+<section>
+    <h1>Web Component</h1>
+    <p>A web component is a javascript class that allow to create some html tags with embedded logic and style. If you
+        need more information about web component you can read this explanation : <a
+            href="https://css-tricks.com/an-introduction-to-web-components/" target="_blank">css-trick.com</a>
+    </p>
+    <p>Inside Aventus there are two kind of components:</p>
+    <ul>
+        <li><b>Single File Component</b> : Style - JS - HTML are wrapped inside the same file<br>Use it for small component</li>
+        <li><b>Multiple Files Component</b> : Style - JS - HTML are wrapped inside the same file<br>Use it for complex component</li>
+    </ul>
+    <p>
+      During the previous section, you created a new component called : <b>app.wc.avt</b>. It's a single file component.
+    </p>
+    <av-code language="html">
+&lt;script&gt;
+export class AvApp extends WebComponent implements DefaultComponent {
+
+}
+&lt;/script&gt;
+&lt;template&gt;
+    &lt;slot&gt;&lt;/slot&gt;
+&lt;/template&gt;
+&lt;style&gt;
+    :host {
+    
+    }
+&lt;/style&gt;
+
+    </av-code>
+</section>
+<section>
+    <h2>Edit the view</h2>
+    <p>You can try to replace the <b>&lt;slot&gt;&lt;/slot&gt;</b> by <b>&lt;h1&gt;Hello World&lt;/h1&gt;</b>. Inside the tag <b>template</b> you can write <b>HTML</b></p>
+
+        <av-code language="html">
+&lt;script&gt;
+export class AvApp extends WebComponent implements DefaultComponent {
+
+}
+&lt;/script&gt;
+&lt;template&gt;
+    &lt;h1&gt;Hello World&lt;/h1&gt;
+&lt;/template&gt;
+&lt;style&gt;
+    :host {
+    
+    }
+&lt;/style&gt;
+
+    </av-code>
+    <p>
+        You can render the website and show your first Hello world with Aventus
+    </p>
+    <av-row>
+        <av-col size="12" center>
+            <av-img src="/img/gettingStarted/first_hello_world.png"></av-img>
+        </av-col>
+    </av-row>
+    <p></p>
+</section>
+<section>
+    <h2>Edit the style</h2>
+    <p>
+        Now you can add color to this Hello world. Inside the tag <b>style</b> you can write <b>SCSS</b>. 
+        When you targetting :host, it means you targeting the component itself.
+        By default Aventus WebComponent has display: inline-block; and box-sizing: border-box; set.
+    </p>
+    <p>
+        Try to add a background and a font color to the host and specify a new different color for your h1
+    </p>
+    <av-code language="scss">
+:host {
+    color: red;
+    background-color: rgb(200, 200, 200);
+    h1 {
+        color: blue;
+    }
+}
+    </av-code>
+    <av-row>
+        <av-col size="12" center>
+            <av-img src="/img/gettingStarted/color_hello_world.png" style="height:100px"></av-img>
+        </av-col>
+    </av-row>
+    <p>As you can see, the title color is blue.</p>
+    <p>Style inside webcomponent can't be modified by the outside. To understand it, you can create a new file <i>static/default.scss</i> with the content below and link it to your index.html file</p>
+    <av-code language="scss">
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+av-app {
+    text-decoration: underline;
+}  
+    </av-code>
+    <p>This code will correctly underline (in red) your component. Now if you try to target h1 inside av-app it won't work. Because we can't change style from outside a component.</p>
+    <av-code language="scss">
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+av-app h1 {
+    text-decoration: underline;
+}  
+    </av-code>
+    <p>It's still possible to change h1 style with css variables</p>
+    <av-row>
+        <av-col size_xs="12" size_md="6">
+            <div>Style - App.wc.avt</div>
+            <av-code language="scss">
+:host {
+    color: red;
+    background-color: rgb(200, 200, 200);
+    h1 {
+        color: blue;
+        text-decoration: var(--app-title-text-decoration);
+    }
+}
+            </av-code>
+        </av-col>
+        <av-col size_xs="12" size_md="6">
+            <div>Style - default.scss</div>
+            <av-code language="scss">
+av-app {
+    --app-title-text-decoration: underline;
+}
+            </av-code>
+        </av-col>
+    </av-row>
+    <p>
+        For more informations about css variables, you can read <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Using_CSS_custom_properties" target="_blank">this</a><br>
+        To have a deeper explanation and good pratices for css variables inside Aventus you can read <av-router-link state="/">this</av-router-link>
+    </p>
+</section>
+<section>
+    <h2>Edit the script</h2>
+    <p>Finally, you can bring some logical part to your component. We will write each letter of <i>world</i> after 1 second</p>
+</section>

@@ -1,30 +1,31 @@
 
 <script>
-	import { AvGettingStarted } from "../pages/gettingStarted/gettingStarted.wcl.avt";
-	import { AvExample } from "../pages/example/example.wcl.avt";
-	import { AvHome } from "../pages/home/home.wcl.avt";
-	import { AvGettingStartedInitProject } from "../pages/gettingStarted/gettingStartedInitProject/gettingStartedInitProject.wcl.avt";
-	import { AvGettingStartedRouting } from "../pages/gettingStarted/gettingStartedRouting/gettingStartedRouting.wcl.avt";
-	import { AvInstallation } from "../pages/installation/installation.wcl.avt";
-	import { AvApi } from "../pages/api/api.wcl.avt";
-	import { AvApiConfiguration } from "../pages/api/apiConfiguration/apiConfiguration.wcl.avt";
-	
-	export class AvApp extends AvRouter implements DefaultComponent {
-	
-	    protected defineRoutes(): { [key: string]: new () => AvPage; } {
-	        return {
-	            "/": AvHome,
-	            "/example": AvExample,
-	            "/introduction": AvGettingStarted,
-	            "/introduction/init": AvGettingStartedInitProject,
-	            "/introduction/routing": AvGettingStartedRouting,
-	            "/installation": AvInstallation,
-	            "/api": AvApi,
-	            "/api/configuration": AvApiConfiguration,
-	        };
-	    }
-	
-	}
+    import { AvGettingStarted } from "../pages/gettingStarted/gettingStarted.wcl.avt";
+    import { AvExample } from "../pages/example/example.wcl.avt";
+    import { AvHome } from "../pages/home/home.wcl.avt";
+    import { AvInstallation } from "../pages/installation/installation.wcl.avt";
+    import { AvApi } from "../pages/api/api.wcl.avt";
+    import { AvApiConfiguration } from "../pages/api/apiConfiguration/apiConfiguration.wcl.avt";
+    import { AvGettingStartedInitProject } from "../pages/gettingStarted/1_gettingStartedInitProject/gettingStartedInitProject.wcl.avt";
+    import { AvGettingStartedWebcomponent } from "../pages/gettingStarted/2_gettingStartedWebcomponent/gettingStartedWebcomponent.wcl.avt";
+    import { AvGettingStartedRouting } from "../pages/gettingStarted/3_gettingStartedRouting/gettingStartedRouting.wcl.avt";
+
+    export class AvApp extends AvRouter implements DefaultComponent {
+
+        protected defineRoutes(): { [key: string]: new () => AvPage; } {
+            return {
+                "/": AvHome,
+                "/example": AvExample,
+                "/introduction": AvGettingStarted,
+                "/introduction/init": AvGettingStartedInitProject,
+                "/introduction/webcomponent": AvGettingStartedWebcomponent,
+                "/introduction/routing": AvGettingStartedRouting,
+                "/installation": AvInstallation,
+                "/api": AvApi,
+                "/api/configuration": AvApiConfiguration
+            };
+        }
+    }
 </script>
 
 <template>

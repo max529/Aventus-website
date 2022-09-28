@@ -120,8 +120,26 @@
     <av-app></av-app>
 &lt;/body&gt;
     </av-code>
-    <p>In the next section, you will understand how you can use web component inside your porject and how to setup a router to navigate inside your app</p>
 </section>
 <section>
-    <av-navigation-footer previous_state="/introduction" previous_name="Introduction" next_state="/introduction/routing" next_name="Routing"></av-navigation-footer>
+    <h2>Faculative : Live server</h2>
+    <p>In a future version a live server will be embedded inside aventus. Right now, you can add the "Live Server" extension from Ritwick Dey inside your vscode.</p>
+    <p>Inside your workspace create a <i>.vscode/</i> directory and a <i>.vscode/settings.json</i> file wth the following content</p>
+    <av-code language="json">
+{
+    "liveServer.settings.root": "/dist",
+}
+    </av-code>
+    <p>Now you can easly run a web server by click on the bottom-left button</p>
+    <av-row>
+        <av-col center size="12">
+            <av-img src="/img/gettingStarted/init_live_server.png"></av-img>
+        </av-col>
+    </av-row>
+</section>
+<section>
+    <p>In the next section, you will understand how you can use web component inside your project and how to setup a router to navigate inside your app</p>
+</section>
+<section>
+    <av-navigation-footer previous_state="/introduction" previous_name="Introduction" next_state="/introduction/webcomponent" next_name="Web component"></av-navigation-footer>
 </section>

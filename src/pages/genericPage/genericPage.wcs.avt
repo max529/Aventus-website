@@ -41,8 +41,9 @@
 					margin-bottom: 5px;
 				}
 			}
-			.table.table-row{
-				av-row{
+
+			.table.table-row {
+				av-row {
 					border-bottom: 1px solid #ddd;
 				}
 			}
@@ -72,6 +73,7 @@
 					display: flex;
 					align-items: center;
 					justify-content: center;
+
 					av-router-link {
 						display: flex;
 						align-items: center;
@@ -90,6 +92,7 @@
 					display: flex;
 					align-items: center;
 					justify-content: center;
+
 					av-router-link {
 						display: flex;
 						align-items: center;
@@ -103,6 +106,20 @@
 						}
 					}
 
+				}
+			}
+
+			ul {
+				li {
+					margin: 5px 0;
+				}
+
+				li:first-child {
+					margin-top: 0;
+				}
+
+				li:last-child {
+					margin-bottom: 0;
 				}
 			}
 		}

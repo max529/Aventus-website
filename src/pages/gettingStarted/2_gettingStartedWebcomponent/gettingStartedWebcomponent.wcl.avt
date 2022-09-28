@@ -1,0 +1,40 @@
+
+import { AvGenericPage } from "../../genericPage/genericPage.wcl.avt";
+
+@Debugger({
+	writeCompiled:false,
+})
+export class AvGettingStartedWebcomponent extends AvGenericPage implements DefaultComponent {
+
+	//#region static
+
+	//#endregion
+
+
+	//#region props
+
+	//#endregion
+
+
+	//#region variables
+
+	//#endregion
+
+
+	//#region states
+
+	//#endregion
+			
+			
+	//#region constructor
+
+	//#endregion
+
+
+	//#region methods
+    defineTitle(): string {
+        return "Aventus - Web component";
+    }
+
+	//#endregion
+}
