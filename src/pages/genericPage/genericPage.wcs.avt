@@ -7,6 +7,9 @@
 		margin: 0 auto;
 
 		av-scrollable {
+			.page-content{
+				padding: 0 20px;
+			}
 			h1 {
 				margin-top: 50px;
 				text-align: center;
@@ -62,6 +65,10 @@
 				p {
 					text-align: justify;
 				}
+			}
+
+			av-img {
+				max-width: 100%;
 			}
 
 			.navigation {

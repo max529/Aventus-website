@@ -42,7 +42,7 @@ export class AvImg extends WebComponent implements DefaultComponent {
 
 
     //#region variables
-    bigImg: HTMLDivElement = undefined;
+    bigImg: HTMLElement = undefined;
     ratio: number = 1;
     _maxCalculateSize: number = 10;
     _isCalculing: boolean = false;
@@ -59,12 +59,16 @@ export class AvImg extends WebComponent implements DefaultComponent {
 
 
     //#region constructor
-
+    constructor() {
+        super();
+        this.checkCloseBinded = this.checkClose.bind(this);
+    }
     //#endregion
 
 
     //#region methods
-    checkClose = (e:Event) => {
+    private checkCloseBinded: (e) => void;
+    private checkClose(e: Event) {
         if(e instanceof KeyboardEvent) {
             if(e.key == 'Escape') {
                 this.close();
@@ -80,12 +84,12 @@ export class AvImg extends WebComponent implements DefaultComponent {
     };
     close() {
         this.bigImg.style.opacity = '0';
-        document.body.removeEventListener('click', this.checkClose);
+        document.body.removeEventListener('click', this.checkCloseBinded);
         setTimeout(() => {
             this.bigImg.remove();
         }, 710);
     }
-    calculateSize(attempt = 0) {
+    private calculateSize(attempt = 0) {
         if(this._isCalculing) {
             return;
         }
@@ -178,11 +182,11 @@ export class AvImg extends WebComponent implements DefaultComponent {
         element.style.opacity = '1';
         this._isCalculing = false;
     }
-    showImg(e:MouseEvent) {
+    private showImg(e: MouseEvent) {
         if(this.display_bigger) {
-            let target = e.currentTarget as HTMLElement
-            let position = target.getPositionOnScreen()
-            let div = new HTMLDivElement();
+            let target = e.currentTarget as HTMLElement;
+            let position = target.getPositionOnScreen();
+            let div = document.createElement("DIV");
             div.style.position = 'absolute';
             div.style.top = position.y + 'px';
             div.style.left = position.x + 'px';
@@ -202,14 +206,14 @@ export class AvImg extends WebComponent implements DefaultComponent {
                 div.style.left = '50px';
                 div.style.width = 'calc(100% - 100px)';
                 div.style.height = 'calc(100% - 100px)';
-                document.body.addEventListener('click', this.checkClose);
-                document.body.addEventListener('keydown', this.checkClose);
+                document.body.addEventListener('click', this.checkCloseBinded);
+                document.body.addEventListener('keydown', this.checkCloseBinded);
             }, 100);
         }
     }
 
     protected override postCreation(): void {
-        
+
         this.addEventListener("click", (e) => { this.showImg(e); });
         new ResizeObserver(() => {
             this.calculateSize();

@@ -9875,87 +9875,93 @@ window.customElements.define('av-app', AvApp);
 class AvHome extends AvPage {
     __getStyle() {
         let arrStyle = super.__getStyle();
-        arrStyle.push(`:host .logo{margin:50px auto;display:flex;align-items:center;justify-content:center;max-width:1000px}:host .logo av-img{width:50%}:host .logo .right-part{width:50%}:host .logo .right-part p{color:var(--darker);font-size:35px}:host .content{background-color:var(--lighter);box-shadow:0 -5px 5px var(--lighter);padding:50px 0}:host .content .advantages{max-width:1500px;margin:auto}:host .content .advantages av-col{padding:0 50px}:host .content .advantages av-col .title{font-weight:bold;margin-bottom:10px}:host .content .advantages av-col .description{text-align:justify}`);
+        arrStyle.push(`:host{width:100%;height:100%}:host av-scrollable{width:100%;height:calc(100% + 15px)}:host av-scrollable .logo{margin:50px auto;display:flex;align-items:center;justify-content:center;max-width:1000px}:host av-scrollable .logo av-img{width:50%}:host av-scrollable .logo .right-part{width:50%}:host av-scrollable .logo .right-part p{color:var(--darker);font-size:35px}:host av-scrollable .content{background-color:var(--lighter);box-shadow:0 -5px 5px var(--lighter);padding:50px 0}:host av-scrollable .content .advantages{max-width:1500px;margin:auto}:host av-scrollable .content .advantages av-col{padding:0 50px}:host av-scrollable .content .advantages av-col .title{font-weight:bold;margin-bottom:10px}:host av-scrollable .content .advantages av-col .description{text-align:justify}`);
         return arrStyle;
     }
     __getHtml() {
         let parentInfo = super.__getHtml();
         let info = {
-            html: `<div class="logo">
-    <av-img src="/img/aventus.gif"></av-img>
-    <div class="right-part">
-        <p>Keep a link <br>with your data</p>
-        <av-router-link state="/introduction">
-            <av-button>Getting started</av-button>
-        </av-router-link>
+            html: `<av-scrollable floating_scroll="">
+    <div class="logo">
+        <av-img src="/img/aventus.gif"></av-img>
+        <div class="right-part">
+            <p>Keep a link <br>with your data</p>
+            <av-router-link state="/introduction">
+                <av-button>Getting started</av-button>
+            </av-router-link>
+        </div>
     </div>
-</div>
-<div class="content">
-    <div class="advantages">
-        <av-row>
-            <av-col size_xs="12" size_md="4">
-                <div class="title">Easy to use</div>
-                <div class="description">
-                    <p>You can easly create component to keep your code clean and reuse complex logical part.</p>
-                    <p>With the use of typescript, you will avoid a lot of mistakes and keep your code clean.</p>
-                </div>
-            </av-col>
-            <av-col size_xs="12" size_md="4">
-                <div class="title">Manage your data</div>
-                <div class="description">
-                    <p>You can easly write data and store to provide consistency inside your app.</p>
-                    <p>When a change occurs, everythink is updated by magic.</p>
-                </div>
-            </av-col>
-            <av-col size_xs="12" size_md="4">
-                <div class="title">Strong backend interaction</div>
-                <div class="description">
-                    <p>With aventus, you can find a lot of plugin to manage your backend like c#, firebase, etc</p>
-                    <p>A lot of code can be automatically generated. It's give you free time to focus on your design</p>
-                </div>
-            </av-col>
-        </av-row>
+    <div class="content">
+        <div class="advantages">
+            <av-row>
+                <av-col size_xs="12" size_md="4">
+                    <div class="title">Easy to use</div>
+                    <div class="description">
+                        <p>You can easly create component to keep your code clean and reuse complex logical part.</p>
+                        <p>With the use of typescript, you will avoid a lot of mistakes and keep your code clean.</p>
+                    </div>
+                </av-col>
+                <av-col size_xs="12" size_md="4">
+                    <div class="title">Manage your data</div>
+                    <div class="description">
+                        <p>You can easly write data and store to provide consistency inside your app.</p>
+                        <p>When a change occurs, everythink is updated by magic.</p>
+                    </div>
+                </av-col>
+                <av-col size_xs="12" size_md="4">
+                    <div class="title">Strong backend interaction</div>
+                    <div class="description">
+                        <p>With aventus, you can find a lot of plugin to manage your backend like c#, firebase, etc</p>
+                        <p>A lot of code can be automatically generated. It's give you free time to focus on your design
+                        </p>
+                    </div>
+                </av-col>
+            </av-row>
+        </div>
     </div>
-</div>`,
+</av-scrollable>`,
             slots: {
             },
             blocks: {
-                'default':`<div class="logo">
-    <av-img src="/img/aventus.gif"></av-img>
-    <div class="right-part">
-        <p>Keep a link <br>with your data</p>
-        <av-router-link state="/introduction">
-            <av-button>Getting started</av-button>
-        </av-router-link>
+                'default':`<av-scrollable floating_scroll="">
+    <div class="logo">
+        <av-img src="/img/aventus.gif"></av-img>
+        <div class="right-part">
+            <p>Keep a link <br>with your data</p>
+            <av-router-link state="/introduction">
+                <av-button>Getting started</av-button>
+            </av-router-link>
+        </div>
     </div>
-</div>
-<div class="content">
-    <div class="advantages">
-        <av-row>
-            <av-col size_xs="12" size_md="4">
-                <div class="title">Easy to use</div>
-                <div class="description">
-                    <p>You can easly create component to keep your code clean and reuse complex logical part.</p>
-                    <p>With the use of typescript, you will avoid a lot of mistakes and keep your code clean.</p>
-                </div>
-            </av-col>
-            <av-col size_xs="12" size_md="4">
-                <div class="title">Manage your data</div>
-                <div class="description">
-                    <p>You can easly write data and store to provide consistency inside your app.</p>
-                    <p>When a change occurs, everythink is updated by magic.</p>
-                </div>
-            </av-col>
-            <av-col size_xs="12" size_md="4">
-                <div class="title">Strong backend interaction</div>
-                <div class="description">
-                    <p>With aventus, you can find a lot of plugin to manage your backend like c#, firebase, etc</p>
-                    <p>A lot of code can be automatically generated. It's give you free time to focus on your design</p>
-                </div>
-            </av-col>
-        </av-row>
+    <div class="content">
+        <div class="advantages">
+            <av-row>
+                <av-col size_xs="12" size_md="4">
+                    <div class="title">Easy to use</div>
+                    <div class="description">
+                        <p>You can easly create component to keep your code clean and reuse complex logical part.</p>
+                        <p>With the use of typescript, you will avoid a lot of mistakes and keep your code clean.</p>
+                    </div>
+                </av-col>
+                <av-col size_xs="12" size_md="4">
+                    <div class="title">Manage your data</div>
+                    <div class="description">
+                        <p>You can easly write data and store to provide consistency inside your app.</p>
+                        <p>When a change occurs, everythink is updated by magic.</p>
+                    </div>
+                </av-col>
+                <av-col size_xs="12" size_md="4">
+                    <div class="title">Strong backend interaction</div>
+                    <div class="description">
+                        <p>With aventus, you can find a lot of plugin to manage your backend like c#, firebase, etc</p>
+                        <p>A lot of code can be automatically generated. It's give you free time to focus on your design
+                        </p>
+                    </div>
+                </av-col>
+            </av-row>
+        </div>
     </div>
-</div>`
+</av-scrollable>`
             }
         }
                 let newHtml = parentInfo.html
@@ -9982,7 +9988,7 @@ class AvGenericPage extends AvPage {
     constructor() { super(); if (this.constructor == AvGenericPage) { throw "can't instanciate an abstract class"; } }
     __getStyle() {
         let arrStyle = super.__getStyle();
-        arrStyle.push(`:host{height:100%}:host .content{height:100%;max-width:1000px;margin:0 auto}:host .content av-scrollable h1{margin-top:50px;text-align:center;display:inline-block;width:100%;color:var(--secondary-color);font-size:35px}:host .content av-scrollable h2{margin-left:0px;color:var(--secondary-color);font-size:25px}:host .content av-scrollable .table .header{font-weight:bold;border-bottom:1px solid var(--darker);padding:5px;font-size:20px}:host .content av-scrollable .table av-row{padding:10px;align-items:center}:host .content av-scrollable .table .title{font-size:18px;font-weight:600;margin-bottom:5px}:host .content av-scrollable .table.table-row av-row{border-bottom:1px solid #ddd}:host .content av-scrollable av-router-link{color:blue;text-decoration:underline;cursor:pointer}:host .content av-scrollable>*:last-child{margin-bottom:30px}:host .content av-scrollable section p{text-align:justify}:host .content av-scrollable .navigation av-img{height:40px}:host .content av-scrollable .navigation .previous{display:flex;align-items:center;justify-content:center}:host .content av-scrollable .navigation .previous av-router-link{display:flex;align-items:center;justify-content:center;cursor:pointer;color:#000;text-decoration:none}:host .content av-scrollable .navigation .previous av-router-link span{margin-left:15px}:host .content av-scrollable .navigation .next{display:flex;align-items:center;justify-content:center}:host .content av-scrollable .navigation .next av-router-link{display:flex;align-items:center;justify-content:center;cursor:pointer;color:#000;text-decoration:none}:host .content av-scrollable .navigation .next av-router-link span{margin-right:15px}:host .content av-scrollable ul li{margin:5px 0}:host .content av-scrollable ul li:first-child{margin-top:0}:host .content av-scrollable ul li:last-child{margin-bottom:0}`);
+        arrStyle.push(`:host{height:100%}:host .content{height:100%;max-width:1000px;margin:0 auto}:host .content av-scrollable .page-content{padding:0 20px}:host .content av-scrollable h1{margin-top:50px;text-align:center;display:inline-block;width:100%;color:var(--secondary-color);font-size:35px}:host .content av-scrollable h2{margin-left:0px;color:var(--secondary-color);font-size:25px}:host .content av-scrollable .table .header{font-weight:bold;border-bottom:1px solid var(--darker);padding:5px;font-size:20px}:host .content av-scrollable .table av-row{padding:10px;align-items:center}:host .content av-scrollable .table .title{font-size:18px;font-weight:600;margin-bottom:5px}:host .content av-scrollable .table.table-row av-row{border-bottom:1px solid #ddd}:host .content av-scrollable av-router-link{color:blue;text-decoration:underline;cursor:pointer}:host .content av-scrollable>*:last-child{margin-bottom:30px}:host .content av-scrollable section p{text-align:justify}:host .content av-scrollable av-img{max-width:100%}:host .content av-scrollable .navigation av-img{height:40px}:host .content av-scrollable .navigation .previous{display:flex;align-items:center;justify-content:center}:host .content av-scrollable .navigation .previous av-router-link{display:flex;align-items:center;justify-content:center;cursor:pointer;color:#000;text-decoration:none}:host .content av-scrollable .navigation .previous av-router-link span{margin-left:15px}:host .content av-scrollable .navigation .next{display:flex;align-items:center;justify-content:center}:host .content av-scrollable .navigation .next av-router-link{display:flex;align-items:center;justify-content:center;cursor:pointer;color:#000;text-decoration:none}:host .content av-scrollable .navigation .next av-router-link span{margin-right:15px}:host .content av-scrollable ul li{margin:5px 0}:host .content av-scrollable ul li:first-child{margin-top:0}:host .content av-scrollable ul li:last-child{margin-bottom:0}`);
         return arrStyle;
     }
     __getHtml() {
@@ -9990,7 +9996,9 @@ class AvGenericPage extends AvPage {
         let info = {
             html: `<div class="content">
     <av-scrollable _id="avgenericpage_0">
-        <slot></slot>
+        <div class="page-content">
+            <slot></slot>
+        </div>
     </av-scrollable>
 </div>`,
             slots: {
@@ -9999,7 +10007,9 @@ class AvGenericPage extends AvPage {
             blocks: {
                 'default':`<div class="content">
     <av-scrollable _id="avgenericpage_0">
-        <slot></slot>
+        <div class="page-content">
+            <slot></slot>
+        </div>
     </av-scrollable>
 </div>`
             }
@@ -10147,19 +10157,19 @@ class AvGettingStarted extends AvGenericPage {
     </p>
     <div class="table">
         <av-row class="header">
-            <av-col size_sm="4" center="">Extension</av-col>
-            <av-col size_sm="8" center="">Role</av-col>
+            <av-col size="4" center="">Extension</av-col>
+            <av-col size="8" center="">Role</av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center="">aventus.conf.json</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center="">aventus.conf.json</av-col>
+            <av-col size="8">
                 <div class="title">Configuration</div>
                 <div class="description">Inside this file you can find configuration for your project</div>
             </av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center="">*.wcl.avt</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center="">*.wcl.avt</av-col>
+            <av-col size="8">
                 <div class="title">Web Component Logic</div>
                 <div class="description">Inside this file you can find the logical part in Typescript for your
                     web
@@ -10167,16 +10177,16 @@ class AvGettingStarted extends AvGenericPage {
             </av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center="">*.wcs.avt</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center="">*.wcs.avt</av-col>
+            <av-col size="8">
                 <div class="title">Web Component Style</div>
                 <div class="description">Inside this file you can find the style in SCSS for your web component
                 </div>
             </av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center="">*.wcv.avt</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center="">*.wcv.avt</av-col>
+            <av-col size="8">
                 <div class="title">Web Component View</div>
                 <div class="description">Inside this file you can find the structure in HTML for your web
                     component
@@ -10184,16 +10194,16 @@ class AvGettingStarted extends AvGenericPage {
             </av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center="">*.data.avt</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center="">*.data.avt</av-col>
+            <av-col size="8">
                 <div class="title">Data</div>
                 <div class="description">This file is a class / interface / enum representing usable objects for
                     your application</div>
             </av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center="">*.lib.avt</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center="">*.lib.avt</av-col>
+            <av-col size="8">
                 <div class="title">Library</div>
                 <div class="description">This file allow you to create some logical part for your project
                     without
@@ -10201,15 +10211,15 @@ class AvGettingStarted extends AvGenericPage {
             </av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center="">*.ram.avt</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center="">*.ram.avt</av-col>
+            <av-col size="8">
                 <div class="title">RAM</div>
                 <div class="description">This file allow you to create store for your data</div>
             </av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center="">*.socket.avt</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center="">*.socket.avt</av-col>
+            <av-col size="8">
                 <div class="title">WebSocket</div>
                 <div class="description">This file allow you to create websocket instance to send message to
                     your
@@ -10264,19 +10274,19 @@ class AvGettingStarted extends AvGenericPage {
     </p>
     <div class="table">
         <av-row class="header">
-            <av-col size_sm="4" center="">Extension</av-col>
-            <av-col size_sm="8" center="">Role</av-col>
+            <av-col size="4" center="">Extension</av-col>
+            <av-col size="8" center="">Role</av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center="">aventus.conf.json</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center="">aventus.conf.json</av-col>
+            <av-col size="8">
                 <div class="title">Configuration</div>
                 <div class="description">Inside this file you can find configuration for your project</div>
             </av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center="">*.wcl.avt</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center="">*.wcl.avt</av-col>
+            <av-col size="8">
                 <div class="title">Web Component Logic</div>
                 <div class="description">Inside this file you can find the logical part in Typescript for your
                     web
@@ -10284,16 +10294,16 @@ class AvGettingStarted extends AvGenericPage {
             </av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center="">*.wcs.avt</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center="">*.wcs.avt</av-col>
+            <av-col size="8">
                 <div class="title">Web Component Style</div>
                 <div class="description">Inside this file you can find the style in SCSS for your web component
                 </div>
             </av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center="">*.wcv.avt</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center="">*.wcv.avt</av-col>
+            <av-col size="8">
                 <div class="title">Web Component View</div>
                 <div class="description">Inside this file you can find the structure in HTML for your web
                     component
@@ -10301,16 +10311,16 @@ class AvGettingStarted extends AvGenericPage {
             </av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center="">*.data.avt</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center="">*.data.avt</av-col>
+            <av-col size="8">
                 <div class="title">Data</div>
                 <div class="description">This file is a class / interface / enum representing usable objects for
                     your application</div>
             </av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center="">*.lib.avt</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center="">*.lib.avt</av-col>
+            <av-col size="8">
                 <div class="title">Library</div>
                 <div class="description">This file allow you to create some logical part for your project
                     without
@@ -10318,15 +10328,15 @@ class AvGettingStarted extends AvGenericPage {
             </av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center="">*.ram.avt</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center="">*.ram.avt</av-col>
+            <av-col size="8">
                 <div class="title">RAM</div>
                 <div class="description">This file allow you to create store for your data</div>
             </av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center="">*.socket.avt</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center="">*.socket.avt</av-col>
+            <av-col size="8">
                 <div class="title">WebSocket</div>
                 <div class="description">This file allow you to create websocket instance to send message to
                     your
@@ -11661,13 +11671,13 @@ class AvNavigationFooter extends WebComponent {
         let parentInfo = super.__getHtml();
         let info = {
             html: `<av-row class="navigation">
-    <av-col class="previous" offset_md="2" size_md="4">
+    <av-col class="previous" size="6" offset_right="6" offset-sm="2" size-sm="4" offset_right_sm="0">
         <av-router-link _id="avnavigationfooter_0">
             <av-img src="/img/angle-left.svg"></av-img>
             <span _id="avnavigationfooter_1"></span>
         </av-router-link>
     </av-col>
-    <av-col class="next" size_md="4">
+    <av-col class="next" offset="6" size="6" size-sm="4" offset_sm="0">
         <av-router-link _id="avnavigationfooter_2">
             <span _id="avnavigationfooter_3"></span>
             <av-img src="/img/angle-right.svg"></av-img>
@@ -11678,13 +11688,13 @@ class AvNavigationFooter extends WebComponent {
             },
             blocks: {
                 'default':`<av-row class="navigation">
-    <av-col class="previous" offset_md="2" size_md="4">
+    <av-col class="previous" size="6" offset_right="6" offset-sm="2" size-sm="4" offset_right_sm="0">
         <av-router-link _id="avnavigationfooter_0">
             <av-img src="/img/angle-left.svg"></av-img>
             <span _id="avnavigationfooter_1"></span>
         </av-router-link>
     </av-col>
-    <av-col class="next" size_md="4">
+    <av-col class="next" offset="6" size="6" size-sm="4" offset_sm="0">
         <av-router-link _id="avnavigationfooter_2">
             <span _id="avnavigationfooter_3"></span>
             <av-img src="/img/angle-right.svg"></av-img>
@@ -11801,7 +11811,7 @@ class AvRow extends WebComponent {
                     }    __prepareVariables() { super.__prepareVariables(); if(this.sizes === undefined) {this.sizes = {"xs":300,"sm":540,"md":720,"lg":960,"xl":1140};} }
     __getStyle() {
         let arrStyle = super.__getStyle();
-        arrStyle.push(`:host{display:flex;width:100%;font-size:0}:host([max_width=""]) ::slotted(av-col[offset_xs="0"]){margin-left:0%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="0"]){margin-right:0%}:host([max_width=""]) ::slotted(av-col[size_xs="0"]){width:0%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="1"]){margin-left:8.3333333333%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="1"]){margin-right:8.3333333333%}:host([max_width=""]) ::slotted(av-col[size_xs="1"]){width:8.3333333333%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="2"]){margin-left:16.6666666667%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="2"]){margin-right:16.6666666667%}:host([max_width=""]) ::slotted(av-col[size_xs="2"]){width:16.6666666667%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="3"]){margin-left:25%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="3"]){margin-right:25%}:host([max_width=""]) ::slotted(av-col[size_xs="3"]){width:25%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="4"]){margin-left:33.3333333333%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="4"]){margin-right:33.3333333333%}:host([max_width=""]) ::slotted(av-col[size_xs="4"]){width:33.3333333333%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="5"]){margin-left:41.6666666667%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="5"]){margin-right:41.6666666667%}:host([max_width=""]) ::slotted(av-col[size_xs="5"]){width:41.6666666667%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="6"]){margin-left:50%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="6"]){margin-right:50%}:host([max_width=""]) ::slotted(av-col[size_xs="6"]){width:50%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="7"]){margin-left:58.3333333333%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="7"]){margin-right:58.3333333333%}:host([max_width=""]) ::slotted(av-col[size_xs="7"]){width:58.3333333333%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="8"]){margin-left:66.6666666667%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="8"]){margin-right:66.6666666667%}:host([max_width=""]) ::slotted(av-col[size_xs="8"]){width:66.6666666667%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="9"]){margin-left:75%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="9"]){margin-right:75%}:host([max_width=""]) ::slotted(av-col[size_xs="9"]){width:75%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="10"]){margin-left:83.3333333333%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="10"]){margin-right:83.3333333333%}:host([max_width=""]) ::slotted(av-col[size_xs="10"]){width:83.3333333333%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="11"]){margin-left:91.6666666667%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="11"]){margin-right:91.6666666667%}:host([max_width=""]) ::slotted(av-col[size_xs="11"]){width:91.6666666667%;display:inline-block}:host([max_width=""]) ::slotted(av-col[offset_xs="12"]){margin-left:100%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="12"]){margin-right:100%}:host([max_width=""]) ::slotted(av-col[size_xs="12"]){width:100%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="0"]){margin-left:0%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="0"]){margin-right:0%}:host([max_width~=xs]) ::slotted(av-col[size_xs="0"]){width:0%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="1"]){margin-left:8.3333333333%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="1"]){margin-right:8.3333333333%}:host([max_width~=xs]) ::slotted(av-col[size_xs="1"]){width:8.3333333333%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="2"]){margin-left:16.6666666667%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="2"]){margin-right:16.6666666667%}:host([max_width~=xs]) ::slotted(av-col[size_xs="2"]){width:16.6666666667%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="3"]){margin-left:25%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="3"]){margin-right:25%}:host([max_width~=xs]) ::slotted(av-col[size_xs="3"]){width:25%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="4"]){margin-left:33.3333333333%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="4"]){margin-right:33.3333333333%}:host([max_width~=xs]) ::slotted(av-col[size_xs="4"]){width:33.3333333333%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="5"]){margin-left:41.6666666667%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="5"]){margin-right:41.6666666667%}:host([max_width~=xs]) ::slotted(av-col[size_xs="5"]){width:41.6666666667%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="6"]){margin-left:50%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="6"]){margin-right:50%}:host([max_width~=xs]) ::slotted(av-col[size_xs="6"]){width:50%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="7"]){margin-left:58.3333333333%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="7"]){margin-right:58.3333333333%}:host([max_width~=xs]) ::slotted(av-col[size_xs="7"]){width:58.3333333333%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="8"]){margin-left:66.6666666667%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="8"]){margin-right:66.6666666667%}:host([max_width~=xs]) ::slotted(av-col[size_xs="8"]){width:66.6666666667%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="9"]){margin-left:75%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="9"]){margin-right:75%}:host([max_width~=xs]) ::slotted(av-col[size_xs="9"]){width:75%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="10"]){margin-left:83.3333333333%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="10"]){margin-right:83.3333333333%}:host([max_width~=xs]) ::slotted(av-col[size_xs="10"]){width:83.3333333333%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="11"]){margin-left:91.6666666667%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="11"]){margin-right:91.6666666667%}:host([max_width~=xs]) ::slotted(av-col[size_xs="11"]){width:91.6666666667%;display:inline-block}:host([max_width~=xs]) ::slotted(av-col[offset_xs="12"]){margin-left:100%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="12"]){margin-right:100%}:host([max_width~=xs]) ::slotted(av-col[size_xs="12"]){width:100%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="0"]){margin-left:0%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="0"]){margin-right:0%}:host([max_width~=sm]) ::slotted(av-col[size_sm="0"]){width:0%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="1"]){margin-left:8.3333333333%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="1"]){margin-right:8.3333333333%}:host([max_width~=sm]) ::slotted(av-col[size_sm="1"]){width:8.3333333333%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="2"]){margin-left:16.6666666667%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="2"]){margin-right:16.6666666667%}:host([max_width~=sm]) ::slotted(av-col[size_sm="2"]){width:16.6666666667%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="3"]){margin-left:25%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="3"]){margin-right:25%}:host([max_width~=sm]) ::slotted(av-col[size_sm="3"]){width:25%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="4"]){margin-left:33.3333333333%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="4"]){margin-right:33.3333333333%}:host([max_width~=sm]) ::slotted(av-col[size_sm="4"]){width:33.3333333333%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="5"]){margin-left:41.6666666667%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="5"]){margin-right:41.6666666667%}:host([max_width~=sm]) ::slotted(av-col[size_sm="5"]){width:41.6666666667%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="6"]){margin-left:50%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="6"]){margin-right:50%}:host([max_width~=sm]) ::slotted(av-col[size_sm="6"]){width:50%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="7"]){margin-left:58.3333333333%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="7"]){margin-right:58.3333333333%}:host([max_width~=sm]) ::slotted(av-col[size_sm="7"]){width:58.3333333333%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="8"]){margin-left:66.6666666667%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="8"]){margin-right:66.6666666667%}:host([max_width~=sm]) ::slotted(av-col[size_sm="8"]){width:66.6666666667%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="9"]){margin-left:75%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="9"]){margin-right:75%}:host([max_width~=sm]) ::slotted(av-col[size_sm="9"]){width:75%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="10"]){margin-left:83.3333333333%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="10"]){margin-right:83.3333333333%}:host([max_width~=sm]) ::slotted(av-col[size_sm="10"]){width:83.3333333333%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="11"]){margin-left:91.6666666667%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="11"]){margin-right:91.6666666667%}:host([max_width~=sm]) ::slotted(av-col[size_sm="11"]){width:91.6666666667%;display:inline-block}:host([max_width~=sm]) ::slotted(av-col[offset_sm="12"]){margin-left:100%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="12"]){margin-right:100%}:host([max_width~=sm]) ::slotted(av-col[size_sm="12"]){width:100%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="0"]){margin-left:0%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="0"]){margin-right:0%}:host([max_width~=md]) ::slotted(av-col[size_md="0"]){width:0%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="1"]){margin-left:8.3333333333%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="1"]){margin-right:8.3333333333%}:host([max_width~=md]) ::slotted(av-col[size_md="1"]){width:8.3333333333%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="2"]){margin-left:16.6666666667%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="2"]){margin-right:16.6666666667%}:host([max_width~=md]) ::slotted(av-col[size_md="2"]){width:16.6666666667%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="3"]){margin-left:25%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="3"]){margin-right:25%}:host([max_width~=md]) ::slotted(av-col[size_md="3"]){width:25%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="4"]){margin-left:33.3333333333%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="4"]){margin-right:33.3333333333%}:host([max_width~=md]) ::slotted(av-col[size_md="4"]){width:33.3333333333%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="5"]){margin-left:41.6666666667%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="5"]){margin-right:41.6666666667%}:host([max_width~=md]) ::slotted(av-col[size_md="5"]){width:41.6666666667%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="6"]){margin-left:50%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="6"]){margin-right:50%}:host([max_width~=md]) ::slotted(av-col[size_md="6"]){width:50%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="7"]){margin-left:58.3333333333%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="7"]){margin-right:58.3333333333%}:host([max_width~=md]) ::slotted(av-col[size_md="7"]){width:58.3333333333%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="8"]){margin-left:66.6666666667%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="8"]){margin-right:66.6666666667%}:host([max_width~=md]) ::slotted(av-col[size_md="8"]){width:66.6666666667%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="9"]){margin-left:75%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="9"]){margin-right:75%}:host([max_width~=md]) ::slotted(av-col[size_md="9"]){width:75%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="10"]){margin-left:83.3333333333%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="10"]){margin-right:83.3333333333%}:host([max_width~=md]) ::slotted(av-col[size_md="10"]){width:83.3333333333%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="11"]){margin-left:91.6666666667%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="11"]){margin-right:91.6666666667%}:host([max_width~=md]) ::slotted(av-col[size_md="11"]){width:91.6666666667%;display:inline-block}:host([max_width~=md]) ::slotted(av-col[offset_md="12"]){margin-left:100%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="12"]){margin-right:100%}:host([max_width~=md]) ::slotted(av-col[size_md="12"]){width:100%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="0"]){margin-left:0%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="0"]){margin-right:0%}:host([max_width~=lg]) ::slotted(av-col[size_lg="0"]){width:0%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="1"]){margin-left:8.3333333333%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="1"]){margin-right:8.3333333333%}:host([max_width~=lg]) ::slotted(av-col[size_lg="1"]){width:8.3333333333%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="2"]){margin-left:16.6666666667%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="2"]){margin-right:16.6666666667%}:host([max_width~=lg]) ::slotted(av-col[size_lg="2"]){width:16.6666666667%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="3"]){margin-left:25%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="3"]){margin-right:25%}:host([max_width~=lg]) ::slotted(av-col[size_lg="3"]){width:25%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="4"]){margin-left:33.3333333333%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="4"]){margin-right:33.3333333333%}:host([max_width~=lg]) ::slotted(av-col[size_lg="4"]){width:33.3333333333%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="5"]){margin-left:41.6666666667%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="5"]){margin-right:41.6666666667%}:host([max_width~=lg]) ::slotted(av-col[size_lg="5"]){width:41.6666666667%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="6"]){margin-left:50%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="6"]){margin-right:50%}:host([max_width~=lg]) ::slotted(av-col[size_lg="6"]){width:50%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="7"]){margin-left:58.3333333333%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="7"]){margin-right:58.3333333333%}:host([max_width~=lg]) ::slotted(av-col[size_lg="7"]){width:58.3333333333%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="8"]){margin-left:66.6666666667%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="8"]){margin-right:66.6666666667%}:host([max_width~=lg]) ::slotted(av-col[size_lg="8"]){width:66.6666666667%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="9"]){margin-left:75%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="9"]){margin-right:75%}:host([max_width~=lg]) ::slotted(av-col[size_lg="9"]){width:75%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="10"]){margin-left:83.3333333333%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="10"]){margin-right:83.3333333333%}:host([max_width~=lg]) ::slotted(av-col[size_lg="10"]){width:83.3333333333%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="11"]){margin-left:91.6666666667%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="11"]){margin-right:91.6666666667%}:host([max_width~=lg]) ::slotted(av-col[size_lg="11"]){width:91.6666666667%;display:inline-block}:host([max_width~=lg]) ::slotted(av-col[offset_lg="12"]){margin-left:100%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="12"]){margin-right:100%}:host([max_width~=lg]) ::slotted(av-col[size_lg="12"]){width:100%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="0"]){margin-left:0%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="0"]){margin-right:0%}:host([max_width~=xl]) ::slotted(av-col[size_xl="0"]){width:0%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="1"]){margin-left:8.3333333333%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="1"]){margin-right:8.3333333333%}:host([max_width~=xl]) ::slotted(av-col[size_xl="1"]){width:8.3333333333%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="2"]){margin-left:16.6666666667%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="2"]){margin-right:16.6666666667%}:host([max_width~=xl]) ::slotted(av-col[size_xl="2"]){width:16.6666666667%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="3"]){margin-left:25%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="3"]){margin-right:25%}:host([max_width~=xl]) ::slotted(av-col[size_xl="3"]){width:25%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="4"]){margin-left:33.3333333333%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="4"]){margin-right:33.3333333333%}:host([max_width~=xl]) ::slotted(av-col[size_xl="4"]){width:33.3333333333%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="5"]){margin-left:41.6666666667%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="5"]){margin-right:41.6666666667%}:host([max_width~=xl]) ::slotted(av-col[size_xl="5"]){width:41.6666666667%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="6"]){margin-left:50%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="6"]){margin-right:50%}:host([max_width~=xl]) ::slotted(av-col[size_xl="6"]){width:50%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="7"]){margin-left:58.3333333333%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="7"]){margin-right:58.3333333333%}:host([max_width~=xl]) ::slotted(av-col[size_xl="7"]){width:58.3333333333%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="8"]){margin-left:66.6666666667%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="8"]){margin-right:66.6666666667%}:host([max_width~=xl]) ::slotted(av-col[size_xl="8"]){width:66.6666666667%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="9"]){margin-left:75%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="9"]){margin-right:75%}:host([max_width~=xl]) ::slotted(av-col[size_xl="9"]){width:75%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="10"]){margin-left:83.3333333333%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="10"]){margin-right:83.3333333333%}:host([max_width~=xl]) ::slotted(av-col[size_xl="10"]){width:83.3333333333%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="11"]){margin-left:91.6666666667%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="11"]){margin-right:91.6666666667%}:host([max_width~=xl]) ::slotted(av-col[size_xl="11"]){width:91.6666666667%;display:inline-block}:host([max_width~=xl]) ::slotted(av-col[offset_xl="12"]){margin-left:100%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="12"]){margin-right:100%}:host([max_width~=xl]) ::slotted(av-col[size_xl="12"]){width:100%;display:inline-block}`);
+        arrStyle.push(`:host{display:flex;flex-wrap:wrap;width:100%;font-size:0}:host([max_width=""]) ::slotted(av-col[offset_xs="0"]){margin-left:0%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="0"]){margin-right:0%}:host([max_width=""]) ::slotted(av-col[size_xs="0"]){width:0%}:host([max_width=""]) ::slotted(av-col[offset_xs="1"]){margin-left:8.3333333333%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="1"]){margin-right:8.3333333333%}:host([max_width=""]) ::slotted(av-col[size_xs="1"]){width:8.3333333333%}:host([max_width=""]) ::slotted(av-col[offset_xs="2"]){margin-left:16.6666666667%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="2"]){margin-right:16.6666666667%}:host([max_width=""]) ::slotted(av-col[size_xs="2"]){width:16.6666666667%}:host([max_width=""]) ::slotted(av-col[offset_xs="3"]){margin-left:25%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="3"]){margin-right:25%}:host([max_width=""]) ::slotted(av-col[size_xs="3"]){width:25%}:host([max_width=""]) ::slotted(av-col[offset_xs="4"]){margin-left:33.3333333333%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="4"]){margin-right:33.3333333333%}:host([max_width=""]) ::slotted(av-col[size_xs="4"]){width:33.3333333333%}:host([max_width=""]) ::slotted(av-col[offset_xs="5"]){margin-left:41.6666666667%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="5"]){margin-right:41.6666666667%}:host([max_width=""]) ::slotted(av-col[size_xs="5"]){width:41.6666666667%}:host([max_width=""]) ::slotted(av-col[offset_xs="6"]){margin-left:50%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="6"]){margin-right:50%}:host([max_width=""]) ::slotted(av-col[size_xs="6"]){width:50%}:host([max_width=""]) ::slotted(av-col[offset_xs="7"]){margin-left:58.3333333333%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="7"]){margin-right:58.3333333333%}:host([max_width=""]) ::slotted(av-col[size_xs="7"]){width:58.3333333333%}:host([max_width=""]) ::slotted(av-col[offset_xs="8"]){margin-left:66.6666666667%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="8"]){margin-right:66.6666666667%}:host([max_width=""]) ::slotted(av-col[size_xs="8"]){width:66.6666666667%}:host([max_width=""]) ::slotted(av-col[offset_xs="9"]){margin-left:75%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="9"]){margin-right:75%}:host([max_width=""]) ::slotted(av-col[size_xs="9"]){width:75%}:host([max_width=""]) ::slotted(av-col[offset_xs="10"]){margin-left:83.3333333333%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="10"]){margin-right:83.3333333333%}:host([max_width=""]) ::slotted(av-col[size_xs="10"]){width:83.3333333333%}:host([max_width=""]) ::slotted(av-col[offset_xs="11"]){margin-left:91.6666666667%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="11"]){margin-right:91.6666666667%}:host([max_width=""]) ::slotted(av-col[size_xs="11"]){width:91.6666666667%}:host([max_width=""]) ::slotted(av-col[offset_xs="12"]){margin-left:100%}:host([max_width=""]) ::slotted(av-col[offset_right_xs="12"]){margin-right:100%}:host([max_width=""]) ::slotted(av-col[size_xs="12"]){width:100%}:host([max_width~=xs]) ::slotted(av-col[offset_xs="0"]){margin-left:0%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="0"]){margin-right:0%}:host([max_width~=xs]) ::slotted(av-col[size_xs="0"]){width:0%}:host([max_width~=xs]) ::slotted(av-col[offset_xs="1"]){margin-left:8.3333333333%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="1"]){margin-right:8.3333333333%}:host([max_width~=xs]) ::slotted(av-col[size_xs="1"]){width:8.3333333333%}:host([max_width~=xs]) ::slotted(av-col[offset_xs="2"]){margin-left:16.6666666667%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="2"]){margin-right:16.6666666667%}:host([max_width~=xs]) ::slotted(av-col[size_xs="2"]){width:16.6666666667%}:host([max_width~=xs]) ::slotted(av-col[offset_xs="3"]){margin-left:25%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="3"]){margin-right:25%}:host([max_width~=xs]) ::slotted(av-col[size_xs="3"]){width:25%}:host([max_width~=xs]) ::slotted(av-col[offset_xs="4"]){margin-left:33.3333333333%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="4"]){margin-right:33.3333333333%}:host([max_width~=xs]) ::slotted(av-col[size_xs="4"]){width:33.3333333333%}:host([max_width~=xs]) ::slotted(av-col[offset_xs="5"]){margin-left:41.6666666667%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="5"]){margin-right:41.6666666667%}:host([max_width~=xs]) ::slotted(av-col[size_xs="5"]){width:41.6666666667%}:host([max_width~=xs]) ::slotted(av-col[offset_xs="6"]){margin-left:50%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="6"]){margin-right:50%}:host([max_width~=xs]) ::slotted(av-col[size_xs="6"]){width:50%}:host([max_width~=xs]) ::slotted(av-col[offset_xs="7"]){margin-left:58.3333333333%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="7"]){margin-right:58.3333333333%}:host([max_width~=xs]) ::slotted(av-col[size_xs="7"]){width:58.3333333333%}:host([max_width~=xs]) ::slotted(av-col[offset_xs="8"]){margin-left:66.6666666667%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="8"]){margin-right:66.6666666667%}:host([max_width~=xs]) ::slotted(av-col[size_xs="8"]){width:66.6666666667%}:host([max_width~=xs]) ::slotted(av-col[offset_xs="9"]){margin-left:75%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="9"]){margin-right:75%}:host([max_width~=xs]) ::slotted(av-col[size_xs="9"]){width:75%}:host([max_width~=xs]) ::slotted(av-col[offset_xs="10"]){margin-left:83.3333333333%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="10"]){margin-right:83.3333333333%}:host([max_width~=xs]) ::slotted(av-col[size_xs="10"]){width:83.3333333333%}:host([max_width~=xs]) ::slotted(av-col[offset_xs="11"]){margin-left:91.6666666667%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="11"]){margin-right:91.6666666667%}:host([max_width~=xs]) ::slotted(av-col[size_xs="11"]){width:91.6666666667%}:host([max_width~=xs]) ::slotted(av-col[offset_xs="12"]){margin-left:100%}:host([max_width~=xs]) ::slotted(av-col[offset_right_xs="12"]){margin-right:100%}:host([max_width~=xs]) ::slotted(av-col[size_xs="12"]){width:100%}:host([max_width~=sm]) ::slotted(av-col[offset_sm="0"]){margin-left:0%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="0"]){margin-right:0%}:host([max_width~=sm]) ::slotted(av-col[size_sm="0"]){width:0%}:host([max_width~=sm]) ::slotted(av-col[offset_sm="1"]){margin-left:8.3333333333%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="1"]){margin-right:8.3333333333%}:host([max_width~=sm]) ::slotted(av-col[size_sm="1"]){width:8.3333333333%}:host([max_width~=sm]) ::slotted(av-col[offset_sm="2"]){margin-left:16.6666666667%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="2"]){margin-right:16.6666666667%}:host([max_width~=sm]) ::slotted(av-col[size_sm="2"]){width:16.6666666667%}:host([max_width~=sm]) ::slotted(av-col[offset_sm="3"]){margin-left:25%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="3"]){margin-right:25%}:host([max_width~=sm]) ::slotted(av-col[size_sm="3"]){width:25%}:host([max_width~=sm]) ::slotted(av-col[offset_sm="4"]){margin-left:33.3333333333%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="4"]){margin-right:33.3333333333%}:host([max_width~=sm]) ::slotted(av-col[size_sm="4"]){width:33.3333333333%}:host([max_width~=sm]) ::slotted(av-col[offset_sm="5"]){margin-left:41.6666666667%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="5"]){margin-right:41.6666666667%}:host([max_width~=sm]) ::slotted(av-col[size_sm="5"]){width:41.6666666667%}:host([max_width~=sm]) ::slotted(av-col[offset_sm="6"]){margin-left:50%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="6"]){margin-right:50%}:host([max_width~=sm]) ::slotted(av-col[size_sm="6"]){width:50%}:host([max_width~=sm]) ::slotted(av-col[offset_sm="7"]){margin-left:58.3333333333%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="7"]){margin-right:58.3333333333%}:host([max_width~=sm]) ::slotted(av-col[size_sm="7"]){width:58.3333333333%}:host([max_width~=sm]) ::slotted(av-col[offset_sm="8"]){margin-left:66.6666666667%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="8"]){margin-right:66.6666666667%}:host([max_width~=sm]) ::slotted(av-col[size_sm="8"]){width:66.6666666667%}:host([max_width~=sm]) ::slotted(av-col[offset_sm="9"]){margin-left:75%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="9"]){margin-right:75%}:host([max_width~=sm]) ::slotted(av-col[size_sm="9"]){width:75%}:host([max_width~=sm]) ::slotted(av-col[offset_sm="10"]){margin-left:83.3333333333%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="10"]){margin-right:83.3333333333%}:host([max_width~=sm]) ::slotted(av-col[size_sm="10"]){width:83.3333333333%}:host([max_width~=sm]) ::slotted(av-col[offset_sm="11"]){margin-left:91.6666666667%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="11"]){margin-right:91.6666666667%}:host([max_width~=sm]) ::slotted(av-col[size_sm="11"]){width:91.6666666667%}:host([max_width~=sm]) ::slotted(av-col[offset_sm="12"]){margin-left:100%}:host([max_width~=sm]) ::slotted(av-col[offset_right_sm="12"]){margin-right:100%}:host([max_width~=sm]) ::slotted(av-col[size_sm="12"]){width:100%}:host([max_width~=md]) ::slotted(av-col[offset_md="0"]){margin-left:0%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="0"]){margin-right:0%}:host([max_width~=md]) ::slotted(av-col[size_md="0"]){width:0%}:host([max_width~=md]) ::slotted(av-col[offset_md="1"]){margin-left:8.3333333333%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="1"]){margin-right:8.3333333333%}:host([max_width~=md]) ::slotted(av-col[size_md="1"]){width:8.3333333333%}:host([max_width~=md]) ::slotted(av-col[offset_md="2"]){margin-left:16.6666666667%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="2"]){margin-right:16.6666666667%}:host([max_width~=md]) ::slotted(av-col[size_md="2"]){width:16.6666666667%}:host([max_width~=md]) ::slotted(av-col[offset_md="3"]){margin-left:25%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="3"]){margin-right:25%}:host([max_width~=md]) ::slotted(av-col[size_md="3"]){width:25%}:host([max_width~=md]) ::slotted(av-col[offset_md="4"]){margin-left:33.3333333333%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="4"]){margin-right:33.3333333333%}:host([max_width~=md]) ::slotted(av-col[size_md="4"]){width:33.3333333333%}:host([max_width~=md]) ::slotted(av-col[offset_md="5"]){margin-left:41.6666666667%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="5"]){margin-right:41.6666666667%}:host([max_width~=md]) ::slotted(av-col[size_md="5"]){width:41.6666666667%}:host([max_width~=md]) ::slotted(av-col[offset_md="6"]){margin-left:50%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="6"]){margin-right:50%}:host([max_width~=md]) ::slotted(av-col[size_md="6"]){width:50%}:host([max_width~=md]) ::slotted(av-col[offset_md="7"]){margin-left:58.3333333333%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="7"]){margin-right:58.3333333333%}:host([max_width~=md]) ::slotted(av-col[size_md="7"]){width:58.3333333333%}:host([max_width~=md]) ::slotted(av-col[offset_md="8"]){margin-left:66.6666666667%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="8"]){margin-right:66.6666666667%}:host([max_width~=md]) ::slotted(av-col[size_md="8"]){width:66.6666666667%}:host([max_width~=md]) ::slotted(av-col[offset_md="9"]){margin-left:75%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="9"]){margin-right:75%}:host([max_width~=md]) ::slotted(av-col[size_md="9"]){width:75%}:host([max_width~=md]) ::slotted(av-col[offset_md="10"]){margin-left:83.3333333333%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="10"]){margin-right:83.3333333333%}:host([max_width~=md]) ::slotted(av-col[size_md="10"]){width:83.3333333333%}:host([max_width~=md]) ::slotted(av-col[offset_md="11"]){margin-left:91.6666666667%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="11"]){margin-right:91.6666666667%}:host([max_width~=md]) ::slotted(av-col[size_md="11"]){width:91.6666666667%}:host([max_width~=md]) ::slotted(av-col[offset_md="12"]){margin-left:100%}:host([max_width~=md]) ::slotted(av-col[offset_right_md="12"]){margin-right:100%}:host([max_width~=md]) ::slotted(av-col[size_md="12"]){width:100%}:host([max_width~=lg]) ::slotted(av-col[offset_lg="0"]){margin-left:0%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="0"]){margin-right:0%}:host([max_width~=lg]) ::slotted(av-col[size_lg="0"]){width:0%}:host([max_width~=lg]) ::slotted(av-col[offset_lg="1"]){margin-left:8.3333333333%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="1"]){margin-right:8.3333333333%}:host([max_width~=lg]) ::slotted(av-col[size_lg="1"]){width:8.3333333333%}:host([max_width~=lg]) ::slotted(av-col[offset_lg="2"]){margin-left:16.6666666667%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="2"]){margin-right:16.6666666667%}:host([max_width~=lg]) ::slotted(av-col[size_lg="2"]){width:16.6666666667%}:host([max_width~=lg]) ::slotted(av-col[offset_lg="3"]){margin-left:25%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="3"]){margin-right:25%}:host([max_width~=lg]) ::slotted(av-col[size_lg="3"]){width:25%}:host([max_width~=lg]) ::slotted(av-col[offset_lg="4"]){margin-left:33.3333333333%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="4"]){margin-right:33.3333333333%}:host([max_width~=lg]) ::slotted(av-col[size_lg="4"]){width:33.3333333333%}:host([max_width~=lg]) ::slotted(av-col[offset_lg="5"]){margin-left:41.6666666667%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="5"]){margin-right:41.6666666667%}:host([max_width~=lg]) ::slotted(av-col[size_lg="5"]){width:41.6666666667%}:host([max_width~=lg]) ::slotted(av-col[offset_lg="6"]){margin-left:50%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="6"]){margin-right:50%}:host([max_width~=lg]) ::slotted(av-col[size_lg="6"]){width:50%}:host([max_width~=lg]) ::slotted(av-col[offset_lg="7"]){margin-left:58.3333333333%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="7"]){margin-right:58.3333333333%}:host([max_width~=lg]) ::slotted(av-col[size_lg="7"]){width:58.3333333333%}:host([max_width~=lg]) ::slotted(av-col[offset_lg="8"]){margin-left:66.6666666667%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="8"]){margin-right:66.6666666667%}:host([max_width~=lg]) ::slotted(av-col[size_lg="8"]){width:66.6666666667%}:host([max_width~=lg]) ::slotted(av-col[offset_lg="9"]){margin-left:75%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="9"]){margin-right:75%}:host([max_width~=lg]) ::slotted(av-col[size_lg="9"]){width:75%}:host([max_width~=lg]) ::slotted(av-col[offset_lg="10"]){margin-left:83.3333333333%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="10"]){margin-right:83.3333333333%}:host([max_width~=lg]) ::slotted(av-col[size_lg="10"]){width:83.3333333333%}:host([max_width~=lg]) ::slotted(av-col[offset_lg="11"]){margin-left:91.6666666667%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="11"]){margin-right:91.6666666667%}:host([max_width~=lg]) ::slotted(av-col[size_lg="11"]){width:91.6666666667%}:host([max_width~=lg]) ::slotted(av-col[offset_lg="12"]){margin-left:100%}:host([max_width~=lg]) ::slotted(av-col[offset_right_lg="12"]){margin-right:100%}:host([max_width~=lg]) ::slotted(av-col[size_lg="12"]){width:100%}:host([max_width~=xl]) ::slotted(av-col[offset_xl="0"]){margin-left:0%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="0"]){margin-right:0%}:host([max_width~=xl]) ::slotted(av-col[size_xl="0"]){width:0%}:host([max_width~=xl]) ::slotted(av-col[offset_xl="1"]){margin-left:8.3333333333%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="1"]){margin-right:8.3333333333%}:host([max_width~=xl]) ::slotted(av-col[size_xl="1"]){width:8.3333333333%}:host([max_width~=xl]) ::slotted(av-col[offset_xl="2"]){margin-left:16.6666666667%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="2"]){margin-right:16.6666666667%}:host([max_width~=xl]) ::slotted(av-col[size_xl="2"]){width:16.6666666667%}:host([max_width~=xl]) ::slotted(av-col[offset_xl="3"]){margin-left:25%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="3"]){margin-right:25%}:host([max_width~=xl]) ::slotted(av-col[size_xl="3"]){width:25%}:host([max_width~=xl]) ::slotted(av-col[offset_xl="4"]){margin-left:33.3333333333%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="4"]){margin-right:33.3333333333%}:host([max_width~=xl]) ::slotted(av-col[size_xl="4"]){width:33.3333333333%}:host([max_width~=xl]) ::slotted(av-col[offset_xl="5"]){margin-left:41.6666666667%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="5"]){margin-right:41.6666666667%}:host([max_width~=xl]) ::slotted(av-col[size_xl="5"]){width:41.6666666667%}:host([max_width~=xl]) ::slotted(av-col[offset_xl="6"]){margin-left:50%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="6"]){margin-right:50%}:host([max_width~=xl]) ::slotted(av-col[size_xl="6"]){width:50%}:host([max_width~=xl]) ::slotted(av-col[offset_xl="7"]){margin-left:58.3333333333%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="7"]){margin-right:58.3333333333%}:host([max_width~=xl]) ::slotted(av-col[size_xl="7"]){width:58.3333333333%}:host([max_width~=xl]) ::slotted(av-col[offset_xl="8"]){margin-left:66.6666666667%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="8"]){margin-right:66.6666666667%}:host([max_width~=xl]) ::slotted(av-col[size_xl="8"]){width:66.6666666667%}:host([max_width~=xl]) ::slotted(av-col[offset_xl="9"]){margin-left:75%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="9"]){margin-right:75%}:host([max_width~=xl]) ::slotted(av-col[size_xl="9"]){width:75%}:host([max_width~=xl]) ::slotted(av-col[offset_xl="10"]){margin-left:83.3333333333%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="10"]){margin-right:83.3333333333%}:host([max_width~=xl]) ::slotted(av-col[size_xl="10"]){width:83.3333333333%}:host([max_width~=xl]) ::slotted(av-col[offset_xl="11"]){margin-left:91.6666666667%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="11"]){margin-right:91.6666666667%}:host([max_width~=xl]) ::slotted(av-col[size_xl="11"]){width:91.6666666667%}:host([max_width~=xl]) ::slotted(av-col[offset_xl="12"]){margin-left:100%}:host([max_width~=xl]) ::slotted(av-col[offset_right_xl="12"]){margin-right:100%}:host([max_width~=xl]) ::slotted(av-col[size_xl="12"]){width:100%}`);
         return arrStyle;
     }
     __getHtml() {
@@ -11958,7 +11968,7 @@ class AvCol extends WebComponent {
                         }
                     }    __getStyle() {
         let arrStyle = super.__getStyle();
-        arrStyle.push(`:host{display:flex;padding:0 10px;width:100%;margin-left:0;margin-right:0;font-size:16px}:host([nobreak]){white-space:nowrap;text-overflow:ellipsis;overflow:hidden}:host([center]){text-align:center}:host([size="1"]){width:8.3333333333%;display:inline-block}:host([offset="1"]){margin-left:8.3333333333%}:host([offset-right="1"]){margin-right:8.3333333333%}:host([size="2"]){width:16.6666666667%;display:inline-block}:host([offset="2"]){margin-left:16.6666666667%}:host([offset-right="2"]){margin-right:16.6666666667%}:host([size="3"]){width:25%;display:inline-block}:host([offset="3"]){margin-left:25%}:host([offset-right="3"]){margin-right:25%}:host([size="4"]){width:33.3333333333%;display:inline-block}:host([offset="4"]){margin-left:33.3333333333%}:host([offset-right="4"]){margin-right:33.3333333333%}:host([size="5"]){width:41.6666666667%;display:inline-block}:host([offset="5"]){margin-left:41.6666666667%}:host([offset-right="5"]){margin-right:41.6666666667%}:host([size="6"]){width:50%;display:inline-block}:host([offset="6"]){margin-left:50%}:host([offset-right="6"]){margin-right:50%}:host([size="7"]){width:58.3333333333%;display:inline-block}:host([offset="7"]){margin-left:58.3333333333%}:host([offset-right="7"]){margin-right:58.3333333333%}:host([size="8"]){width:66.6666666667%;display:inline-block}:host([offset="8"]){margin-left:66.6666666667%}:host([offset-right="8"]){margin-right:66.6666666667%}:host([size="9"]){width:75%;display:inline-block}:host([offset="9"]){margin-left:75%}:host([offset-right="9"]){margin-right:75%}:host([size="10"]){width:83.3333333333%;display:inline-block}:host([offset="10"]){margin-left:83.3333333333%}:host([offset-right="10"]){margin-right:83.3333333333%}:host([size="11"]){width:91.6666666667%;display:inline-block}:host([offset="11"]){margin-left:91.6666666667%}:host([offset-right="11"]){margin-right:91.6666666667%}:host([size="12"]){width:100%;display:inline-block}:host([offset="12"]){margin-left:100%}:host([offset-right="12"]){margin-right:100%}`);
+        arrStyle.push(`:host{display:flex;flex-direction:column;padding:0 10px;width:100%;margin-left:0;margin-right:0;font-size:16px}:host([nobreak]){white-space:nowrap;text-overflow:ellipsis;overflow:hidden}:host([center]){text-align:center}:host([size="1"]){width:8.3333333333%;display:inline-block}:host([offset="1"]){margin-left:8.3333333333%}:host([offset-right="1"]){margin-right:8.3333333333%}:host([size="2"]){width:16.6666666667%;display:inline-block}:host([offset="2"]){margin-left:16.6666666667%}:host([offset-right="2"]){margin-right:16.6666666667%}:host([size="3"]){width:25%;display:inline-block}:host([offset="3"]){margin-left:25%}:host([offset-right="3"]){margin-right:25%}:host([size="4"]){width:33.3333333333%;display:inline-block}:host([offset="4"]){margin-left:33.3333333333%}:host([offset-right="4"]){margin-right:33.3333333333%}:host([size="5"]){width:41.6666666667%;display:inline-block}:host([offset="5"]){margin-left:41.6666666667%}:host([offset-right="5"]){margin-right:41.6666666667%}:host([size="6"]){width:50%;display:inline-block}:host([offset="6"]){margin-left:50%}:host([offset-right="6"]){margin-right:50%}:host([size="7"]){width:58.3333333333%;display:inline-block}:host([offset="7"]){margin-left:58.3333333333%}:host([offset-right="7"]){margin-right:58.3333333333%}:host([size="8"]){width:66.6666666667%;display:inline-block}:host([offset="8"]){margin-left:66.6666666667%}:host([offset-right="8"]){margin-right:66.6666666667%}:host([size="9"]){width:75%;display:inline-block}:host([offset="9"]){margin-left:75%}:host([offset-right="9"]){margin-right:75%}:host([size="10"]){width:83.3333333333%;display:inline-block}:host([offset="10"]){margin-left:83.3333333333%}:host([offset-right="10"]){margin-right:83.3333333333%}:host([size="11"]){width:91.6666666667%;display:inline-block}:host([offset="11"]){margin-left:91.6666666667%}:host([offset-right="11"]){margin-right:91.6666666667%}:host([size="12"]){width:100%;display:inline-block}:host([offset="12"]){margin-left:100%}:host([offset-right="12"]){margin-right:100%}`);
         return arrStyle;
     }
     __getHtml() {
@@ -12070,7 +12080,7 @@ class AvImg extends WebComponent {
                     }
                     set 'mode'(val) {
                         this.setAttribute('mode',val);
-                    }    __prepareVariables() { super.__prepareVariables(); if(this.bigImg === undefined) {this.bigImg = "undefined";}if(this.ratio === undefined) {this.ratio = 1;}if(this._maxCalculateSize === undefined) {this._maxCalculateSize = 10;}if(this._isCalculing === undefined) {this._isCalculing = false;}if(this.checkClose === undefined) {this.checkClose = "(e:Event) => {\r\n        if(e instanceof KeyboardEvent) {\r\n            if(e.key == 'Escape') {\r\n                this.close();\r\n            }\r\n        }\r\n        else {\r\n            let realTargetEl = e.realTarget();\r\n            if(realTargetEl != this.bigImg) {\r\n                this.close();\r\n            }\r\n        }\r\n\r\n    }";} }
+                    }    __prepareVariables() { super.__prepareVariables(); if(this.bigImg === undefined) {this.bigImg = "undefined";}if(this.ratio === undefined) {this.ratio = 1;}if(this._maxCalculateSize === undefined) {this._maxCalculateSize = 10;}if(this._isCalculing === undefined) {this._isCalculing = false;}if(this.checkCloseBinded === undefined) {this.checkCloseBinded = undefined;} }
     __getStyle() {
         let arrStyle = super.__getStyle();
         arrStyle.push(`:host{--internal-img-color: var(--img-color);--internal-img-stroke-color: var(--img-stroke-color, var(--internal-img-color));--internal-img-fill-color: var(--img-fill-color, var(--internal-img-color));--internal-img-color-transition: var(--img-color-transition, none)}:host{display:inline-block;overflow:hidden;font-size:0;height:100%}:host *{box-sizing:border-box}:host img{opacity:0;transition:filter .3s linear}:host .svg{display:none;height:100%;width:100%}:host .svg svg{height:100%;width:100%}:host([src$=".svg"]) img{display:none}:host([src$=".svg"]) .svg{display:flex}:host([src$=".svg"]) .svg svg{transition:var(--internal-img-color-transition);stroke:var(--internal-img-stroke-color);fill:var(--internal-img-fill-color)}:host([display_bigger=true]) img{cursor:pointer}:host([display_bigger=true]) img:hover{filter:brightness(50%)}`);
@@ -12097,13 +12107,14 @@ class AvImg extends WebComponent {
     }
     __mapSelectedElement() { super.__mapSelectedElement(); this.imgEl = this.shadowRoot.querySelector('[_id="avimg_0"]');this.svgEl = this.shadowRoot.querySelector('[_id="avimg_1"]');}
     __registerOnChange() { super.__registerOnChange(); this.__onChangeFct['src'] = []this.__onChangeFct['src'].push((path) => {((target) => {    if (target.src.endsWith(".svg")) {        AvRessourceManager.get(target.src).then((svgContent) => {            target.svgEl.innerHTML = svgContent;            target.calculateSize();        });    }    else if (target.src != "") {        AvRessourceManager.get(target.src).then((base64) => {            target.imgEl.setAttribute("src", base64);            target.calculateSize();        });    }})(this);})this.__onChangeFct['mode'] = []this.__onChangeFct['mode'].push((path) => {((target) => {    if (target.src != "") {        target.calculateSize();    }})(this);}) }
+    __endConstructor() { super.__endConstructor(); (() => {    this.checkCloseBinded = this.checkClose.bind(this);})() }
     getClassName() {
         return "AvImg";
     }
     __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('display_bigger')) { this.attributeChangedCallback('display_bigger', false, false); }if(!this.hasAttribute('mode')){ this['mode'] = 'contains'; } }
     __upgradeAttributes() { super.__upgradeAttributes(); this.__upgradeProperty('src');this.__upgradeProperty('mode'); }
     __listBoolProps() { return ["display_bigger"].concat(super.__listBoolProps()).filter((v, i, a) => a.indexOf(v) === i); }
-     close(){this.bigImg.style.opacity = '0';document.body.removeEventListener('click', this.checkClose);setTimeout(() => {    this.bigImg.remove();}, 710);} calculateSize(attempt){if (this._isCalculing) {    return;}if (this.src == "") {    return;}this._isCalculing = true;if (getComputedStyle(this).display == 'none') {    return;}if (attempt == this._maxCalculateSize) {    this._isCalculing = false;    return;}let element = this.imgEl;if (this.src.endsWith(".svg")) {    element = this.svgEl;}this.style.width = '';this.style.height = '';element.style.width = '';element.style.height = '';if (element.offsetWidth == 0 && element.offsetHeight == 0) {    setTimeout(() => {        this._isCalculing = false;        this.calculateSize(attempt + 1);    }, 100);    return;}let style = getComputedStyle(this);let addedY = Number(style.paddingTop.replace("px", "")) + Number(style.paddingBottom.replace("px", "")) + Number(style.borderTopWidth.replace("px", "")) + Number(style.borderBottomWidth.replace("px", ""));let addedX = Number(style.paddingLeft.replace("px", "")) + Number(style.paddingRight.replace("px", "")) + Number(style.borderLeftWidth.replace("px", "")) + Number(style.borderRightWidth.replace("px", ""));let availableHeight = this.offsetHeight - addedY;let availableWidth = this.offsetWidth - addedX;let sameWidth = (element.offsetWidth == availableWidth);let sameHeight = (element.offsetHeight == availableHeight);this.ratio = element.offsetWidth / element.offsetHeight;if (sameWidth && !sameHeight) {    element.style.width = (availableHeight * this.ratio) + 'px';    element.style.height = availableHeight + 'px';}else if (!sameWidth && sameHeight) {    element.style.width = availableWidth + 'px';    element.style.height = (availableWidth / this.ratio) + 'px';}else if (!sameWidth && !sameHeight) {    if (this.mode == "stretch") {        element.style.width = '100%';        element.style.height = '100%';    }    else if (this.mode == "contains") {        let newWidth = (availableHeight * this.ratio);        if (newWidth <= availableWidth) {            element.style.width = newWidth + 'px';            element.style.height = availableHeight + 'px';        }        else {            element.style.width = availableWidth + 'px';            element.style.height = (availableWidth / this.ratio) + 'px';        }    }    else if (this.mode == "cover") {        let newWidth = (availableHeight * this.ratio);        if (newWidth >= availableWidth) {            element.style.width = newWidth + 'px';            element.style.height = availableHeight + 'px';        }        else {            element.style.width = availableWidth + 'px';            element.style.height = (availableWidth / this.ratio) + 'px';        }    }}let diffTop = (this.offsetHeight - element.offsetHeight - addedY) / 2;let diffLeft = (this.offsetWidth - element.offsetWidth - addedX) / 2;element.style.transform = "translate(" + diffLeft + "px, " + diffTop + "px)";element.style.opacity = '1';this._isCalculing = false;} showImg(e){if (this.display_bigger) {    let target = e.currentTarget;    let position = target.getPositionOnScreen();    let div = new HTMLDivElement();    div.style.position = 'absolute';    div.style.top = position.y + 'px';    div.style.left = position.x + 'px';    div.style.width = target.offsetWidth + 'px';    div.style.height = target.offsetHeight + 'px';    div.style.backgroundImage = 'url(' + this.src + ')';    div.style.backgroundSize = 'contain';    div.style.backgroundRepeat = 'no-repeat';    div.style.zIndex = '502';    div.style.transition = 'all 0.7s cubic-bezier(0.65, 0, 0.15, 1)';    div.style.backgroundPosition = 'center';    div.style.backgroundColor = 'black';    this.bigImg = div;    document.body.appendChild(div);    setTimeout(() => {        div.style.top = '50px';        div.style.left = '50px';        div.style.width = 'calc(100% - 100px)';        div.style.height = 'calc(100% - 100px)';        document.body.addEventListener('click', this.checkClose);        document.body.addEventListener('keydown', this.checkClose);    }, 100);}} postCreation(){this.addEventListener("click", (e) => { this.showImg(e); });new ResizeObserver(() => {    this.calculateSize();}).observe(this);}}
+     checkClose(e){if (e instanceof KeyboardEvent) {    if (e.key == 'Escape') {        this.close();    }}else {    let realTargetEl = e.realTarget();    if (realTargetEl != this.bigImg) {        this.close();    }}} close(){this.bigImg.style.opacity = '0';document.body.removeEventListener('click', this.checkCloseBinded);setTimeout(() => {    this.bigImg.remove();}, 710);} calculateSize(attempt){if (this._isCalculing) {    return;}if (this.src == "") {    return;}this._isCalculing = true;if (getComputedStyle(this).display == 'none') {    return;}if (attempt == this._maxCalculateSize) {    this._isCalculing = false;    return;}let element = this.imgEl;if (this.src.endsWith(".svg")) {    element = this.svgEl;}this.style.width = '';this.style.height = '';element.style.width = '';element.style.height = '';if (element.offsetWidth == 0 && element.offsetHeight == 0) {    setTimeout(() => {        this._isCalculing = false;        this.calculateSize(attempt + 1);    }, 100);    return;}let style = getComputedStyle(this);let addedY = Number(style.paddingTop.replace("px", "")) + Number(style.paddingBottom.replace("px", "")) + Number(style.borderTopWidth.replace("px", "")) + Number(style.borderBottomWidth.replace("px", ""));let addedX = Number(style.paddingLeft.replace("px", "")) + Number(style.paddingRight.replace("px", "")) + Number(style.borderLeftWidth.replace("px", "")) + Number(style.borderRightWidth.replace("px", ""));let availableHeight = this.offsetHeight - addedY;let availableWidth = this.offsetWidth - addedX;let sameWidth = (element.offsetWidth == availableWidth);let sameHeight = (element.offsetHeight == availableHeight);this.ratio = element.offsetWidth / element.offsetHeight;if (sameWidth && !sameHeight) {    element.style.width = (availableHeight * this.ratio) + 'px';    element.style.height = availableHeight + 'px';}else if (!sameWidth && sameHeight) {    element.style.width = availableWidth + 'px';    element.style.height = (availableWidth / this.ratio) + 'px';}else if (!sameWidth && !sameHeight) {    if (this.mode == "stretch") {        element.style.width = '100%';        element.style.height = '100%';    }    else if (this.mode == "contains") {        let newWidth = (availableHeight * this.ratio);        if (newWidth <= availableWidth) {            element.style.width = newWidth + 'px';            element.style.height = availableHeight + 'px';        }        else {            element.style.width = availableWidth + 'px';            element.style.height = (availableWidth / this.ratio) + 'px';        }    }    else if (this.mode == "cover") {        let newWidth = (availableHeight * this.ratio);        if (newWidth >= availableWidth) {            element.style.width = newWidth + 'px';            element.style.height = availableHeight + 'px';        }        else {            element.style.width = availableWidth + 'px';            element.style.height = (availableWidth / this.ratio) + 'px';        }    }}let diffTop = (this.offsetHeight - element.offsetHeight - addedY) / 2;let diffLeft = (this.offsetWidth - element.offsetWidth - addedX) / 2;element.style.transform = "translate(" + diffLeft + "px, " + diffTop + "px)";element.style.opacity = '1';this._isCalculing = false;} showImg(e){if (this.display_bigger) {    let target = e.currentTarget;    let position = target.getPositionOnScreen();    let div = document.createElement("DIV");    div.style.position = 'absolute';    div.style.top = position.y + 'px';    div.style.left = position.x + 'px';    div.style.width = target.offsetWidth + 'px';    div.style.height = target.offsetHeight + 'px';    div.style.backgroundImage = 'url(' + this.src + ')';    div.style.backgroundSize = 'contain';    div.style.backgroundRepeat = 'no-repeat';    div.style.zIndex = '502';    div.style.transition = 'all 0.7s cubic-bezier(0.65, 0, 0.15, 1)';    div.style.backgroundPosition = 'center';    div.style.backgroundColor = 'black';    this.bigImg = div;    document.body.appendChild(div);    setTimeout(() => {        div.style.top = '50px';        div.style.left = '50px';        div.style.width = 'calc(100% - 100px)';        div.style.height = 'calc(100% - 100px)';        document.body.addEventListener('click', this.checkCloseBinded);        document.body.addEventListener('keydown', this.checkCloseBinded);    }, 100);}} postCreation(){this.addEventListener("click", (e) => { this.showImg(e); });new ResizeObserver(() => {    this.calculateSize();}).observe(this);}}
 window.customElements.define('av-img', AvImg);
 class AvButton extends WebComponent {
     __getStyle() {

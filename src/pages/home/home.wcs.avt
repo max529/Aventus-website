@@ -1,43 +1,50 @@
 :host {
-	.logo {
-		margin: 50px auto;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		max-width: 1000px;
+	width: 100%;
+	height: 100%;
+	av-scrollable {
+		width: 100%;
+		height: calc(100% + 15px);
+		.logo {
+			margin: 50px auto;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			max-width: 1000px;
 
-		av-img {
-			width: 50%;
-		}
+			av-img {
+				width: 50%;
+			}
 
-		.right-part {
-			width: 50%;
+			.right-part {
+				width: 50%;
 
-			p {
-				color: var(--darker);
-				font-size: 35px;
+				p {
+					color: var(--darker);
+					font-size: 35px;
+				}
 			}
 		}
-	}
 
-	.content {
-		background-color: var(--lighter);
-		box-shadow: 0 -5px 5px var(--lighter);
-		padding: 50px 0;
+		.content {
+			background-color: var(--lighter);
+			box-shadow: 0 -5px 5px var(--lighter);
+			padding: 50px 0;
 
-		.advantages {
-			max-width: 1500px;
-			margin: auto;
+			.advantages {
+				max-width: 1500px;
+				margin: auto;
 
-			av-col {
-				padding: 0 50px;
-				.title {
-					font-weight: bold;
-					margin-bottom: 10px;
-				}
+				av-col {
+					padding: 0 50px;
 
-				.description {
-					text-align: justify;
+					.title {
+						font-weight: bold;
+						margin-bottom: 10px;
+					}
+
+					.description {
+						text-align: justify;
+					}
 				}
 			}
 		}

@@ -1,1 +1,1 @@
-:root{--primary-color: #a9a6dc;--secondary-color: #e5540e;--bezier-curve: cubic-bezier(0.65, 0, 0.15, 1);--lighter: #f0edff;--darker: #767496}html,body{height:100%;width:100%;overflow:hidden;margin:0;padding:0;box-sizing:border-box;font-family:"Roboto",sans-serif}
+:root{--primary-color: #a9a6dc;--secondary-color: #e5540e;--bezier-curve: cubic-bezier(0.65, 0, 0.15, 1);--lighter: #f0edff;--darker: #767496;--scrollable-delay: 0}html,body{height:100%;width:100%;overflow:hidden;margin:0;padding:0;box-sizing:border-box;font-family:"Roboto",sans-serif}

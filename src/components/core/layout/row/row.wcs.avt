@@ -1,5 +1,6 @@
 :host {
     display: flex;
+    flex-wrap: wrap;
     width: 100%;
     font-size: 0;
 }
@@ -24,7 +25,6 @@ $labels: xs, sm, md, lg, xl;
 
         ::slotted(av-col[size_xs="#{$j}"]) {
             width: #{$size + "%"};
-            display: inline-block;
         }
     }
 }
@@ -48,7 +48,6 @@ $labels: xs, sm, md, lg, xl;
             }
             ::slotted(av-col[size_#{$label}="#{$j}"]) {
                 width: #{$size + "%"};
-                display: inline-block;
             }
         }
     }

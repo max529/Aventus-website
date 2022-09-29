@@ -1,11 +1,11 @@
 <av-row class="navigation">
-    <av-col class="previous" offset_md="2" size_md="4">
+    <av-col class="previous" size="6" offset_right="6" offset-sm="2" size-sm="4" offset_right_sm="0">
         <av-router-link state="{{previous_state}}">
             <av-img src="/img/angle-left.svg"></av-img>
             <span>{{previous_name}}</span>
         </av-router-link>
     </av-col>
-    <av-col class="next" size_md="4">
+    <av-col class="next" offset="6" size="6" size-sm="4" offset_sm="0">
         <av-router-link state="{{next_state}}">
             <span>{{next_name}}</span>
             <av-img src="/img/angle-right.svg"></av-img>

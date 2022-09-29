@@ -37,19 +37,19 @@
     </p>
     <div class="table">
         <av-row class="header">
-            <av-col size_sm="4" center>Extension</av-col>
-            <av-col size_sm="8" center>Role</av-col>
+            <av-col size="4" center>Extension</av-col>
+            <av-col size="8" center>Role</av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center>aventus.conf.json</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center>aventus.conf.json</av-col>
+            <av-col size="8">
                 <div class="title">Configuration</div>
                 <div class="description">Inside this file you can find configuration for your project</div>
             </av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center>*.wcl.avt</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center>*.wcl.avt</av-col>
+            <av-col size="8">
                 <div class="title">Web Component Logic</div>
                 <div class="description">Inside this file you can find the logical part in Typescript for your
                     web
@@ -57,16 +57,16 @@
             </av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center>*.wcs.avt</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center>*.wcs.avt</av-col>
+            <av-col size="8">
                 <div class="title">Web Component Style</div>
                 <div class="description">Inside this file you can find the style in SCSS for your web component
                 </div>
             </av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center>*.wcv.avt</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center>*.wcv.avt</av-col>
+            <av-col size="8">
                 <div class="title">Web Component View</div>
                 <div class="description">Inside this file you can find the structure in HTML for your web
                     component
@@ -74,16 +74,16 @@
             </av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center>*.data.avt</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center>*.data.avt</av-col>
+            <av-col size="8">
                 <div class="title">Data</div>
                 <div class="description">This file is a class / interface / enum representing usable objects for
                     your application</div>
             </av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center>*.lib.avt</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center>*.lib.avt</av-col>
+            <av-col size="8">
                 <div class="title">Library</div>
                 <div class="description">This file allow you to create some logical part for your project
                     without
@@ -91,15 +91,15 @@
             </av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center>*.ram.avt</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center>*.ram.avt</av-col>
+            <av-col size="8">
                 <div class="title">RAM</div>
                 <div class="description">This file allow you to create store for your data</div>
             </av-col>
         </av-row>
         <av-row>
-            <av-col size_sm="4" center>*.socket.avt</av-col>
-            <av-col size_sm="8">
+            <av-col size="4" center>*.socket.avt</av-col>
+            <av-col size="8">
                 <div class="title">WebSocket</div>
                 <div class="description">This file allow you to create websocket instance to send message to
                     your

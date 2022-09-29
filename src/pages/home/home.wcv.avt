@@ -1,36 +1,39 @@
-<div class="logo">
-    <av-img src="/img/aventus.gif"></av-img>
-    <div class="right-part">
-        <p>Keep a link <br>with your data</p>
-        <av-router-link state="/introduction">
-            <av-button>Getting started</av-button>
-        </av-router-link>
+<av-scrollable floating_scroll>
+    <div class="logo">
+        <av-img src="/img/aventus.gif"></av-img>
+        <div class="right-part">
+            <p>Keep a link <br>with your data</p>
+            <av-router-link state="/introduction">
+                <av-button>Getting started</av-button>
+            </av-router-link>
+        </div>
     </div>
-</div>
-<div class="content">
-    <div class="advantages">
-        <av-row>
-            <av-col size_xs="12" size_md="4">
-                <div class="title">Easy to use</div>
-                <div class="description">
-                    <p>You can easly create component to keep your code clean and reuse complex logical part.</p>
-                    <p>With the use of typescript, you will avoid a lot of mistakes and keep your code clean.</p>
-                </div>
-            </av-col>
-            <av-col size_xs="12" size_md="4">
-                <div class="title">Manage your data</div>
-                <div class="description">
-                    <p>You can easly write data and store to provide consistency inside your app.</p>
-                    <p>When a change occurs, everythink is updated by magic.</p>
-                </div>
-            </av-col>
-            <av-col size_xs="12" size_md="4">
-                <div class="title">Strong backend interaction</div>
-                <div class="description">
-                    <p>With aventus, you can find a lot of plugin to manage your backend like c#, firebase, etc</p>
-                    <p>A lot of code can be automatically generated. It's give you free time to focus on your design</p>
-                </div>
-            </av-col>
-        </av-row>
+    <div class="content">
+        <div class="advantages">
+            <av-row>
+                <av-col size_xs="12" size_md="4">
+                    <div class="title">Easy to use</div>
+                    <div class="description">
+                        <p>You can easly create component to keep your code clean and reuse complex logical part.</p>
+                        <p>With the use of typescript, you will avoid a lot of mistakes and keep your code clean.</p>
+                    </div>
+                </av-col>
+                <av-col size_xs="12" size_md="4">
+                    <div class="title">Manage your data</div>
+                    <div class="description">
+                        <p>You can easly write data and store to provide consistency inside your app.</p>
+                        <p>When a change occurs, everythink is updated by magic.</p>
+                    </div>
+                </av-col>
+                <av-col size_xs="12" size_md="4">
+                    <div class="title">Strong backend interaction</div>
+                    <div class="description">
+                        <p>With aventus, you can find a lot of plugin to manage your backend like c#, firebase, etc</p>
+                        <p>A lot of code can be automatically generated. It's give you free time to focus on your design
+                        </p>
+                    </div>
+                </av-col>
+            </av-row>
+        </div>
     </div>
-</div>
+</av-scrollable>
