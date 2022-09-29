@@ -118,16 +118,18 @@ declare class AvImg extends WebComponent implements DefaultComponent {
     src: string;
     display_bigger: boolean;
     mode: string;
-    bigImg: HTMLDivElement;
+    bigImg: HTMLElement;
     ratio: number;
     _maxCalculateSize: number;
     _isCalculing: boolean;
     imgEl: HTMLImageElement;
     svgEl: HTMLElement;
-    checkClose: (e: Event) => void;
+    constructor();
+    private checkCloseBinded;
+    private checkClose;
     close(): void;
-    calculateSize(attempt?: number): void;
-    showImg(e: MouseEvent): void;
+    private calculateSize;
+    private showImg;
     protected postCreation(): void;
 }
 
