@@ -1,13 +1,654 @@
-class AvGenericRAMManager {    static allRams = {};    static _getInstance() {        if (!this.allRams.hasOwnProperty(this.name)) {            let temp = { class: this };            this.allRams[this.name] = new temp["class"]();        }        return this.allRams[this.name];    }    records;    getId(item) {        if (item[this.getPrimaryKey()] !== undefined) {            return item[this.getPrimaryKey()];        }        console.error("can't found key " + this.getPrimaryKey() + " inside ", item);        return undefined;    }    constructor() {        if (this.constructor == AvGenericRAMManager) {            throw "can't instanciate an abstract class";        }        this.records = {};    }    async createList(list) {        let result = [];        list = await this.beforeCreateList(list);        for (let item of list) {            let resultItem = await this._create(item, true);            if (resultItem) {                result.push(resultItem);            }        }        result = await this.afterCreateList(result);        return result;    }    async create(item, ...args) {        return await this._create(item, false);    }    async _create(item, fromList) {        let key = this.getId(item);        if (key) {            item = await this.beforeCreateItem(item, fromList);            let createdItem = this.transformElementInStorable(item);            this.records[key] = createdItem;            this.records[key] = await this.afterCreateItem(createdItem, fromList);            return this.records[key];        }        return undefined;    }    async beforeCreateList(list) {        return list;    }    async beforeCreateItem(item, fromList) {        return item;    }    async afterCreateItem(item, fromList) {        return item;    }    async afterCreateList(list) {        return list;    }    async updateList(list) {        let result = [];        list = await this.beforeUpdateList(list);        for (let item of list) {            let resultItem = await this._update(item, true);            if (resultItem) {                result.push(resultItem);            }        }        result = await this.afterUpdateList(result);        return result;    }    async update(item, ...args) {        return await this._update(item, false);    }    async _update(item, fromList) {        let key = await this.getId(item);        if (key) {            if (this.records[key]) {                item = await this.beforeUpdateItem(item, fromList);                this.updateDataInRAM(item);                this.records[key] = await this.afterUpdateItem(this.records[key], fromList);                return this.records[key];            }            else {                console.error("can't update the item " + key + " because it wasn't found inside ram");            }        }        return undefined;    }    async beforeUpdateList(list) {        return list;    }    async beforeUpdateItem(item, fromList) {        return item;    }    async afterUpdateItem(item, fromList) {        return item;    }    async afterUpdateList(list) {        return list;    }    updateDataInRAM(newData) {        let dataInRAM = this.records[this.getId(newData)];        let oldKeys = {};        for (let key in dataInRAM) {            oldKeys[key] = key;        }        for (const [key, value] of Object.entries(newData)) {            dataInRAM[key] = value;            delete oldKeys[key];        }        for (let keyMissing of Object.keys(oldKeys)) {            delete dataInRAM[keyMissing];        }    }    async deleteList(list) {        await this.beforeDeleteList(list);        for (let item of list) {            await this._delete(item, true);        }        await this.afterDeleteList(list);    }    async delete(item, ...args) {        return await this._delete(item, false);    }    async deleteById(id) {        let item = this.records[id];        if (item) {            return await this._delete(item, false);        }    }    async _delete(item, fromList) {        let key = await this.getId(item);        if (key && this.records[key]) {            let oldItem = this.records[key];            await this.beforeDeleteItem(oldItem, fromList);            delete this.records[key];            await this.afterDeleteItem(oldItem, fromList);        }    }    async beforeDeleteList(list) { }    async beforeDeleteItem(item, fromList) { }    async afterDeleteItem(item, fromList) { }    async afterDeleteList(list) { }    async get(id) {        return await this.getById(id);    }    async getById(id) {        await this.beforeGetById(id);        if (this.records[id]) {            let result = this.records[id];            await this.afterGetById(result);            return result;        }        return undefined;    }    async beforeGetById(id) { }    async afterGetById(item) { }    async getByIds(ids) {        let result = [];        await this.beforeGetByIds(ids);        for (let id of ids) {            if (this.records[id]) {                result.push(this.records[id]);            }        }        await this.afterGetByIds(result);        return result;    }    async beforeGetByIds(ids) { }    async afterGetByIds(items) { }    async getAll() {        await this.beforeGetAll();        await this.afterGetAll(this.records);        return this.records;    }    async beforeGetAll() { }    async afterGetAll(result) { }    async getList() {        let data = await this.getAll();        return Object.values(data);    }}class AvRAMManager extends AvGenericRAMManager {    transformElementInStorable(item) {        return item;    }}
-class GenericSocketRAMManager extends AvGenericRAMManager {    socketActions;    gotAllRecords = false;    subscribers;    recordsSubscribers = {};    socketRoutes;    static defaultSocketName = undefined;    constructor() {        super();        if (this.constructor == GenericSocketRAMManager) {            throw "can't instanciate an abstract class";        }        this.init();    }    getPrimaryKey() {        return 'id';    }    getSocket() {        return Socket.getInstance(this._getSocketName());    }    _getSocketName() {        return GenericSocketRAMManager.defaultSocketName;    }    init() {        this.initVariables();        this.initSocket();    }    initVariables() {        this.socketActions = {            get: "get",            getAll: "get/all",            create: "create",            created: "created",            update: "update",            updated: "updated",            delete: "delete",            deleted: "deleted"        };        this.subscribers = {            created: [],            updated: [],            deleted: [],        };        let temp = {};        for (const [key, name] of Object.entries(this.socketActions)) {            temp[key] = {                request: `${this.getObjectName()}/${name}`,                multiple: `${this.getObjectName()}/${name}/multiple`,                success: `${this.getObjectName()}/${name}/success`,                error: `${this.getObjectName()}/${name}/error`            };        }        this.socketRoutes = temp;    }    initSocket() {        let createdRoute = {            channel: this.getObjectName() + "/" + this.socketActions.created,            callback: response => {                if (response.data) {                    for (let key in response.data) {                        let obj = response.data[key];                        let id = this.getId(obj);                        if (id !== undefined) {                            this.records[id] = this.transformElementInStorable(obj);                            this.publish(this.socketActions.created, this.records[id]);                        }                    }                }            }        };        Socket.getInstance(this._getSocketName()).addRoute(createdRoute);        let updatedRoute = {            channel: this.getObjectName() + "/" + this.socketActions.updated,            callback: response => {                if (response.data) {                    for (let key in response.data) {                        const newData = response.data[key];                        let id = this.getId(newData);                        if (id !== undefined) {                            if (this.records[id] !== undefined) {                                this.updateDataInRAM(newData);                                this.publish(this.socketActions.updated, this.records[id]);                            }                            else {                                this.records[id] = this.transformElementInStorable(newData);                                this.publish(this.socketActions.created, this.records[id]);                            }                        }                    }                }            }        };        Socket.getInstance(this._getSocketName()).addRoute(updatedRoute);        let deletedRoute = {            channel: this.getObjectName() + "/" + this.socketActions.deleted,            callback: response => {                if (response.data) {                    for (let data of response.data) {                        let id = this.getId(data);                        if (this.records[id] !== undefined) {                            let oldData = this.records[id];                            delete this.records[id];                            this.publish(this.socketActions.deleted, oldData);                        }                    }                }            }        };        Socket.getInstance(this._getSocketName()).addRoute(deletedRoute);    }    async create(item, cbError) {        try {            return await super.create(item);        }        catch (e) {            if (cbError) {                cbError(e);            }        }        return undefined;    }    beforeCreateItem(item, fromList) {        return new Promise((resolve, reject) => {            if (!fromList) {                Socket.getInstance(this._getSocketName()).sendMessageAndWait(this.socketRoutes.create.request, item, {                    [this.socketRoutes.create.success]: response => {                        let element = response.created[0];                        resolve(element);                    },                    [this.socketRoutes.create.error]: response => {                        reject(response);                    }                });            }            else {                resolve(item);            }        });    }    beforeCreateList(list) {        return new Promise((resolve, reject) => {            Socket.getInstance(this._getSocketName()).sendMessageAndWait(this.socketRoutes.create.multiple, list, {                [this.socketRoutes.create.success]: response => {                    resolve(response.created);                },                [this.socketRoutes.create.error]: response => {                    reject(response);                }            });        });    }    async update(item, cbError) {        try {            return await super.update(item);        }        catch (e) {            if (cbError) {                cbError(e);            }        }        return undefined;    }    beforeUpdateItem(item, fromList) {        return new Promise((resolve, reject) => {            if (!fromList) {                Socket.getInstance(this._getSocketName()).sendMessageAndWait(this.socketRoutes.update.request, item, {                    [this.socketRoutes.update.success]: response => {                        let element = response.updated[0];                        resolve(element);                    },                    [this.socketRoutes.update.error]: response => {                        reject(response);                    }                });            }            else {                resolve(item);            }        });    }    beforeUpdateList(list) {        return new Promise((resolve, reject) => {            Socket.getInstance(this._getSocketName()).sendMessageAndWait(this.socketRoutes.update.multiple, list, {                [this.socketRoutes.update.success]: response => {                    resolve(response.updated);                },                [this.socketRoutes.update.error]: response => {                    reject(response);                }            });        });    }    async internalUpdate(id, newData) {        let oldData = this.records[id];        if (oldData) {            let mergedData = {                ...oldData,                ...newData            };            let result = await this.update(mergedData);            return result;        }        return undefined;    }    async delete(item, cbError) {        try {            await super.delete(item);        }        catch (e) {            if (cbError) {                cbError(e);            }        }        return undefined;    }    beforeDeleteItem(item, fromList) {        return new Promise((resolve, reject) => {            if (!fromList) {                Socket.getInstance(this._getSocketName()).sendMessageAndWait(this.socketRoutes.delete.request, item, {                    [this.socketRoutes.delete.success]: response => {                        resolve();                    },                    [this.socketRoutes.delete.error]: response => {                        reject(response);                    }                });            }            else {                resolve();            }        });    }    beforeDeleteList(list) {        return new Promise((resolve, reject) => {            Socket.getInstance(this._getSocketName()).sendMessageAndWait(this.socketRoutes.delete.multiple, list, {                [this.socketRoutes.delete.success]: response => {                    resolve();                },                [this.socketRoutes.delete.error]: response => {                    reject(response);                }            });        });    }    beforeGetById(id) {        return new Promise((resolve, reject) => {            if (this.records[id]) {                resolve();            }            else {                Socket.getInstance(this._getSocketName()).sendMessageAndWait(this.socketRoutes.get.request, {                    [this.getPrimaryKey()]: id                }, {                    [this.socketRoutes.get.success]: response => {                        if (response.data) {                            this.records[id] = this.transformElementInStorable(response.data);                        }                        resolve();                    },                    [this.socketRoutes.get.error]: response => {                        this.printErrors(response, "getById");                        reject();                    }                });            }        });    }    beforeGetByIds(ids) {        return new Promise((resolve, reject) => {            let missingIds = [];            for (let id of ids) {                if (!this.records[id]) {                    missingIds.push(id);                }            }            if (missingIds.length > 0) {                Socket.getInstance(this._getSocketName()).sendMessageAndWait(this.socketRoutes.get.multiple, {                    [this.getPrimaryKey()]: ids                }, {                    [this.socketRoutes.get.success]: response => {                        if (response.data) {                            for (let item of Object.values(response.data)) {                                this.records[this.getId(item)] = this.transformElementInStorable(item);                            }                        }                        resolve();                    },                    [this.socketRoutes.get.error]: response => {                        this.printErrors(response, "getMultiple");                        reject(response);                    }                });            }            else {                resolve();            }        });    }    beforeGetAll() {        return new Promise((resolve, reject) => {            if (this.gotAllRecords) {                resolve();            }            else {                Socket.getInstance(this._getSocketName()).sendMessageAndWait(this.socketRoutes.getAll.request, {}, {                    [this.socketRoutes.getAll.success]: response => {                        if (response.data) {                            this.gotAllRecords = true;                            for (let item of Object.values(response.data)) {                                this.records[this.getId(item)] = this.transformElementInStorable(item);                            }                        }                        resolve();                    },                    [this.socketRoutes.getAll.error]: response => {                        this.printErrors(response, "getAll");                        reject();                    }                });            }        });    }    transformElementInStorable(item) {        let id = this.getId(item);        let addedType = {            update: async (newData = {}) => {                return await this.internalUpdate(id, newData);            },            onUpdate: (callback) => {                if (!this.recordsSubscribers.hasOwnProperty(id)) {                    this.recordsSubscribers[id] = {                        created: [],                        updated: [],                        deleted: []                    };                }                this.recordsSubscribers[id].updated.push(callback);            },            offUpdate: (callback) => {                if (this.recordsSubscribers[id]) {                    let index = this.recordsSubscribers[id].updated.indexOf(callback);                    if (index != -1) {                        this.recordsSubscribers[id].updated.splice(index, 1);                    }                }            },            delete: async () => {                return await this.deleteById(id);            },            onDelete: (callback) => {                if (!this.recordsSubscribers.hasOwnProperty(id)) {                    this.recordsSubscribers[id] = {                        created: [],                        updated: [],                        deleted: []                    };                }                this.recordsSubscribers[id].deleted.push(callback);            },            offDelete: (callback) => {                if (this.recordsSubscribers[id]) {                    let index = this.recordsSubscribers[id].deleted.indexOf(callback);                    if (index != -1) {                        this.recordsSubscribers[id].deleted.splice(index, 1);                    }                }            },        };        let socketObj = {            ...item,            ...addedType        };        return this.addCustomFunctions(socketObj);    }    publish(type, data) {        [...this.subscribers[type]].forEach(callback => callback(data));    }    printErrors(data, action) {        console.error(data, action);    }}class SocketRAMManager extends GenericSocketRAMManager {    addCustomFunctions(item) {        return item;    }}
-class AvUtils {    static sleep(ms) {        return new Promise(resolve => setTimeout(resolve, ms));    }}
+var Aventus;(function (Aventus) {
+class GenericRAMManager {    static allRams = {};    static _getInstance() {        if (!this.allRams.hasOwnProperty(this.name)) {            let temp = { class: this };            this.allRams[this.name] = new temp["class"]();        }        return this.allRams[this.name];    }    records;    getId(item) {        if (item[this.getPrimaryKey()] !== undefined) {            return item[this.getPrimaryKey()];        }        console.error("can't found key " + this.getPrimaryKey() + " inside ", item);        return undefined;    }    constructor() {        if (this.constructor == GenericRAMManager) {            throw "can't instanciate an abstract class";        }        this.records = {};    }    async createList(list) {        let result = [];        list = await this.beforeCreateList(list);        for (let item of list) {            let resultItem = await this._create(item, true);            if (resultItem) {                result.push(resultItem);            }        }        result = await this.afterCreateList(result);        return result;    }    async create(item, ...args) {        return await this._create(item, false);    }    async _create(item, fromList) {        let key = this.getId(item);        if (key) {            item = await this.beforeCreateItem(item, fromList);            let createdItem = this.transformElementInStorable(item);            this.records[key] = createdItem;            this.records[key] = await this.afterCreateItem(createdItem, fromList);            return this.records[key];        }        return undefined;    }    async beforeCreateList(list) {        return list;    }    async beforeCreateItem(item, fromList) {        return item;    }    async afterCreateItem(item, fromList) {        return item;    }    async afterCreateList(list) {        return list;    }    async updateList(list) {        let result = [];        list = await this.beforeUpdateList(list);        for (let item of list) {            let resultItem = await this._update(item, true);            if (resultItem) {                result.push(resultItem);            }        }        result = await this.afterUpdateList(result);        return result;    }    async update(item, ...args) {        return await this._update(item, false);    }    async _update(item, fromList) {        let key = await this.getId(item);        if (key) {            if (this.records[key]) {                item = await this.beforeUpdateItem(item, fromList);                this.updateDataInRAM(item);                this.records[key] = await this.afterUpdateItem(this.records[key], fromList);                return this.records[key];            }            else {                console.error("can't update the item " + key + " because it wasn't found inside ram");            }        }        return undefined;    }    async beforeUpdateList(list) {        return list;    }    async beforeUpdateItem(item, fromList) {        return item;    }    async afterUpdateItem(item, fromList) {        return item;    }    async afterUpdateList(list) {        return list;    }    updateDataInRAM(newData) {        let dataInRAM = this.records[this.getId(newData)];        let oldKeys = {};        for (let key in dataInRAM) {            oldKeys[key] = key;        }        for (const [key, value] of Object.entries(newData)) {            dataInRAM[key] = value;            delete oldKeys[key];        }        for (let keyMissing of Object.keys(oldKeys)) {            delete dataInRAM[keyMissing];        }    }    async deleteList(list) {        await this.beforeDeleteList(list);        for (let item of list) {            await this._delete(item, true);        }        await this.afterDeleteList(list);    }    async delete(item, ...args) {        return await this._delete(item, false);    }    async deleteById(id) {        let item = this.records[id];        if (item) {            return await this._delete(item, false);        }    }    async _delete(item, fromList) {        let key = await this.getId(item);        if (key && this.records[key]) {            let oldItem = this.records[key];            await this.beforeDeleteItem(oldItem, fromList);            delete this.records[key];            await this.afterDeleteItem(oldItem, fromList);        }    }    async beforeDeleteList(list) { }    async beforeDeleteItem(item, fromList) { }    async afterDeleteItem(item, fromList) { }    async afterDeleteList(list) { }    async get(id) {        return await this.getById(id);    }    async getById(id) {        await this.beforeGetById(id);        if (this.records[id]) {            let result = this.records[id];            await this.afterGetById(result);            return result;        }        return undefined;    }    async beforeGetById(id) { }    async afterGetById(item) { }    async getByIds(ids) {        let result = [];        await this.beforeGetByIds(ids);        for (let id of ids) {            if (this.records[id]) {                result.push(this.records[id]);            }        }        await this.afterGetByIds(result);        return result;    }    async beforeGetByIds(ids) { }    async afterGetByIds(items) { }    async getAll() {        await this.beforeGetAll();        await this.afterGetAll(this.records);        return this.records;    }    async beforeGetAll() { }    async afterGetAll(result) { }    async getList() {        let data = await this.getAll();        return Object.values(data);    }}class RAMManager extends GenericRAMManager {    transformElementInStorable(item) {        return item;    }}
+class GenericSocketRAMManager extends GenericRAMManager {    socketActions;    gotAllRecords = false;    subscribers;    recordsSubscribers = {};    socketRoutes;    static defaultSocketName = undefined;    constructor() {        super();        if (this.constructor == GenericSocketRAMManager) {            throw "can't instanciate an abstract class";        }        this.init();    }    getPrimaryKey() {        return 'id';    }    getSocket() {        return Socket.getInstance(this._getSocketName());    }    _getSocketName() {        return GenericSocketRAMManager.defaultSocketName;    }    init() {        this.initVariables();        this.initSocket();    }    initVariables() {        this.socketActions = {            get: "get",            getAll: "get/all",            create: "create",            created: "created",            update: "update",            updated: "updated",            delete: "delete",            deleted: "deleted"        };        this.subscribers = {            created: [],            updated: [],            deleted: [],        };        let temp = {};        for (const [key, name] of Object.entries(this.socketActions)) {            temp[key] = {                request: `${this.getObjectName()}/${name}`,                multiple: `${this.getObjectName()}/${name}/multiple`,                success: `${this.getObjectName()}/${name}/success`,                error: `${this.getObjectName()}/${name}/error`            };        }        this.socketRoutes = temp;    }    initSocket() {        let createdRoute = {            channel: this.getObjectName() + "/" + this.socketActions.created,            callback: response => {                if (response.data) {                    for (let key in response.data) {                        let obj = response.data[key];                        let id = this.getId(obj);                        if (id !== undefined) {                            this.records[id] = this.transformElementInStorable(obj);                            this.publish(this.socketActions.created, this.records[id]);                        }                    }                }            }        };        Socket.getInstance(this._getSocketName()).addRoute(createdRoute);        let updatedRoute = {            channel: this.getObjectName() + "/" + this.socketActions.updated,            callback: response => {                if (response.data) {                    for (let key in response.data) {                        const newData = response.data[key];                        let id = this.getId(newData);                        if (id !== undefined) {                            if (this.records[id] !== undefined) {                                this.updateDataInRAM(newData);                                this.publish(this.socketActions.updated, this.records[id]);                            }                            else {                                this.records[id] = this.transformElementInStorable(newData);                                this.publish(this.socketActions.created, this.records[id]);                            }                        }                    }                }            }        };        Socket.getInstance(this._getSocketName()).addRoute(updatedRoute);        let deletedRoute = {            channel: this.getObjectName() + "/" + this.socketActions.deleted,            callback: response => {                if (response.data) {                    for (let data of response.data) {                        let id = this.getId(data);                        if (this.records[id] !== undefined) {                            let oldData = this.records[id];                            delete this.records[id];                            this.publish(this.socketActions.deleted, oldData);                        }                    }                }            }        };        Socket.getInstance(this._getSocketName()).addRoute(deletedRoute);    }    async create(item, cbError) {        try {            return await super.create(item);        }        catch (e) {            if (cbError) {                cbError(e);            }        }        return undefined;    }    beforeCreateItem(item, fromList) {        return new Promise((resolve, reject) => {            if (!fromList) {                Socket.getInstance(this._getSocketName()).sendMessageAndWait(this.socketRoutes.create.request, item, {                    [this.socketRoutes.create.success]: response => {                        let element = response.created[0];                        resolve(element);                    },                    [this.socketRoutes.create.error]: response => {                        reject(response);                    }                });            }            else {                resolve(item);            }        });    }    beforeCreateList(list) {        return new Promise((resolve, reject) => {            Socket.getInstance(this._getSocketName()).sendMessageAndWait(this.socketRoutes.create.multiple, list, {                [this.socketRoutes.create.success]: response => {                    resolve(response.created);                },                [this.socketRoutes.create.error]: response => {                    reject(response);                }            });        });    }    async update(item, cbError) {        try {            return await super.update(item);        }        catch (e) {            if (cbError) {                cbError(e);            }        }        return undefined;    }    beforeUpdateItem(item, fromList) {        return new Promise((resolve, reject) => {            if (!fromList) {                Socket.getInstance(this._getSocketName()).sendMessageAndWait(this.socketRoutes.update.request, item, {                    [this.socketRoutes.update.success]: response => {                        let element = response.updated[0];                        resolve(element);                    },                    [this.socketRoutes.update.error]: response => {                        reject(response);                    }                });            }            else {                resolve(item);            }        });    }    beforeUpdateList(list) {        return new Promise((resolve, reject) => {            Socket.getInstance(this._getSocketName()).sendMessageAndWait(this.socketRoutes.update.multiple, list, {                [this.socketRoutes.update.success]: response => {                    resolve(response.updated);                },                [this.socketRoutes.update.error]: response => {                    reject(response);                }            });        });    }    async internalUpdate(id, newData) {        let oldData = this.records[id];        if (oldData) {            let mergedData = {                ...oldData,                ...newData            };            let result = await this.update(mergedData);            return result;        }        return undefined;    }    async delete(item, cbError) {        try {            await super.delete(item);        }        catch (e) {            if (cbError) {                cbError(e);            }        }        return undefined;    }    beforeDeleteItem(item, fromList) {        return new Promise((resolve, reject) => {            if (!fromList) {                Socket.getInstance(this._getSocketName()).sendMessageAndWait(this.socketRoutes.delete.request, item, {                    [this.socketRoutes.delete.success]: response => {                        resolve();                    },                    [this.socketRoutes.delete.error]: response => {                        reject(response);                    }                });            }            else {                resolve();            }        });    }    beforeDeleteList(list) {        return new Promise((resolve, reject) => {            Socket.getInstance(this._getSocketName()).sendMessageAndWait(this.socketRoutes.delete.multiple, list, {                [this.socketRoutes.delete.success]: response => {                    resolve();                },                [this.socketRoutes.delete.error]: response => {                    reject(response);                }            });        });    }    beforeGetById(id) {        return new Promise((resolve, reject) => {            if (this.records[id]) {                resolve();            }            else {                Socket.getInstance(this._getSocketName()).sendMessageAndWait(this.socketRoutes.get.request, {                    [this.getPrimaryKey()]: id                }, {                    [this.socketRoutes.get.success]: response => {                        if (response.data) {                            this.records[id] = this.transformElementInStorable(response.data);                        }                        resolve();                    },                    [this.socketRoutes.get.error]: response => {                        this.printErrors(response, "getById");                        reject();                    }                });            }        });    }    beforeGetByIds(ids) {        return new Promise((resolve, reject) => {            let missingIds = [];            for (let id of ids) {                if (!this.records[id]) {                    missingIds.push(id);                }            }            if (missingIds.length > 0) {                Socket.getInstance(this._getSocketName()).sendMessageAndWait(this.socketRoutes.get.multiple, {                    [this.getPrimaryKey()]: ids                }, {                    [this.socketRoutes.get.success]: response => {                        if (response.data) {                            for (let item of Object.values(response.data)) {                                this.records[this.getId(item)] = this.transformElementInStorable(item);                            }                        }                        resolve();                    },                    [this.socketRoutes.get.error]: response => {                        this.printErrors(response, "getMultiple");                        reject(response);                    }                });            }            else {                resolve();            }        });    }    beforeGetAll() {        return new Promise((resolve, reject) => {            if (this.gotAllRecords) {                resolve();            }            else {                Socket.getInstance(this._getSocketName()).sendMessageAndWait(this.socketRoutes.getAll.request, {}, {                    [this.socketRoutes.getAll.success]: response => {                        if (response.data) {                            this.gotAllRecords = true;                            for (let item of Object.values(response.data)) {                                this.records[this.getId(item)] = this.transformElementInStorable(item);                            }                        }                        resolve();                    },                    [this.socketRoutes.getAll.error]: response => {                        this.printErrors(response, "getAll");                        reject();                    }                });            }        });    }    transformElementInStorable(item) {        let id = this.getId(item);        let addedType = {            update: async (newData = {}) => {                return await this.internalUpdate(id, newData);            },            onUpdate: (callback) => {                if (!this.recordsSubscribers.hasOwnProperty(id)) {                    this.recordsSubscribers[id] = {                        created: [],                        updated: [],                        deleted: []                    };                }                this.recordsSubscribers[id].updated.push(callback);            },            offUpdate: (callback) => {                if (this.recordsSubscribers[id]) {                    let index = this.recordsSubscribers[id].updated.indexOf(callback);                    if (index != -1) {                        this.recordsSubscribers[id].updated.splice(index, 1);                    }                }            },            delete: async () => {                return await this.deleteById(id);            },            onDelete: (callback) => {                if (!this.recordsSubscribers.hasOwnProperty(id)) {                    this.recordsSubscribers[id] = {                        created: [],                        updated: [],                        deleted: []                    };                }                this.recordsSubscribers[id].deleted.push(callback);            },            offDelete: (callback) => {                if (this.recordsSubscribers[id]) {                    let index = this.recordsSubscribers[id].deleted.indexOf(callback);                    if (index != -1) {                        this.recordsSubscribers[id].deleted.splice(index, 1);                    }                }            },        };        let socketObj = {            ...item,            ...addedType        };        return this.addCustomFunctions(socketObj);    }    publish(type, data) {        [...this.subscribers[type]].forEach(callback => callback(data));    }    printErrors(data, action) {        console.error(data, action);    }}class SocketRAMManager extends GenericSocketRAMManager {    addCustomFunctions(item) {        return item;    }}
+class Utils {    static sleep(ms) {        return new Promise(resolve => setTimeout(resolve, ms));    }}
 class StateManager {    logLevel = 0; // 0 = error only / 1 = errors and warning / 2 = error, warning and logs (not implemented)    _activeState = undefined;    _activeParams = undefined;    _activeSlug = undefined;    _callbackList = {};    _subscribersMutliple = {};    _subscribers = {};    _isNumberRegex = /^-?\d+$/;    _callbackFunctions = {};    constructor() {    }    static __instances = {};    static getInstance(name) {        if (!name) {            name = "";        }        if (!this.__instances.hasOwnProperty(name)) {            this.__instances[name] = new StateManager();        }        return this.__instances[name];    }    subscribe(state, callbacks) {        if (!callbacks.hasOwnProperty("active") && !callbacks.hasOwnProperty("inactive") && callbacks.hasOwnProperty("askChange")) {            this._log(`Trying to subscribe to state : ${state} with no callbacks !`, "warning");            return;        }        if (!Array.isArray(state)) {            state = [state];        }        for (let i = 0; i < state.length; i++) {            let _state = state[i];            let res = this._prepareStateString(_state);            _state = res["state"];            if (!this._subscribers.hasOwnProperty(_state)) {                let regex = new RegExp(_state);                let isActive = this._activeState !== undefined && regex.test(this._activeState);                this._subscribers[_state] = {                    "regex": regex,                    "callbacks": {                        "active": [],                        "inactive": [],                        "askChange": [],                    },                    "isActive": isActive,                    "testRegex": (string) => {                        if (!string) {                            string = this.getActiveState();                        }                        return this._subscribers[_state].regex.test(string);                    }                };            }            if (callbacks.hasOwnProperty("active")) {                this._subscribers[_state].callbacks.active.push(callbacks.active);                if (this._subscribers[_state].isActive) {                    callbacks.active(this._activeState);                }            }            if (callbacks.hasOwnProperty("inactive")) {                this._subscribers[_state].callbacks.inactive.push(callbacks.inactive);            }            if (callbacks.hasOwnProperty("askChange")) {                this._subscribers[_state].callbacks.askChange.push(callbacks.askChange);            }        }    }    /**     *     * @param {string|Array} state - The state(s) to unsubscribe from     * @param {Object} callbacks     * @param {activeCallback} [callbacks.active]     * @param {incativeCallback} [callbacks.inactive]     * @param {askChangeCallback} [callbacks.askChange]     */    unsubscribe(state, callbacks) {        if (!Array.isArray(state)) {            state = [state];        }        for (let i = 0; i < state.length; i++) {            let _state = state[i];            let res = this._prepareStateString(_state);            _state = res["state"];            if (this._subscribers.hasOwnProperty(_state)) {                let modifications = false;                if (callbacks.hasOwnProperty("active")) {                    let index = this._subscribers[_state].callbacks.active.indexOf(callbacks["active"]);                    if (index !== -1) {                        this._subscribers[_state].callbacks.active.splice(index, 1);                        modifications = true;                    }                }                if (callbacks.hasOwnProperty("inactive")) {                    let index = this._subscribers[_state].callbacks.inactive.indexOf(callbacks["inactive"]);                    if (index !== -1) {                        this._subscribers[_state].callbacks.inactive.splice(index, 1);                        modifications = true;                    }                }                if (callbacks.hasOwnProperty("askChange")) {                    let index = this._subscribers[_state].callbacks.askChange.indexOf(callbacks["askChange"]);                    if (index !== -1) {                        this._subscribers[_state].callbacks.askChange.splice(index, 1);                        modifications = true;                    }                }                if (modifications &&                    this._subscribers[_state].callbacks.active.length === 0 &&                    this._subscribers[_state].callbacks.inactive.length === 0 &&                    this._subscribers[_state].callbacks.askChange.length === 0) {                    delete this._subscribers[_state];                }            }            return;        }    }    /**     * Format a state and return if you need to bypass the test or not     * @param {string} string - The state to format     * @returns {Object} - The state, the formated state and if it's a regex state or not     */    _prepareStateString(string) {        let _state = string;        let stateToTest = _state;        let bypassTest = false;        if (_state.startsWith("^") && _state.endsWith("$")) {            bypassTest = true;        }        else {            if (_state.endsWith("/*")) {                _state = "^" + this._escapeRegExp(_state).replace("\*", "-?\\d+$");            }            else {                let splittedState = _state.split("/");                let slug = splittedState.pop();                if (this._isNumberRegex.test(slug)) {                    stateToTest = splittedState.join("/") + "/*";                }                _state = "^" + this._escapeRegExp(_state) + "$";            }        }        return { "state": _state, "stateToTest": stateToTest, "bypassTest": bypassTest };    }    /**     * Escape a string to be regex-compatible ()     * @param {string} string The string to escape     * @returns An escaped string     */    _escapeRegExp(string) {        return string.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&');    }    /**     * Get the slug from a state string     * @param {string} state The state to extract the slug from     * @returns {string|undefined} The slug of the state or undefined if the state don't have one     */    _getSlugFromState(state) {        let slug = state.split("/").pop();        if (this._isNumberRegex.test(slug)) {            return parseInt(slug);        }        else {            return undefined;        }    }    /**     * Save the current info (state/params) in cache     */    _saveDataInCache() {        if (!this._activeParams || Object.keys(this._activeParams).length == 0) {            if (localStorage["disableStorage"] == null) {                localStorage["state"] = this._activeState;            }        }    }    /**     * Add a callback to a key     * @param {string} key - The key to trigger to trigger the function     * @param {function} callback - The function to trigger     */    addFunction(key, callback) {        if (!this._callbackFunctions.hasOwnProperty(key)) {            this._callbackFunctions[key] = [];        }        this._callbackFunctions[key].push(callback);    }    /**     * Remove a function from a key     * @param {string} key - The key to remove the function from     * @param {function} callback - The function to remove     */    removeFunction(key, callback) {        if (this._callbackFunctions.hasOwnProperty(key)) {            const index = this._callbackFunctions[key].indexOf(callback);            if (index !== -1) {                this._callbackFunctions[key].splice(index, 1);                if (this._callbackFunctions[key].length === 0) {                    delete this._callbackFunctions[key];                }            }            else {                console.warn("Couldn't find callback in list " + key);            }        }        else {            console.warn("Couldn't find " + key + " in callback array");        }    }    /**     * Trigger all the functions added under a key     * @param {string} key - The key to trigger     * @param {*} [params] - The params to pass to the functions (optional)     */    triggerFunction(key, params = {}) {        if (this._callbackFunctions.hasOwnProperty(key)) {            const copy = [...this._callbackFunctions[key]];            copy.forEach(callback => {                callback(params);            });        }        else {            console.warn("Trying to trigger non existent key : " + key);        }    }    /**     * Remove all the function added under all keys     */    clearFunctions() {        this._callbackFunctions = {};    }    /**     * Set the current active state     * @param {string} state - The state to set to active     * @param {number} slug - The slug of the active state (Only work if the state ends with "*")     * @param {Object} params - The params of the active state     */    setActiveState(state, params = {}) {        if (this._activeState !== undefined && state === this._activeState) {            this._log("Trying to set a state that was already active. state : " + state + " activeState : " + this._activeState, "warning");            return;        }        let canChange = true;        if (this._activeState) {            let activeToInactive = [];            let inactiveToActive = [];            let triggerActive = [];            for (let key in this._subscribers) {                let current = this._subscribers[key];                if (current.isActive) {                    if (!current.regex.test(state)) {                        let clone = [...current.callbacks["askChange"]];                        for (let i = 0; i < clone.length; i++) {                            let callback = clone[i];                            if (!callback(this._activeState, state)) {                                canChange = false;                            }                        }                        activeToInactive.push(current);                    }                    else {                        triggerActive.push(current);                    }                }                else {                    if (current.regex.test(state)) {                        inactiveToActive.push(current);                    }                }            }            if (canChange) {                const oldState = this._activeState;                this._activeState = state;                this._activeSlug = this._getSlugFromState(state);                this._activeParams = params;                activeToInactive.forEach(route => {                    route.isActive = false;                    [...route.callbacks.inactive].forEach(callback => {                        callback(oldState, state);                    });                });                this.clearFunctions();                triggerActive.forEach(route => {                    [...route.callbacks.active].forEach(callback => {                        callback(state);                    });                });                inactiveToActive.forEach(route => {                    route.isActive = true;                    [...route.callbacks.active].forEach(callback => {                        callback(state);                    });                });            }        }        else {            this._activeState = state;            this._activeSlug = this._getSlugFromState(state);            this._activeParams = params;            this.clearFunctions();            for (let key in this._subscribers) {                if (this._subscribers[key].regex.test(state)) {                    this._subscribers[key].isActive = true;                    [...this._subscribers[key].callbacks.active].forEach(callback => {                        callback(state);                    });                }            }        }        this._saveDataInCache();        return;    }    /**     * Get the active state     * @returns {string} - The active state     */    getActiveState() {        return this._activeState;    }    /**     * Get the active params     * @returns {Object} - The active params     */    getActiveParams() {        return this._activeParams;    }    /**     * Get the active slug     * @returns {int} - The active slug     */    getActiveSlug() {        return this._activeSlug;    }    /**     * Check if a state is in the subscribers and active, return true if it is, false otherwise     * @param {string} state - The state to test     * @returns {boolean} - True if the state is in the subscription list and active, false otherwise     */    isStateActive(state) {        state = this._prepareStateString(state).state;        if (this._subscribers[state] && this._subscribers[state].isActive) {            return true;        }        return false;    }    _log(logMessage, type) {        if (type === "error") {            console.error(logMessage);        }        else if (type === "warning" && this.logLevel > 0) {            console.warn(logMessage);        }        else if (type === "info" && this.logLevel > 1) {            console.log(logMessage);        }    }}
 class Socket {    options;    waitingList = {};    multipltWaitingList = {};    onDone;    timeoutError;    memoryBeforeOpen = [];    nbClose = 0;    socket;    constructor() {    }    init(options = {}) {        if (!options.port) {            options.port = parseInt(window.location.port);        }        if (!options.ip) {            options.ip = window.location.hostname;        }        if (!options.hasOwnProperty('useHttps')) {            options.useHttps = window.location.protocol == "https:";        }        if (!options.routes) {            options.routes = {};        }        if (!options.socketName) {            options.socketName = this.getSocketName();        }        this.options = options;    }    static __instances = {};    static getInstance(name) {        if (!name) {            name = "";        }        if (!this.__instances.hasOwnProperty(name)) {            let temp = { class: this };            this.__instances[name] = new temp["class"]();            this.__instances[name].init({ log: true });        }        return this.__instances[name];    }    getSocketName() {        return "";    }    addRoute(newRoute) {        if (!this.options.routes.hasOwnProperty(newRoute.channel)) {            this.options.routes[newRoute.channel] = [];        }        this.options.routes[newRoute.channel].push(newRoute);    }    /**     * The route to remove     * @param route - The route to remove     */    removeRoute(route) {        let index = this.options.routes[route.channel].indexOf(route);        if (index != -1) {            this.options.routes[route.channel].splice(index, 1);        }    }    open(done = () => { }, error = () => { }) {        if (this.socket) {            this.socket.close();        }        let protocol = "ws";        if (this.options.useHttps) {            protocol = "wss";        }        let url = protocol + "://" + this.options.ip + ":" + this.options.port + "/ws/" + this.options.socketName;        this.log(url);        this.socket = new WebSocket(url);        this.timeoutError = setTimeout(() => {            if (this.socket &&                this.socket.readyState != 1) {                delete this.socket;                this.socket = null;                console.error('Timeout on socket open');                error();            }        }, 3000);        this.socket.onopen = this.onOpen.bind(this);        this.socket.onclose = this.onClose.bind(this);        this.socket.onerror = this.onError.bind(this);        this.socket.onmessage = this.onMessage.bind(this);        this.onDone = done;    }    /**     *     * @param channelName The channel on which the message is sent     * @param data The data to send     * @param options the options to add to the message (typically the uid)     */    sendMessage(channelName, data = null, options = {}) {        if (this.socket && this.socket.readyState == 1) {            let message = {                channel: channelName,            };            for (let key in options) {                message[key] = options[key];            }            if (data) {                message.data = data;                this.log(message);                message.data = JSON.stringify(data);            }            else {                this.log(message);            }            this.socket.send(JSON.stringify(message));        }        else {            this.log('Socket not ready ! Please ensure that it is open and ready to send message');            this.memoryBeforeOpen.push({                channelName: channelName,                data: data,                options: options            });        }    }    /**     *     * @param channelName The channel on which the message is sent     * @param data The data to send     * @param callbacks The callbacks to call. With the channel as key and the callback function as value     */    sendMessageAndWait(channelName, data, callbacks) {        let uid = '_' + Math.random().toString(36).substr(2, 9);        this.waitingList[uid] = callbacks;        this.sendMessage(channelName, data, {            uid: uid        });    }    ;    /**     *     * @param channelName The channel on which the message is sent     * @param data The data to send     * @param callbacks The callbacks to call. With the channel as key and the callback function as value     */    sendMessageAndWaitMultiple(channelName, data, callbacks) {        let uid = '_' + Math.random().toString(36).substr(2, 9);        this.multipltWaitingList[uid] = callbacks;        this.sendMessage(channelName, data, {            uid: uid        });    }    isReady() {        if (this.socket && this.socket.readyState == 1) {            return true;        }        return false;    }    onOpen() {        if (this.socket && this.socket.readyState == 1) {            this.log('Connection successfully established !' + this.options.ip + ":" + this.options.port);            window.clearTimeout(this.timeoutError);            this.onDone();            if (this.options.hasOwnProperty("onOpen")) {                this.options.onOpen();            }            for (let i = 0; i < this.memoryBeforeOpen.length; i++) {                this.sendMessage(this.memoryBeforeOpen[i].channelName, this.memoryBeforeOpen[i].data, this.memoryBeforeOpen[i].options);            }            this.memoryBeforeOpen = [];        }        else {            console.error("open with error " + this.options.ip + ":" + this.options.port + "(" + (this.socket ? this.socket.readyState : "unknown") + ")");            setTimeout(() => this.open(), 2000);        }    }    onError(event) {        this.log('An error has occured');        if (this.options.hasOwnProperty("onError")) {            this.options.onError();        }    }    onClose(event) {        this.log('Closing connection');        if (this.options.hasOwnProperty("onClose")) {            this.options.onClose();        }        else {            if (window.location.pathname == '/') {                this.nbClose++;                if (this.nbClose == 2) {                    window.location.href = '/login/logout';                }                else {                    console.warn("try reopen socket ");                    let reopenInterval = setTimeout(() => {                        this.open(() => {                            clearInterval(reopenInterval);                        }, () => { });                    }, 5000);                }            }            else {                console.warn("try reopen socket ");                let reopenInterval = setTimeout(() => {                    this.open(() => {                        clearInterval(reopenInterval);                    }, () => { });                }, 5000);            }        }    }    onMessage(event) {        let response = JSON.parse(event.data);        this.log(response);        response.data = JSON.parse(response.data);        if (this.options.routes.hasOwnProperty(response.channel)) {            this.options.routes[response.channel].forEach(element => {                element.callback(response.data);            });        }        if (response.uid) {            if (this.waitingList.hasOwnProperty(response.uid)) {                let group = this.waitingList[response.uid];                if (group.hasOwnProperty(response.channel)) {                    group[response.channel](response.data);                }                delete this.waitingList[response.uid];            }            else if (this.multipltWaitingList.hasOwnProperty(response.uid)) {                let group = this.multipltWaitingList[response.uid];                if (group.hasOwnProperty(response.channel)) {                    try {                        if (!group[response.channel](response.data)) {                            delete this.multipltWaitingList[response.uid];                        }                    }                    catch (e) {                        console.error(e);                        delete this.multipltWaitingList[response.uid];                    }                }            }        }    }    log(message) {        if (this.options.log) {            const now = new Date();            const hours = (now.getHours()).toLocaleString(undefined, { minimumIntegerDigits: 2 });            const minutes = (now.getMinutes()).toLocaleString(undefined, { minimumIntegerDigits: 2 });            const seconds = (now.getSeconds()).toLocaleString(undefined, { minimumIntegerDigits: 2 });            console.log(`[WEBSOCKET] [${hours}:${minutes}:${seconds}]: `, JSON.parse(JSON.stringify(message)));        }    }}
 class ResourceLoader {    static waitingResources = {};    static load(options, preventCache = false) {        let resourceData = localStorage.getItem("resource:" + options.url);        if (resourceData) {            options.success(resourceData);        }        else {            if (!this.waitingResources.hasOwnProperty(options.url)) {                this.waitingResources[options.url] = [options.success];                fetch(options.url)                    .then(async (response) => {                    let html = await response.text();                    if (preventCache) {                        localStorage.setItem("resource:" + options.url, html);                    }                    for (let i = 0; i < this.waitingResources[options.url].length; i++) {                        this.waitingResources[options.url][i](html);                    }                    delete this.waitingResources[options.url];                });            }            else {                this.waitingResources[options.url].push(options.success);            }        }    }}
-class AvResizeObserver {    callback;    targets;    fpsInterval;    nextFrame;    entriesChangedEvent;    willTrigger;    static resizeObserverClassByObject = {};    static uniqueInstance;    static getUniqueInstance() {        if (!AvResizeObserver.uniqueInstance) {            AvResizeObserver.uniqueInstance = new ResizeObserver(entries => {                let allClasses = [];                for (let j = 0; j < entries.length; j++) {                    let entry = entries[j];                    let index = entry.target['sourceIndex'];                    if (AvResizeObserver.resizeObserverClassByObject[index]) {                        for (let i = 0; i < AvResizeObserver.resizeObserverClassByObject[index].length; i++) {                            let classTemp = AvResizeObserver.resizeObserverClassByObject[index][i];                            classTemp.entryChanged(entry);                            if (allClasses.indexOf(classTemp) == -1) {                                allClasses.push(classTemp);                            }                        }                    }                }                for (let i = 0; i < allClasses.length; i++) {                    allClasses[i].triggerCb();                }            });        }        return AvResizeObserver.uniqueInstance;    }    constructor(options) {        let realOption;        if (options instanceof Function) {            realOption = {                callback: options,            };        }        else {            realOption = options;        }        this.callback = realOption.callback;        this.targets = [];        if (!realOption.fps) {            realOption.fps = 60;        }        if (realOption.fps != -1) {            this.fpsInterval = 1000 / realOption.fps;        }        this.nextFrame = 0;        this.entriesChangedEvent = {};        this.willTrigger = false;    }    observe(target) {        if (!target["sourceIndex"]) {            target["sourceIndex"] = Math.random().toString(36);            this.targets.push(target);            AvResizeObserver.resizeObserverClassByObject[target["sourceIndex"]] = [];            AvResizeObserver.getUniqueInstance().observe(target);        }        if (AvResizeObserver.resizeObserverClassByObject[target["sourceIndex"]].indexOf(this) == -1) {            AvResizeObserver.resizeObserverClassByObject[target["sourceIndex"]].push(this);        }    }    unobserve(target) {        for (let i = 0; this.targets.length; i++) {            let tempTarget = this.targets[i];            if (tempTarget == target) {                let position = AvResizeObserver.resizeObserverClassByObject[target['sourceIndex']].indexOf(this);                if (position != -1) {                    AvResizeObserver.resizeObserverClassByObject[target['sourceIndex']].splice(position, 1);                }                if (AvResizeObserver.resizeObserverClassByObject[target['sourceIndex']].length == 0) {                    delete AvResizeObserver.resizeObserverClassByObject[target['sourceIndex']];                }                AvResizeObserver.getUniqueInstance().unobserve(target);                this.targets.splice(i, 1);                return;            }        }    }    disconnect() {        for (let i = 0; this.targets.length; i++) {            this.unobserve(this.targets[i]);        }    }    entryChanged(entry) {        let index = entry.target.sourceIndex;        this.entriesChangedEvent[index] = entry;    }    triggerCb() {        if (!this.willTrigger) {            this.willTrigger = true;            this._triggerCb();        }    }    _triggerCb() {        let now = window.performance.now();        let elapsed = now - this.nextFrame;        if (this.fpsInterval != -1 && elapsed <= this.fpsInterval) {            requestAnimationFrame(() => {                this._triggerCb();            });            return;        }        this.nextFrame = now - (elapsed % this.fpsInterval);        let changed = Object.values(this.entriesChangedEvent);        this.entriesChangedEvent = {};        this.willTrigger = false;        setTimeout(() => {            this.callback(changed);        }, 0);    }}
+class ResizeObserver {    callback;    targets;    fpsInterval;    nextFrame;    entriesChangedEvent;    willTrigger;    static resizeObserverClassByObject = {};    static uniqueInstance;    static getUniqueInstance() {        if (!ResizeObserver.uniqueInstance) {            ResizeObserver.uniqueInstance = new ResizeObserver(entries => {                let allClasses = [];                for (let j = 0; j < entries.length; j++) {                    let entry = entries[j];                    let index = entry.target['sourceIndex'];                    if (ResizeObserver.resizeObserverClassByObject[index]) {                        for (let i = 0; i < ResizeObserver.resizeObserverClassByObject[index].length; i++) {                            let classTemp = ResizeObserver.resizeObserverClassByObject[index][i];                            classTemp.entryChanged(entry);                            if (allClasses.indexOf(classTemp) == -1) {                                allClasses.push(classTemp);                            }                        }                    }                }                for (let i = 0; i < allClasses.length; i++) {                    allClasses[i].triggerCb();                }            });        }        return ResizeObserver.uniqueInstance;    }    constructor(options) {        let realOption;        if (options instanceof Function) {            realOption = {                callback: options,            };        }        else {            realOption = options;        }        this.callback = realOption.callback;        this.targets = [];        if (!realOption.fps) {            realOption.fps = 60;        }        if (realOption.fps != -1) {            this.fpsInterval = 1000 / realOption.fps;        }        this.nextFrame = 0;        this.entriesChangedEvent = {};        this.willTrigger = false;    }    observe(target) {        if (!target["sourceIndex"]) {            target["sourceIndex"] = Math.random().toString(36);            this.targets.push(target);            ResizeObserver.resizeObserverClassByObject[target["sourceIndex"]] = [];            ResizeObserver.getUniqueInstance().observe(target);        }        if (ResizeObserver.resizeObserverClassByObject[target["sourceIndex"]].indexOf(this) == -1) {            ResizeObserver.resizeObserverClassByObject[target["sourceIndex"]].push(this);        }    }    unobserve(target) {        for (let i = 0; this.targets.length; i++) {            let tempTarget = this.targets[i];            if (tempTarget == target) {                let position = ResizeObserver.resizeObserverClassByObject[target['sourceIndex']].indexOf(this);                if (position != -1) {                    ResizeObserver.resizeObserverClassByObject[target['sourceIndex']].splice(position, 1);                }                if (ResizeObserver.resizeObserverClassByObject[target['sourceIndex']].length == 0) {                    delete ResizeObserver.resizeObserverClassByObject[target['sourceIndex']];                }                ResizeObserver.getUniqueInstance().unobserve(target);                this.targets.splice(i, 1);                return;            }        }    }    disconnect() {        for (let i = 0; this.targets.length; i++) {            this.unobserve(this.targets[i]);        }    }    entryChanged(entry) {        let index = entry.target.sourceIndex;        this.entriesChangedEvent[index] = entry;    }    triggerCb() {        if (!this.willTrigger) {            this.willTrigger = true;            this._triggerCb();        }    }    _triggerCb() {        let now = window.performance.now();        let elapsed = now - this.nextFrame;        if (this.fpsInterval != -1 && elapsed <= this.fpsInterval) {            requestAnimationFrame(() => {                this._triggerCb();            });            return;        }        this.nextFrame = now - (elapsed % this.fpsInterval);        let changed = Object.values(this.entriesChangedEvent);        this.entriesChangedEvent = {};        this.willTrigger = false;        setTimeout(() => {            this.callback(changed);        }, 0);    }}
 class PressManager {    options;    element;    subPressManager = [];    delayDblPress = 150;    delayLongPress = 700;    nbPress = 0;    offsetDrag = 20;    state = {        oneActionTriggered: false,        isMoving: false,    };    startPosition = { x: 0, y: 0 };    customFcts = {};    timeoutDblPress = 0;    timeoutLongPress = 0;    downEventSaved;    actionsName = {        press: "press",        longPress: "longPress",        dblPress: "dblPress",        drag: "drag"    };    useDblPress = false;    forceDblPress = false;    functionsBinded = {        downAction: (e) => { },        upAction: (e) => { },        moveAction: (e) => { },        childPress: (e) => { },        childDblPress: (e) => { },        childLongPress: (e) => { },        childDragStart: (e) => { },    };    /**     * @param {*} options - The options     * @param {HTMLElement | HTMLElement[]} options.element - The element to manage     */    constructor(options) {        if (options.element === void 0) {            throw 'You must provide an element';        }        if (Array.isArray(options.element)) {            for (let el of options.element) {                let cloneOpt = { ...options };                cloneOpt.element = el;                this.subPressManager.push(new PressManager(cloneOpt));            }        }        else {            this.element = options.element;            this.checkDragConstraint(options);            this.assignValueOption(options);            this.options = options;            this.init();        }    }    getElement() {        return this.element;    }    checkDragConstraint(options) {        if (options.onDrag !== void 0) {            if (options.onDragStart === void 0) {                options.onDragStart = (e) => { };            }            if (options.onDragEnd === void 0) {                options.onDragEnd = (e) => { };            }        }        if (options.onDragStart !== void 0) {            if (options.onDrag === void 0) {                options.onDrag = (e) => { };            }            if (options.onDragEnd === void 0) {                options.onDragEnd = (e) => { };            }        }        if (options.onDragEnd !== void 0) {            if (options.onDragStart === void 0) {                options.onDragStart = (e) => { };            }            if (options.onDrag === void 0) {                options.onDrag = (e) => { };            }        }    }    assignValueOption(options) {        if (options.delayDblPress !== undefined) {            this.delayDblPress = options.delayDblPress;        }        if (options.delayLongPress !== undefined) {            this.delayLongPress = options.delayLongPress;        }        if (options.offsetDrag !== undefined) {            this.offsetDrag = options.offsetDrag;        }        if (options.onDblPress !== undefined) {            this.useDblPress = true;        }        if (options.forceDblPress) {            this.useDblPress = true;        }    }    bindAllFunction() {        this.functionsBinded.downAction = this.downAction.bind(this);        this.functionsBinded.moveAction = this.moveAction.bind(this);        this.functionsBinded.upAction = this.upAction.bind(this);        this.functionsBinded.childDblPress = this.childDblPress.bind(this);        this.functionsBinded.childDragStart = this.childDragStart.bind(this);        this.functionsBinded.childLongPress = this.childLongPress.bind(this);        this.functionsBinded.childPress = this.childPress.bind(this);    }    init() {        this.bindAllFunction();        this.element.addEventListener("pointerdown", this.functionsBinded.downAction);        this.element.addEventListener("trigger_pointer_press", this.functionsBinded.childPress);        this.element.addEventListener("trigger_pointer_dblpress", this.functionsBinded.childDblPress);        this.element.addEventListener("trigger_pointer_longpress", this.functionsBinded.childLongPress);        this.element.addEventListener("trigger_pointer_dragstart", this.functionsBinded.childDragStart);    }    downAction(e) {        this.downEventSaved = e;        e.stopPropagation();        this.customFcts = {};        if (this.nbPress == 0) {            this.state.oneActionTriggered = false;            clearTimeout(this.timeoutDblPress);        }        this.startPosition = { x: e.pageX, y: e.pageY };        document.addEventListener("pointerup", this.functionsBinded.upAction);        document.addEventListener("pointermove", this.functionsBinded.moveAction);        this.timeoutLongPress = setTimeout(() => {            if (!this.state.oneActionTriggered) {                if (this.options.onLongPress) {                    this.state.oneActionTriggered = true;                    this.options.onLongPress(e, this);                    this.triggerEventToParent(this.actionsName.longPress, e);                }                else {                    this.emitTriggerFunction("longpress", e);                }            }        }, this.delayLongPress);        if (this.options.onPressStart) {            this.options.onPressStart(e, this);        }    }    upAction(e) {        e.stopPropagation();        document.removeEventListener("pointerup", this.functionsBinded.downAction);        document.removeEventListener("pointermove", this.functionsBinded.moveAction);        clearTimeout(this.timeoutLongPress);        if (this.state.isMoving) {            this.state.isMoving = false;            if (this.options.onDragEnd) {                this.options.onDragEnd(e, this);            }            else if (this.customFcts.src && this.customFcts.onDragEnd) {                this.customFcts.onDragEnd(e, this.customFcts.src);            }        }        else {            if (this.useDblPress) {                this.nbPress++;                if (this.nbPress == 2) {                    if (!this.state.oneActionTriggered) {                        this.state.oneActionTriggered = true;                        this.nbPress = 0;                        if (this.options.onDblPress) {                            this.options.onDblPress(e, this);                            this.triggerEventToParent(this.actionsName.dblPress, e);                        }                        else {                            this.emitTriggerFunction("dblpress", e);                        }                    }                }                else if (this.nbPress == 1) {                    this.timeoutDblPress = setTimeout(() => {                        this.nbPress = 0;                        if (!this.state.oneActionTriggered) {                            if (this.options.onPress) {                                this.state.oneActionTriggered = true;                                this.options.onPress(e, this);                                this.triggerEventToParent(this.actionsName.press, e);                            }                            else {                                this.emitTriggerFunction("press", e);                            }                        }                    }, this.delayDblPress);                }            }            else {                if (!this.state.oneActionTriggered) {                    if (this.options.onPress) {                        this.state.oneActionTriggered = true;                        this.options.onPress(e, this);                        this.triggerEventToParent(this.actionsName.press, e);                    }                    else {                        this.emitTriggerFunction("press", e);                    }                }            }        }        if (this.options.onPressEnd) {            this.options.onPressEnd(e, this);        }    }    moveAction(e) {        if (!this.state.isMoving && !this.state.oneActionTriggered) {            e.stopPropagation();            let xDist = e.pageX - this.startPosition.x;            let yDist = e.pageY - this.startPosition.y;            let distance = Math.sqrt(xDist * xDist + yDist * yDist);            if (distance > this.offsetDrag) {                this.state.oneActionTriggered = true;                if (this.options.onDragStart) {                    this.state.isMoving = true;                    if (this.options.onDragStart) {                        this.options.onDragStart(this.downEventSaved, this);                        this.triggerEventToParent(this.actionsName.drag, e);                    }                    else {                        this.emitTriggerFunction("dragstart", this.downEventSaved);                    }                }            }        }        else if (this.state.isMoving) {            if (this.options.onDrag) {                this.options.onDrag(e, this);            }            else if (this.customFcts.src && this.customFcts.onDrag) {                this.customFcts.onDrag(e, this.customFcts.src);            }        }    }    triggerEventToParent(eventName, pointerEvent) {        if (this.element.parentNode) {            this.element.parentNode.dispatchEvent(new CustomEvent("pressaction_trigger", {                bubbles: true,                cancelable: false,                composed: true,                detail: {                    target: this.element,                    eventName: eventName,                    realEvent: pointerEvent                }            }));        }    }    childPress(e) {        if (this.options.onPress) {            e.stopPropagation();            e.detail.state.oneActionTriggered = true;            this.options.onPress(e.detail.realEvent, this);            this.triggerEventToParent(this.actionsName.press, e.detail.realEvent);        }    }    childDblPress(e) {        if (this.options.onDblPress) {            e.stopPropagation();            if (e.detail.state) {                e.detail.state.oneActionTriggered = true;            }            this.options.onDblPress(e.detail.realEvent, this);            this.triggerEventToParent(this.actionsName.dblPress, e.detail.realEvent);        }    }    childLongPress(e) {        if (this.options.onLongPress) {            e.stopPropagation();            e.detail.state.oneActionTriggered = true;            this.options.onLongPress(e.detail.realEvent, this);            this.triggerEventToParent(this.actionsName.longPress, e.detail.realEvent);        }    }    childDragStart(e) {        if (this.options.onDragStart) {            e.stopPropagation();            e.detail.state.isMoving = true;            e.detail.customFcts.src = this;            e.detail.customFcts.onDrag = this.options.onDrag;            e.detail.customFcts.onDragEnd = this.options.onDragEnd;            this.options.onDragStart(e.detail.realEvent, this);            this.triggerEventToParent(this.actionsName.drag, e.detail.realEvent);        }    }    emitTriggerFunction(action, e) {        this.element.dispatchEvent(new CustomEvent("trigger_pointer_" + action, {            bubbles: true,            cancelable: true,            composed: true,            detail: {                state: this.state,                customFcts: this.customFcts,                realEvent: e            }        }));    }    destroy() {        for (let sub of this.subPressManager) {            sub.destroy();        }        if (this.element) {            this.element.removeEventListener("pointerdown", this.functionsBinded.downAction);            this.element.removeEventListener("trigger_pointer_press", this.functionsBinded.childPress);            this.element.removeEventListener("trigger_pointer_dblpress", this.functionsBinded.childDblPress);            this.element.removeEventListener("trigger_pointer_longpress", this.functionsBinded.childLongPress);            this.element.removeEventListener("trigger_pointer_dragstart", this.functionsBinded.childDragStart);        }    }}
-class Pointer {    id;    clientX;    clientY;    nativePointer;    pageX;    pageY;    constructor(nativePointer) {        this.id = -1;        this.nativePointer = nativePointer;        this.pageX = nativePointer.pageX;        this.pageY = nativePointer.pageY;        this.clientX = nativePointer.clientX;        this.clientY = nativePointer.clientY;        if (self.Touch && nativePointer instanceof Touch) {            this.id = nativePointer.identifier;        }        else if (self.PointerEvent && nativePointer instanceof PointerEvent) {            this.id = nativePointer.pointerId;        }    }}class PointerTracker {    element;    currentPointers;    startCallback;    moveCallback;    endCallback;    lastEvent;    constructor(element, callbacks) {        this.element = element;        this.currentPointers = [];        const { start = () => true, move = () => { }, end = () => { } } = callbacks;        this.startCallback = start;        this.moveCallback = move;        this.endCallback = end;        this.pointerStart = this.pointerStart.bind(this);        this.touchStart = this.touchStart.bind(this);        this.triggerPointerStart = this.triggerPointerStart.bind(this);        this.move = this.move.bind(this);        this.triggerPointerEnd = this.triggerPointerEnd.bind(this);        this.pointerEnd = this.pointerEnd.bind(this);        this.touchEnd = this.touchEnd.bind(this);        this.lastEvent = new Date();        this.element.addEventListener('mousedown', this.pointerStart);        this.element.addEventListener('touchstart', this.touchStart);    }    reset() {        this.currentPointers = [];        window.removeEventListener('mousemove', this.move);        window.removeEventListener('mouseup', this.pointerEnd);        window.removeEventListener('touchmove', this.move);        window.removeEventListener('touchend', this.touchEnd);    }    getCurrentPointers() {        return this.currentPointers;    }    triggerPointerStart(pointer, event) {        if (this.isTooOld()) {            this.currentPointers = [];        }        if (!this.startCallback(pointer, event))            return false;        this.currentPointers.push(pointer);        return true;    }    pointerStart(event) {        if (event.button !== 0)            return;        const oldPointersLength = this.currentPointers.length;        if (!this.triggerPointerStart(new Pointer(event), event))            return;        event.preventDefault();        if (oldPointersLength === 0) {            window.addEventListener('mousemove', this.move);            window.addEventListener('mouseup', this.pointerEnd);        }    }    touchStart(event) {        /* if (window.currentDropdownOpen) {             window.currentDropdownOpen.expanded = false;         }*/        const oldPointersLength = this.currentPointers.length;        for (const touch of Array.from(event.changedTouches)) {            this.triggerPointerStart(new Pointer(touch), event);        }        event.preventDefault();        if (oldPointersLength === 0) {            window.removeEventListener('touchmove', this.move);            window.removeEventListener('touchend', this.touchEnd);            window.addEventListener('touchmove', this.move);            window.addEventListener('touchend', this.touchEnd);        }    }    move(event) {        setTimeout(() => {            this.lastEvent = new Date();            const previousPointers = this.currentPointers.slice();            const changedPointers = ('changedTouches' in event) ? Array.from(event.changedTouches).map(t => new Pointer(t)) : [new Pointer(event)];            const trackedChangedPointers = [];            for (const pointer of changedPointers) {                const index = this.currentPointers.findIndex(p => p.id === pointer.id);                if (index === -1)                    continue;                trackedChangedPointers.push(pointer);                this.currentPointers[index] = pointer;            }            if (trackedChangedPointers.length === 0)                return;            this.moveCallback(previousPointers, trackedChangedPointers, event);        });    }    triggerPointerEnd(pointer, event) {        const index = this.currentPointers.findIndex(p => p.id === pointer.id);        if (index === -1)            return false;        this.currentPointers.splice(index, 1);        this.endCallback(pointer, event);        return true;    }    pointerEnd(event) {        event.preventDefault();        if (this.currentPointers.length === 0) {            window.removeEventListener('mousemove', this.move);            window.removeEventListener('mouseup', this.pointerEnd);        }        if (!this.triggerPointerEnd(new Pointer(event), event))            return;    }    touchEnd(event) {        for (const touch of Array.from(event.changedTouches)) {            this.triggerPointerEnd(new Pointer(touch), event);        }        event.preventDefault();        if (this.currentPointers.length === 0) {            window.removeEventListener('touchmove', this.move);            window.removeEventListener('touchend', this.touchEnd);        }    }    isTooOld() {        let d = new Date();        let diff = d.getTime() - this.lastEvent.getTime();        if (diff > 2000) {            return true;        }        return false;    }}
-var luxon = (function (exports) {
+
+class DefaultHttpRequestOptions {    url = "";    method = HttpRequestMethod.GET;}class HttpRequest {    options = {};    url = '';    static getMethod(method) {        let genericMethod = method.toLowerCase().trim();        if (genericMethod == "get") {            return HttpRequestMethod.GET;        }        if (genericMethod == "post") {            return HttpRequestMethod.POST;        }        if (genericMethod == "delete") {            return HttpRequestMethod.DELETE;        }        if (genericMethod == "put") {            return HttpRequestMethod.PUT;        }        if (genericMethod == "option") {            return HttpRequestMethod.OPTION;        }        console.error("unknow type " + method + ". I ll return GET by default");        return HttpRequestMethod.GET;    }    getMethod(method) {        if (method == HttpRequestMethod.GET)            return "GET";        if (method == HttpRequestMethod.POST)            return "POST";        if (method == HttpRequestMethod.DELETE)            return "DELETE";        if (method == HttpRequestMethod.OPTION)            return "OPTION";        if (method == HttpRequestMethod.PUT)            return "PUT";        return "GET";    }    constructor(options) {        options = {            ...new DefaultHttpRequestOptions(),            ...options        };        let optionsToSend = {            method: this.getMethod(options.method),        };        if (options.data) {            if (options.data instanceof FormData) {                optionsToSend.body = options.data;            }            else {                let formData = new FormData();                for (let key in options.data) {                    formData.append(key, options.data[key]);                }                optionsToSend.body = formData;            }        }        this.options = optionsToSend;        this.url = options.url;    }    async send() {        let result = await fetch(this.url, this.options);        if (result.ok) {        }    }    static get(url) {        return fetch(url, {            method: "GET"        });    }    static async post(url, data) {        let formData = new FormData();        for (let key in data) {            formData.append(key, data[key]);        }        const response = await fetch(url, {            method: "POST",            body: formData        });        const content = await response.json();        return new Promise((resolve, reject) => {            if (response.ok) {                resolve(content);            }            else {                reject(content);            }        });    }}/** * List of HTTP Method allowed */var HttpRequestMethod;(function (HttpRequestMethod) {    HttpRequestMethod[HttpRequestMethod["GET"] = 0] = "GET";    HttpRequestMethod[HttpRequestMethod["POST"] = 1] = "POST";    HttpRequestMethod[HttpRequestMethod["DELETE"] = 2] = "DELETE";    HttpRequestMethod[HttpRequestMethod["PUT"] = 3] = "PUT";    HttpRequestMethod[HttpRequestMethod["OPTION"] = 4] = "OPTION";})(HttpRequestMethod || (HttpRequestMethod = {}));
+class DragAndDrop {    static defaultOffsetDrag = 20;    pressManager;    options;    startCursorPosition;    startElementPosition;    constructor(options) {        this.options = this.getDefaultOptions();        this.mergeProperties(options);        this.mergeFunctions(options);        this.init();    }    getDefaultOptions() {        return {            applyDrag: true,            element: null,            elementTrigger: null,            offsetDrag: DragAndDrop.defaultOffsetDrag,            shadow: {                enable: false,                container: document.body            },            strict: false,            targets: [],            usePercent: false,            isDragEnable: () => true,            getZoom: () => 1,            getOffsetX: () => 0,            getOffsetY: () => 0,            onStart: (e) => { },            onMove: (e) => { },            onStop: (e) => { },            onDrop: (element, targets) => { }        };    }    mergeProperties(options) {        if (options.element === void 0) {            throw "You must define the element for the drag&drop";        }        this.options.element = options.element;        if (options.elementTrigger === void 0) {            this.options.elementTrigger = this.options.element;        }        this.defaultMerge(options, "applyDrag");        this.defaultMerge(options, "offsetDrag");        this.defaultMerge(options, "strict");        this.defaultMerge(options, "targets");        this.defaultMerge(options, "usePercent");        if (options.shadow !== void 0) {            this.options.shadow.enable = options.shadow.enable;            if (options.shadow.container !== void 0) {                this.options.shadow.container = options.shadow.container;            }        }    }    mergeFunctions(options) {        this.defaultMerge(options, "isDragEnable");        this.defaultMerge(options, "getZoom");        this.defaultMerge(options, "getOffsetX");        this.defaultMerge(options, "getOffsetY");        this.defaultMerge(options, "onStart");        this.defaultMerge(options, "onMove");        this.defaultMerge(options, "onStop");        this.defaultMerge(options, "onDrop");    }    defaultMerge(options, name) {        if (options[name] !== void 0) {            this.options[name] = options[name];        }    }    init() {        this.pressManager = new PressManager({            element: this.options.elementTrigger,            onDragStart: this.onDragStart.bind(this),            onDrag: this.onDrag.bind(this),            onDragEnd: this.onDragEnd.bind(this),            offsetDrag: this.options.offsetDrag        });    }    draggableElement;    positionShadowRelativeToElement;    onDragStart(e) {        this.draggableElement = this.options.element;        this.startCursorPosition = {            x: e.pageX,            y: e.pageY        };        this.startElementPosition = {            x: this.draggableElement.offsetLeft,            y: this.draggableElement.offsetTop        };        if (this.options.shadow.enable) {            this.draggableElement = this.options.element.cloneNode(true);            const posRelativeToContainer = this.options.element.getPositionOnScreen(this.options.shadow.container);            this.positionShadowRelativeToElement = {                x: this.startCursorPosition.x - posRelativeToContainer.x,                y: this.startCursorPosition.y - posRelativeToContainer.y            };            this.draggableElement.style.position = "absolute";            this.draggableElement.style.top = posRelativeToContainer.y / this.options.getZoom() + 'px';            this.draggableElement.style.left = posRelativeToContainer.x / this.options.getZoom() + 'px';            this.options.shadow.container.appendChild(this.draggableElement);        }        this.options.onStart(e);    }    onDrag(e) {        let zoom = this.options.getZoom();        let diff = {            x: 0,            y: 0        };        if (this.options.shadow.enable) {            diff = {                x: e.pageX - (this.positionShadowRelativeToElement.x / this.options.getZoom()) + this.options.getOffsetX(),                y: e.pageY - (this.positionShadowRelativeToElement.y / this.options.getZoom()) + this.options.getOffsetY(),            };        }        else {            diff = {                x: (e.pageX - this.startCursorPosition.x) / zoom + this.startElementPosition.x + this.options.getOffsetX(),                y: (e.pageY - this.startCursorPosition.y) / zoom + this.startElementPosition.y + this.options.getOffsetY()            };        }        let newPos = this.setPosition(diff);        this.options.onMove(e, newPos);    }    onDragEnd(e) {        let targets = this.getMatchingTargets();        if (this.options.shadow.enable) {            this.draggableElement.parentNode?.removeChild(this.draggableElement);        }        if (targets.length > 0) {            this.options.onDrop(this.draggableElement, targets);        }    }    setPosition(position) {        if (this.options.usePercent) {            let elementParent = this.draggableElement.offsetParent;            const percentLeft = (position.x / elementParent.offsetWidth) * 100;            const percentTop = (position.y / elementParent.offsetHeight) * 100;            if (this.options.applyDrag) {                this.draggableElement.style.left = percentLeft + '%';                this.draggableElement.style.top = percentTop + '%';            }            return {                x: percentLeft,                y: percentTop            };        }        else {            if (this.options.applyDrag) {                this.draggableElement.style.left = position.x + 'px';                this.draggableElement.style.top = position.y + 'px';            }        }        return position;    }    getMatchingTargets() {        let matchingTargets = [];        for (let target of this.options.targets) {            const elementCoordinates = this.draggableElement.getBoundingClientRect();            const targetCoordinates = target.getBoundingClientRect();            let offsetX = this.options.getOffsetX();            let offsetY = this.options.getOffsetY();            let zoom = this.options.getZoom();            targetCoordinates.x += offsetX;            targetCoordinates.y += offsetY;            targetCoordinates.width *= zoom;            targetCoordinates.height *= zoom;            if (this.options.strict) {                if ((elementCoordinates.x >= targetCoordinates.x && elementCoordinates.x + elementCoordinates.width <= targetCoordinates.x + targetCoordinates.width) &&                    (elementCoordinates.y >= targetCoordinates.y && elementCoordinates.y + elementCoordinates.height <= targetCoordinates.y + targetCoordinates.height)) {                    matchingTargets.push(target);                }            }            else {                let elementLeft = elementCoordinates.x;                let elementRight = elementCoordinates.x + elementCoordinates.width;                let elementTop = elementCoordinates.y;                let elementBottom = elementCoordinates.y + elementCoordinates.height;                let targetLeft = targetCoordinates.x;                let targetRight = targetCoordinates.x + targetCoordinates.width;                let targetTop = targetCoordinates.y;                let targetBottom = targetCoordinates.y + targetCoordinates.height;                if (!(elementRight < targetLeft ||                    elementLeft > targetRight ||                    elementBottom < targetTop ||                    elementTop > targetBottom)) {                    matchingTargets.push(target);                }            }        }        return matchingTargets;    }    setTargets(targets) {        this.options.targets = targets;    }}
+class AnimationManager {    static FPS_DEFAULT = 60;    options;    nextFrame;    fpsInterval;    continueAnimation = false;    constructor(options) {        if (!options.animate) {            options.animate = () => { };        }        if (!options.stopped) {            options.stopped = () => { };        }        if (!options.fps) {            options.fps = AnimationManager.FPS_DEFAULT;        }        this.options = options;        this.fpsInterval = 1000 / this.options.fps;    }    animate() {        let now = window.performance.now();        let elapsed = now - this.nextFrame;        if (elapsed <= this.fpsInterval) {            requestAnimationFrame(() => this.animate());            return;        }        this.nextFrame = now - (elapsed % this.fpsInterval);        setTimeout(() => {            this.options.animate();        }, 0);        if (this.continueAnimation) {            requestAnimationFrame(() => this.animate());        }        else {            this.options.stopped();        }    }    /**     * Start the of animation     */    start() {        if (this.continueAnimation == false) {            this.continueAnimation = true;            this.nextFrame = window.performance.now();            this.animate();        }    }    /**     * Stop the animation     */    stop() {        this.continueAnimation = false;    }    /**     * Get the FPS     *     * @returns {number}     */    getFPS() {        return this.options.fps;    }    /**     * Set the FPS     *     * @param fps     */    setFPS(fps) {        this.options.fps = fps;        this.fpsInterval = 1000 / this.options.fps;    }    /**     * Get the animation status (true if animation is running)     *     * @returns {boolean}     */    isStarted() {        return this.continueAnimation;    }}
+
+
+class WebComponent extends HTMLElement {    static get observedAttributes() {        return [];    }    _first;    _isReady;    get isReady() {        return this._isReady;    }    _translations;    currentState = "";    statesList;    _components;    __onChangeFct = {};    getSlugFct;    __watch;    __watchActions = {};    __prepareForCreate = [];    __prepareForUpdate = [];    __loopTemplate = {};    __watchActionsCb = {};    getClassName() {        return this.constructor.name;    }    ;    constructor() {        super();        if (this.constructor == WebComponent) {            throw "can't instanciate an abstract class";        }        this._first = true;        this._isReady = false;        this.__prepareVariables();        this.__prepareTranslations();        this.__prepareWatchesActions();        this.__initWatches();        this.__prepareTemplate();        this.__selectElementNeeded();        this.__registerOnChange();        this.__createStates();        this.__prepareForLoop();        this.__endConstructor();    }    __prepareVariables() { }    __prepareWatchesActions() {        if (Object.keys(this.__watchActions).length > 0) {            if (!this.__watch) {                this.__watch = Object.transformIntoWatcher({}, (type, path, element) => {                    let action = this.__watchActionsCb[path.split(".")[0]] || this.__watchActionsCb[path.split("[")[0]];                    action(type, path, element);                });            }        }    }    __initWatches() { }    __prepareForLoop() { }    __getLangTranslations() {        return [];    }    __prepareTranslations() {        this._translations = {};        let langs = this.__getLangTranslations();        for (let i = 0; i < langs.length; i++) {            this._translations[langs[i]] = {};        }        this.__setTranslations();    }    __setTranslations() {    }    __getStyle() {        return [":host{display:inline-block;box-sizing:border-box}:host *{box-sizing:border-box}"];    }    __getHtml() {        return {            html: '<slot></slot>',            slots: {                default: '<slot></slot>'            }        };    }    __prepareTemplate() {        let tmpl = document.createElement('template');        tmpl.innerHTML = `        <style>            ${this.__getStyle().join("\r\n")}        </style>${this.__getHtml().html}`;        let shadowRoot = this.attachShadow({ mode: 'open' });        shadowRoot.appendChild(tmpl.content.cloneNode(true));    }    __createStates() {        this.currentState = "default";        this.statesList = {            "default": this.getDefaultStateCallbacks()        };        this.getSlugFct = {};    }    getDefaultStateCallbacks() {        return {            active: () => { },            inactive: () => { }        };    }    __getMaxId() {        return [];    }    __selectElementNeeded(ids = null) {        if (ids == null) {            var _maxId = this.__getMaxId();            this._components = {};            for (var i = 0; i < _maxId.length; i++) {                for (let j = 0; j < _maxId[i][1]; j++) {                    let key = _maxId[i][0].toLowerCase() + "_" + j;                    this._components[key] = Array.from(this.shadowRoot.querySelectorAll('[_id="' + key + '"]'));                }            }        }        else {            for (let i = 0; i < ids.length; i++) {                //this._components[ids[i]] = this.shadowRoot.querySelectorAll('[_id="component' + ids[i] + '"]');            }        }        this.__mapSelectedElement();    }    __mapSelectedElement() {    }    __registerOnChange() {    }    __endConstructor() { }    connectedCallback() {        this.__defaultValue();        this.__upgradeAttributes();        this.__addEvents();        if (this._first) {            this._first = false;            this.__applyTranslations();            setTimeout(() => {                this.__subscribeState();                this.postCreation();                this._isReady = true;                this.dispatchEvent(new CustomEvent('ready'));            });        }    }    __defaultValue() { }    __upgradeAttributes() { }    __listBoolProps() {        return [];    }    __upgradeProperty(prop) {        let boolProps = this.__listBoolProps();        if (boolProps.indexOf(prop) != -1) {            if (this.hasAttribute(prop) && (this.getAttribute(prop) === "true" || this.getAttribute(prop) === "")) {                let value = this.getAttribute(prop);                delete this[prop];                this[prop] = value;            }            else {                this.removeAttribute(prop);                this[prop] = false;            }        }        else {            if (this.hasAttribute(prop)) {                let value = this.getAttribute(prop);                delete this[prop];                this[prop] = value;            }        }    }    __addEvents() { }    __applyTranslations() { }    __getTranslation(key) {        if (!this._translations)            return;        var lang = localStorage.getItem('lang');        if (lang === null) {            lang = 'en';        }        if (key.indexOf('lang.') === 0) {            key = key.substring(5);        }        if (this._translations[lang] !== undefined) {            return this._translations[lang][key];        }        return key;    }    getStateManagerName() {        return undefined;    }    __subscribeState() {        var currentState = StateManager.getInstance(this.getStateManagerName()).getActiveState() || "";        var currentSlug = StateManager.getInstance(this.getStateManagerName()).getActiveSlug() || "*";        var stateSlugged = currentState.replace("*", currentSlug);        if (this.statesList.hasOwnProperty(stateSlugged)) {            this.statesList[stateSlugged].active(stateSlugged);        }        else {            this.statesList["default"].active("default");        }        for (let route in this.statesList) {            StateManager.getInstance(this.getStateManagerName()).subscribe(route, this.statesList[route]);        }    }    attributeChangedCallback(name, oldValue, newValue) {        if (oldValue !== newValue) {            if (this.__onChangeFct.hasOwnProperty(name)) {                for (let fct of this.__onChangeFct[name]) {                    fct('');                }            }        }    }    postCreation() { }    _unsubscribeState() {        if (this.statesList) {            for (let key in this.statesList) {                StateManager.getInstance(this.getStateManagerName()).unsubscribe(key, this.statesList[key]);            }        }    }}
+var WatchAction;(function (WatchAction) {    WatchAction[WatchAction["SET"] = 0] = "SET";    WatchAction[WatchAction["CREATED"] = 1] = "CREATED";    WatchAction[WatchAction["UPDATED"] = 2] = "UPDATED";    WatchAction[WatchAction["DELETED"] = 3] = "DELETED";})(WatchAction || (WatchAction = {}));
+
+class Coordinate {    x = 0;    y = 0;}
+
+
+class AvScrollable extends WebComponent {
+    static get observedAttributes() {return ["disable_scroll", "zoom"].concat(super.observedAttributes).filter((v, i, a) => a.indexOf(v) === i);}
+    get 'disable_scroll'() {
+                        return this.hasAttribute('disable_scroll');
+                    }
+                    set 'disable_scroll'(val) {
+                        if(val === 1 || val === 'true' || val === ''){
+                            val = true;
+                        }
+                        else if(val === 0 || val === 'false' || val === null || val === undefined){
+                            val = false;
+                        }
+                        if(val !== false && val !== true){
+                            console.error("error setting boolean in disable_scroll");
+                            val = false;
+                        }
+                        if (val) {
+                            this.setAttribute('disable_scroll', 'true');
+                        } else{
+                            this.removeAttribute('disable_scroll');
+                        }
+                    }get 'zoom'() {
+                        return Number(this.getAttribute('zoom'));
+                    }
+                    set 'zoom'(val) {
+						if(val === undefined || val === null){this.removeAttribute('zoom')}
+                        else{this.setAttribute('zoom',val)}
+                    }get 'floating_scroll'() {
+                        return this.hasAttribute('floating_scroll');
+                    }
+                    set 'floating_scroll'(val) {
+                        if(val === 1 || val === 'true' || val === ''){
+                            val = true;
+                        }
+                        else if(val === 0 || val === 'false' || val === null || val === undefined){
+                            val = false;
+                        }
+                        if(val !== false && val !== true){
+                            console.error("error setting boolean in floating_scroll");
+                            val = false;
+                        }
+                        if (val) {
+                            this.setAttribute('floating_scroll', 'true');
+                        } else{
+                            this.removeAttribute('floating_scroll');
+                        }
+                    }get 'only_vertical'() {
+                        return this.hasAttribute('only_vertical');
+                    }
+                    set 'only_vertical'(val) {
+                        if(val === 1 || val === 'true' || val === ''){
+                            val = true;
+                        }
+                        else if(val === 0 || val === 'false' || val === null || val === undefined){
+                            val = false;
+                        }
+                        if(val !== false && val !== true){
+                            console.error("error setting boolean in only_vertical");
+                            val = false;
+                        }
+                        if (val) {
+                            this.setAttribute('only_vertical', 'true');
+                        } else{
+                            this.removeAttribute('only_vertical');
+                        }
+                    }    __prepareVariables() { super.__prepareVariables(); if(this.verticalScrollVisible === undefined) {this.verticalScrollVisible = false;}if(this.horizontalScrollVisible === undefined) {this.horizontalScrollVisible = false;}if(this.observer === undefined) {this.observer = undefined;}if(this.wheelAction === undefined) {this.wheelAction = undefined;}if(this.touchWheelAction === undefined) {this.touchWheelAction = undefined;}if(this.contentHidderWidth === undefined) {this.contentHidderWidth = 0;}if(this.contentHidderHeight === undefined) {this.contentHidderHeight = 0;}if(this.content === undefined) {this.content = {"vertical":{"value":0,"max":0},"horizontal":{"value":0,"max":0}};}if(this.scrollbar === undefined) {this.scrollbar = {"vertical":{"value":0,"max":0},"horizontal":{"value":0,"max":0}};}if(this.refreshTimeout === undefined) {this.refreshTimeout = 100;}if(this.elToCalculate === undefined) {this.elToCalculate = undefined;}if(this.contentZoom === undefined) {this.contentZoom = undefined;}if(this.contentHidder === undefined) {this.contentHidder = undefined;}if(this.contentWrapper === undefined) {this.contentWrapper = undefined;}if(this.contentscroller === undefined) {this.contentscroller = undefined;}if(this.verticalScrollerContainer === undefined) {this.verticalScrollerContainer = undefined;}if(this.verticalScroller === undefined) {this.verticalScroller = undefined;}if(this.horizontalScrollerContainer === undefined) {this.horizontalScrollerContainer = undefined;}if(this.horizontalScroller === undefined) {this.horizontalScroller = undefined;} }
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(`:host{--internal-scrollbar-content-overflow: var(--scrollbar-content-overflow, hidden);--internal-scrollbar-content-height: var(--scrollbar-content-height, auto);--internal-scrollbar-content-width: var(--scrollbar-content-width, 100%);--internal-scrollbar-container-color: var(--scrollbar-container-color, transparent);--internal-scrollbar-color: var(--scrollbar-color, #757575);--internal-scrollbar-active-color: var(--scrollbar-active-color, #757575);--internal-scroller-width: var(--scroller-width, 6px);--internal-scroller-bottom: var(--scroller-bottom, 3px);--internal-scroller-right: var(--scroller-right, 3px);--internal-scroller-left: var(--scroller-left, 3px);--internal-scroller-top: var(--scroller-top, 3px);--internal-scroller-vertical-shadow: var(--scroller-shadow, var(--scroller-vertical-shadow, none));--internal-scroller-horizontal-shadow: var(--scroller-shadow, var(--scroller-horizontal-shadow, none));--internal-scollable-delay: var(--scrollable-delay, 0.3s)}:host{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-drag:none}:host *{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-drag:none;box-sizing:border-box}:host{display:block;position:relative;height:100%;width:100%}:host .scroll-main-container{display:block;position:relative;height:100%;width:100%}:host .scroll-main-container .content-zoom{display:block;position:relative;height:100%;width:100%;transform-origin:0 0}:host .scroll-main-container .content-hidder{overflow:var(--internal-scrollbar-content-overflow);width:100%;height:100%;position:relative;display:block}:host .scroll-main-container .content-wrapper{position:absolute;display:inline-block;top:0;left:0;height:var(--internal-scrollbar-content-height);width:var(--internal-scrollbar-content-width);transition:top var(--internal-scollable-delay) linear,left var(--internal-scollable-delay) linear}:host .scroll-main-container .container-scroller{position:absolute;background-color:var(--internal-scrollbar-container-color);border-radius:5px;z-index:5;display:none}:host .scroll-main-container .scroller{background-color:var(--internal-scrollbar-color);border-radius:5px;position:absolute;z-index:5;cursor:pointer}:host .scroll-main-container .scroller.active{background-color:var(--internal-scrollbar-active-color);transition:none !important}:host .scroll-main-container .container-scroller.vertical{width:calc(var(--internal-scroller-width) + var(--internal-scroller-left));padding-left:var(--internal-scroller-left);top:var(--internal-scroller-bottom);height:calc(100% - var(--internal-scroller-bottom)*2 - var(--internal-scroller-width));right:var(--internal-scroller-right)}:host .scroll-main-container .scroller.vertical{width:calc(100% - var(--internal-scroller-left));top:0;transition:top var(--internal-scollable-delay) linear;box-shadow:var(--internal-scroller-vertical-shadow)}:host .scroll-main-container .container-scroller.horizontal{height:calc(var(--internal-scroller-width) + var(--internal-scroller-top));padding-top:var(--internal-scroller-top);left:var(--internal-scroller-right);width:calc(100% - var(--internal-scroller-right)*2 - var(--internal-scroller-width));bottom:var(--internal-scroller-bottom)}:host .scroll-main-container .scroller.horizontal{height:calc(100% - var(--internal-scroller-top));left:0;transition:left var(--internal-scollable-delay) linear;box-shadow:var(--internal-scroller-horizontal-shadow)}:host([disable_scroll]) .content-wrapper{height:100%}:host([disable_scroll]) .scroller{display:none}:host(.scrolling) .content-wrapper *{user-select:none}:host(.scrolling) ::slotted{user-select:none}`);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<div class="scroll-main-container" av-element="elToCalculate">
+    <div class="content-zoom" av-element="contentZoom">
+        <div class="content-hidder" av-element="contentHidder">
+            <div class="content-wrapper" av-element="contentWrapper">
+                <slot></slot>
+            </div>
+        </div>
+    </div>
+    <div av-element="contentscroller">
+        <div class="container-scroller vertical" av-element="verticalScrollerContainer">
+            <div class="scroller vertical" av-element="verticalScroller"></div>
+        </div>
+        <div class="container-scroller horizontal" av-element="horizontalScrollerContainer">
+            <div class="scroller horizontal" av-element="horizontalScroller"></div>
+        </div>
+    </div>
+</div>`,
+            slots: {
+                'default':`<slot></slot>`
+            },
+            blocks: {
+                'default':`<div class="scroll-main-container" av-element="elToCalculate">
+    <div class="content-zoom" av-element="contentZoom">
+        <div class="content-hidder" av-element="contentHidder">
+            <div class="content-wrapper" av-element="contentWrapper">
+                <slot></slot>
+            </div>
+        </div>
+    </div>
+    <div av-element="contentscroller">
+        <div class="container-scroller vertical" av-element="verticalScrollerContainer">
+            <div class="scroller vertical" av-element="verticalScroller"></div>
+        </div>
+        <div class="container-scroller horizontal" av-element="horizontalScrollerContainer">
+            <div class="scroller horizontal" av-element="horizontalScroller"></div>
+        </div>
+    </div>
+</div>`
+            }
+        }
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvScrollable", 0])
+        return temp;
+    }
+    __registerOnChange() { super.__registerOnChange(); this.__onChangeFct['disable_scroll'] = []this.__onChangeFct['disable_scroll'].push((path) => {((target) => {    if (target.disable_scroll) {        target.removeResizeObserver();        target.removeWheelAction();        target.contentZoom.style.width = '';        target.contentZoom.style.height = '';    }    else {        target.addResizeObserver();        target.addWheelAction();    }})(this);})this.__onChangeFct['zoom'] = []this.__onChangeFct['zoom'].push((path) => {((target) => {    target.changeZoom();})(this);}) }
+    getClassName() {
+        return "AvScrollable";
+    }
+    __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('disable_scroll')) { this.attributeChangedCallback('disable_scroll', false, false); }if(!this.hasAttribute('zoom')){ this['zoom'] = '1'; }if(!this.hasAttribute('floating_scroll')) { this.attributeChangedCallback('floating_scroll', false, false); }if(!this.hasAttribute('only_vertical')) { this.attributeChangedCallback('only_vertical', false, false); } }
+    __upgradeAttributes() { super.__upgradeAttributes(); this.__upgradeProperty('disable_scroll');this.__upgradeProperty('zoom'); }
+    __listBoolProps() { return ["disable_scroll","floating_scroll","only_vertical"].concat(super.__listBoolProps()).filter((v, i, a) => a.indexOf(v) === i); }
+     getVisibleBox(){return {    top: this.content.vertical.value,    left: this.content.horizontal.value,    width: this.contentHidder.offsetWidth,    height: this.contentHidder.offsetHeight};} changeZoom(){if (!this.disable_scroll) {    this.contentZoom.style.transform = 'scale(' + this.zoom + ')';    this.dimensionRefreshed();}} dimensionRefreshed(entries){this.calculateRealSize();if (this.contentWrapper.scrollHeight - this.contentHidderHeight > 2) {    if (!this.verticalScrollVisible) {        this.verticalScrollerContainer.style.display = "block";        this.verticalScrollVisible = true;        this.afterShowVerticalScroller();    }    var verticalScrollerHeight = (this.contentHidderHeight / this.contentWrapper.scrollHeight * 100);    this.verticalScroller.style.height = verticalScrollerHeight + '%';    this.scrollVerticalScrollbar(this.scrollbar.vertical.value);}else if (this.verticalScrollVisible) {    this.verticalScrollerContainer.style.display = "none";    this.verticalScrollVisible = false;    this.afterShowVerticalScroller();    this.scrollVerticalScrollbar(0);}if (!this.only_vertical) {    if (this.contentWrapper.scrollWidth - this.contentHidderWidth > 2) {        if (!this.horizontalScrollVisible) {            this.horizontalScrollerContainer.style.display = "block";            this.horizontalScrollVisible = true;            this.afterShowHorizontalScroller();        }        var horizontalScrollerWidth = (this.contentHidderWidth / this.contentWrapper.scrollWidth * 100);        this.horizontalScroller.style.width = horizontalScrollerWidth + '%';        this.scrollHorizontalScrollbar(this.scrollbar.horizontal.value);    }    else if (this.horizontalScrollVisible) {        this.horizontalScrollerContainer.style.display = "none";        this.horizontalScrollVisible = false;        this.afterShowHorizontalScroller();        this.scrollHorizontalScrollbar(0);    }}if (entries && entries[0].target == this) {    if (this.zoom != 1) {        this.contentZoom.style.width = '';        this.contentZoom.style.height = '';        this.changeZoom();    }}} calculateRealSize(){if (!this.disable_scroll) {    var currentOffsetWidth = this.contentZoom.offsetWidth;    var currentOffsetHeight = this.contentZoom.offsetHeight;    this.contentHidderHeight = currentOffsetHeight;    this.contentHidderWidth = currentOffsetWidth;    if (this.zoom < 1) {        this.contentZoom.style.width = this.elToCalculate.offsetWidth / this.zoom + 'px';        this.contentZoom.style.height = this.elToCalculate.offsetHeight / this.zoom + 'px';    }    else {        let inlineStyle = this.getAttribute("style");        if (inlineStyle) {            let arrStyle = inlineStyle.split(";");            for (let i = 0; i < arrStyle.length; i++) {                if (arrStyle[i].trim().startsWith("width") || arrStyle[i].trim().startsWith("height")) {                    this.contentZoom.style.width = '';                    this.contentZoom.style.height = '';                }            }        }        this.contentHidderHeight = currentOffsetHeight / this.zoom;        this.contentHidderWidth = currentOffsetWidth / this.zoom;    }}} afterShowVerticalScroller(){var leftMissing = this.elToCalculate.offsetWidth - this.verticalScrollerContainer.offsetLeft;if (leftMissing > 0 && this.verticalScrollVisible && !this.floating_scroll) {    this.contentHidder.style.width = 'calc(100% - ' + leftMissing + 'px)';    this.contentHidder.style.marginRight = leftMissing + 'px';}else {    this.contentHidder.style.width = '';    this.contentHidder.style.marginRight = '';}} afterShowHorizontalScroller(){var topMissing = this.elToCalculate.offsetHeight - this.horizontalScrollerContainer.offsetTop;if (topMissing > 0 && this.horizontalScrollVisible && !this.floating_scroll) {    this.contentHidder.style.height = 'calc(100% - ' + topMissing + 'px)';    this.contentHidder.style.marginBottom = topMissing + 'px';}else {    this.contentHidder.style.height = '';    this.contentHidder.style.marginBottom = '';}} createResizeObserver(){let inProgress = false;this.observer = new ResizeObserver({    callback: entries => {        if (inProgress) {            return;        }        inProgress = true;        this.dimensionRefreshed(entries);        inProgress = false;    },    fps: 30});} addResizeObserver(){if (this.observer == undefined) {    this.createResizeObserver();}this.observer.observe(this.contentWrapper);this.observer.observe(this);} removeResizeObserver(){this.observer.unobserve(this.contentWrapper);this.observer.unobserve(this);} addVerticalScrollAction(){var diff = 0;var oldDiff = 0;var intervalTimer = undefined;var intervalMove = () => {    if (diff != oldDiff) {        oldDiff = diff;        this.scrollVerticalScrollbar(diff);    }};let mouseDown = (e) => {    e.normalize();    var startY = e.pageY;    var oldVerticalScrollPosition = this.verticalScroller.offsetTop;    this.classList.add("scrolling");    this.verticalScroller.classList.add("active");    intervalTimer = setInterval(intervalMove, this.refreshTimeout);    var mouseMove = (e) => {        e.normalize();        diff = oldVerticalScrollPosition + e.pageY - startY;    };    var mouseUp = (e) => {        clearInterval(intervalTimer);        this.scrollVerticalScrollbar(diff);        this.classList.remove("scrolling");        this.verticalScroller.classList.remove("active");        document.removeEventListener("mousemove", mouseMove);        document.removeEventListener("touchmove", mouseMove);        document.removeEventListener("mouseup", mouseUp);        document.removeEventListener("touchend", mouseUp);    };    document.addEventListener("mousemove", mouseMove);    document.addEventListener("touchmove", mouseMove);    document.addEventListener("mouseup", mouseUp);    document.addEventListener("touchend", mouseUp);    return false;};this.verticalScroller.addEventListener("mousedown", mouseDown);this.verticalScroller.addEventListener("touchstart", mouseDown);this.verticalScroller.addEventListener("dragstart", this.preventDrag);this.verticalScroller.addEventListener("drop", this.preventDrag);} addHorizontalScrollAction(){var diff = 0;var oldDiff = 0;var intervalTimer = undefined;var intervalMove = () => {    if (diff != oldDiff) {        oldDiff = diff;        this.scrollHorizontalScrollbar(diff);    }};let mouseDown = (e) => {    e.normalize();    var startX = e.pageX;    var oldHoritzontalScrollPosition = this.horizontalScroller.offsetLeft;    this.classList.add("scrolling");    this.horizontalScroller.classList.add("active");    intervalTimer = setInterval(intervalMove, this.refreshTimeout);    var mouseMove = (e) => {        e.normalize();        diff = oldHoritzontalScrollPosition + e.pageX - startX;    };    var mouseUp = (e) => {        clearInterval(intervalTimer);        this.scrollHorizontalScrollbar(diff);        this.classList.remove("scrolling");        this.horizontalScroller.classList.remove("active");        document.removeEventListener("mousemove", mouseMove);        document.removeEventListener("touchmove", mouseMove);        document.removeEventListener("mouseup", mouseUp);        document.removeEventListener("touchend", mouseUp);    };    document.addEventListener("mousemove", mouseMove);    document.addEventListener("touchmove", mouseMove);    document.addEventListener("mouseup", mouseUp);    document.addEventListener("touchend", mouseUp);};this.horizontalScroller.addEventListener("mousedown", mouseDown);this.horizontalScroller.addEventListener("touchstart", mouseDown);this.horizontalScroller.addEventListener("dragstart", this.preventDrag);this.horizontalScroller.addEventListener("drop", this.preventDrag);} createTouchWheelAction(){this.touchWheelAction = (e) => {    e.normalize();    let startX = e.pageX;    let startY = e.pageY;    let startVertical = this.scrollbar.vertical.value;    let startHorizontal = this.scrollbar.horizontal.value;    let touchMove = (e) => {        e.normalize();        let diffX = startX - e.pageX;        let diffY = startY - e.pageY;        this.scrollHorizontalScrollbar(startHorizontal + diffX);        this.scrollVerticalScrollbar(startVertical + diffY);    };    let touchEnd = () => {        window.removeEventListener("touchmove", touchMove);        window.removeEventListener("touchend", touchEnd);    };    window.addEventListener("touchmove", touchMove);    window.addEventListener("touchend", touchEnd);};} createWheelAction(){this.wheelAction = (e) => {    if (e.altKey) {        if (this.horizontalScrollVisible) {            var scrollX = e.deltaY / 5;            this.scrollHorizontalScrollbar(this.scrollbar.horizontal.value + scrollX);            let maxHorizontal = this.horizontalScrollerContainer.offsetWidth - this.horizontalScroller.offsetWidth;            if (this.scrollbar.horizontal.value != 0 && this.scrollbar.horizontal.value != maxHorizontal) {                e.preventDefault();                e.stopPropagation();            }        }    }    else {        if (this.verticalScrollVisible) {            var scrollY = e.deltaY / 5;            this.scrollVerticalScrollbar(this.scrollbar.vertical.value + scrollY);            let maxVertical = this.verticalScrollerContainer.offsetHeight - this.verticalScroller.offsetHeight;            if (this.scrollbar.vertical.value != 0 && this.scrollbar.vertical.value != maxVertical) {                e.preventDefault();                e.stopPropagation();            }        }    }};} addWheelAction(){if (!this.wheelAction) {    this.createWheelAction();}if (!this.touchWheelAction) {    this.createTouchWheelAction();}this.addEventListener("wheel", this.wheelAction);this.addEventListener("touchstart", this.touchWheelAction);} removeWheelAction(){if (this.wheelAction) {    this.removeEventListener("wheel", this.wheelAction);}if (this.touchWheelAction) {    this.removeEventListener("touchstart", this.touchWheelAction);}} scrollScrollbarTo(horizontalValue,verticalValue){this.scrollHorizontalScrollbar(horizontalValue);this.scrollVerticalScrollbar(verticalValue);} scrollHorizontalScrollbar(horizontalValue){if (!this.only_vertical) {    if (horizontalValue != undefined) {        var maxScroller = this.horizontalScrollerContainer.offsetWidth - this.horizontalScroller.offsetWidth;        this.scrollbar.horizontal.max = maxScroller;        var maxScrollContent = this.contentWrapper.scrollWidth - this.contentHidderWidth;        if (maxScrollContent < 0) {            maxScrollContent = 0;        }        this.content.horizontal.max = maxScrollContent;        if (horizontalValue < 0) {            horizontalValue = 0;        }        else if (horizontalValue > maxScroller) {            horizontalValue = maxScroller;        }        this.scrollbar.horizontal.value = horizontalValue;        this.horizontalScroller.style.left = horizontalValue + 'px';        if (maxScroller != 0) {            var percent = maxScrollContent / maxScroller;            this.content.horizontal.value = Math.round(horizontalValue * percent);        }        else {            this.content.horizontal.value = 0;        }        this.contentWrapper.style.left = -1 * this.content.horizontal.value + 'px';        this.emitScroll();    }}} scrollVerticalScrollbar(verticalValue){if (verticalValue != undefined) {    var maxScroller = this.verticalScrollerContainer.offsetHeight - this.verticalScroller.offsetHeight;    this.scrollbar.vertical.max = maxScroller;    var maxScrollContent = this.contentWrapper.scrollHeight - this.contentHidderHeight;    if (maxScrollContent < 0) {        maxScrollContent = 0;    }    this.content.vertical.max = maxScrollContent;    if (verticalValue < 0) {        verticalValue = 0;    }    else if (verticalValue > maxScroller) {        verticalValue = maxScroller;    }    this.scrollbar.vertical.value = verticalValue;    this.verticalScroller.style.top = verticalValue + 'px';    if (maxScroller != 0) {        var percent = maxScrollContent / maxScroller;        this.content.vertical.value = Math.round(verticalValue * percent);    }    else {        this.content.vertical.value = 0;    }    this.contentWrapper.style.top = -1 * this.content.vertical.value + 'px';    this.emitScroll();}} scrollHorizontal(horizontalValue){if (!this.only_vertical) {    if (horizontalValue != undefined) {        var maxScroller = this.horizontalScrollerContainer.offsetWidth - this.horizontalScroller.offsetWidth;        this.scrollbar.horizontal.max = maxScroller;        var maxScrollContent = this.contentWrapper.scrollWidth - this.contentHidderWidth;        if (maxScrollContent < 0) {            maxScrollContent = 0;        }        this.content.horizontal.max = maxScrollContent;        if (horizontalValue < 0) {            horizontalValue = 0;        }        else if (horizontalValue > maxScrollContent) {            horizontalValue = maxScrollContent;        }        this.content.horizontal.value = horizontalValue;        this.contentWrapper.style.left = -horizontalValue + 'px';        if (maxScroller != 0) {            var percent = maxScrollContent / maxScroller;            this.scrollbar.horizontal.value = Math.round(horizontalValue / percent);        }        else {            this.scrollbar.horizontal.value = 0;        }        this.horizontalScroller.style.left = this.scrollbar.horizontal.value + 'px';        this.emitScroll();    }}} scrollVertical(verticalValue){if (verticalValue != undefined) {    var maxScroller = this.verticalScrollerContainer.offsetHeight - this.verticalScroller.offsetHeight;    this.scrollbar.vertical.max = maxScroller;    var maxScrollContent = this.contentWrapper.scrollHeight - this.contentHidderHeight;    if (maxScrollContent < 0) {        maxScrollContent = 0;    }    this.content.vertical.max = maxScroller;    if (verticalValue < 0) {        verticalValue = 0;    }    else if (verticalValue > maxScrollContent) {        verticalValue = maxScrollContent;    }    this.content.vertical.value = verticalValue;    this.verticalScroller.style.top = -verticalValue + 'px';    if (maxScroller != 0) {        var percent = maxScrollContent / maxScroller;        this.scrollbar.vertical.value = Math.round(verticalValue / percent);    }    else {        this.scrollbar.vertical.value = 0;    }    this.verticalScroller.style.top = this.scrollbar.vertical.value + 'px';    this.contentWrapper.style.top = -1 * this.content.vertical.value + 'px';    this.emitScroll();}} scrollToPosition(horizontalValue,verticalValue){this.scrollHorizontal(horizontalValue);this.scrollVertical(verticalValue);} emitScroll(){var customEvent = new CustomEvent("scroll");this.dispatchEvent(customEvent);} preventDrag(e){e.preventDefault();return false;} postCreation(){if (!this.disable_scroll) {    this.addResizeObserver();    this.addWheelAction();}this.addVerticalScrollAction();this.addHorizontalScrollAction();this.contentHidder.addEventListener("scroll", () => {    if (this.contentHidder.scrollTop != 0) {        this.contentHidder.scrollTop = 0;    }});}}
+window.customElements.define('av-scrollable', AvScrollable);
+class AvRouterLink extends WebComponent {
+    get 'state'() {
+                        return this.getAttribute('state');
+                    }
+                    set 'state'(val) {
+						if(val === undefined || val === null){this.removeAttribute('state')}
+                        else{this.setAttribute('state',val)}
+                    }    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(``);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<slot></slot>`,
+            slots: {
+                'default':`<slot></slot>`
+            },
+            blocks: {
+                'default':`<slot></slot>`
+            }
+        }
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvRouterLink", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvRouterLink";
+    }
+    __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('state')){ this['state'] = ''; } }
+     postCreation(){StateManager.getInstance("navigation").subscribe(this.state, {    active: () => {        this.classList.add("active");    },    inactive: () => {        this.classList.remove("active");    }});new PressManager({    element: this,    onPress: () => {        StateManager.getInstance("navigation").setActiveState(this.state);    }});}}
+window.customElements.define('av-router-link', AvRouterLink);
+class AvRouter extends WebComponent {
+    constructor() { super(); if (this.constructor == AvRouter) { throw "can't instanciate an abstract class"; } }
+    __prepareVariables() { super.__prepareVariables(); if(this.oldPage === undefined) {this.oldPage = undefined;}if(this.contentEl === undefined) {this.contentEl = undefined;} }
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(``);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<slot name="before"></slot>
+<div class="content" av-element="contentEl"></div>
+<slot name="after"></slot>`,
+            slots: {
+                'before':`<slot name="before"></slot>`,'after':`<slot name="after"></slot>`
+            },
+            blocks: {
+                'default':`<slot name="before"></slot>
+<div class="content" av-element="contentEl"></div>
+<slot name="after"></slot>`
+            }
+        }
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvRouter", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvRouter";
+    }
+     register(){let routes = this.defineRoutes();for (let key in routes) {    this.initRoute(key, new routes[key]());}} initRoute(path,element){this.contentEl.appendChild(element);StateManager.getInstance("navigation").subscribe(path, {    active: (currentState) => {        if (this.oldPage && this.oldPage != element) {            this.oldPage.show = false;        }        element.show = true;        this.oldPage = element;        if (window.location.pathname != currentState) {            let newUrl = window.location.origin + currentState;            document.title = element.defineTitle();            window.history.pushState({}, element.defineTitle(), newUrl);        }    }});} postCreation(){this.register();if (window.localStorage.getItem("navigation_url")) {    StateManager.getInstance("navigation").setActiveState(window.localStorage.getItem("navigation_url"));    window.localStorage.removeItem("navigation_url");}else {    StateManager.getInstance("navigation").setActiveState(window.location.pathname);}window.onpopstate = (e) => {    if (window.location.pathname != StateManager.getInstance("navigation").getActiveState()) {        StateManager.getInstance("navigation").setActiveState(window.location.pathname);    }};}}
+window.customElements.define('av-router', AvRouter);
+class AvPage extends WebComponent {
+    constructor() { super(); if (this.constructor == AvPage) { throw "can't instanciate an abstract class"; } }
+    get 'show'() {
+                        return this.hasAttribute('show');
+                    }
+                    set 'show'(val) {
+                        if(val === 1 || val === 'true' || val === ''){
+                            val = true;
+                        }
+                        else if(val === 0 || val === 'false' || val === null || val === undefined){
+                            val = false;
+                        }
+                        if(val !== false && val !== true){
+                            console.error("error setting boolean in show");
+                            val = false;
+                        }
+                        if (val) {
+                            this.setAttribute('show', 'true');
+                        } else{
+                            this.removeAttribute('show');
+                        }
+                    }    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(`:host{display:none}:host([show]){display:block}`);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<slot></slot>`,
+            slots: {
+                'default':`<slot></slot>`
+            },
+            blocks: {
+                'default':`<slot></slot>`
+            }
+        }
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvPage", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvPage";
+    }
+    __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('show')) { this.attributeChangedCallback('show', false, false); } }
+    __listBoolProps() { return ["show"].concat(super.__listBoolProps()).filter((v, i, a) => a.indexOf(v) === i); }
+}
+window.customElements.define('av-page', AvPage);
+class AvHideable extends WebComponent {
+    get 'isVisible'() {
+						return this.__watch["isVisible"];
+					}
+					set 'isVisible'(val) {
+						this.__watch["isVisible"] = val;
+					}    __prepareVariables() { super.__prepareVariables(); if(this.oldParent === undefined) {this.oldParent = "undefined";}if(this.options === undefined) {this.options = undefined;}if(this.checkCloseBinded === undefined) {this.checkCloseBinded = undefined;}if(this.pressManager === undefined) {this.pressManager = undefined;}if(this.content === undefined) {this.content = undefined;}if(this.onVisibilityChangeCallbacks === undefined) {this.onVisibilityChangeCallbacks = [];} }
+    __prepareWatchesActions() {
+					this.__watchActions["isVisible"] = [((target) => {    target.onVisibilityChangeCallbacks.forEach(callback => callback(target.isVisible));})];
+						this.__watchActionsCb["isVisible"] = (action, path, value) => {
+							for (let fct of this.__watchActions["isVisible"]) {
+								fct(this, action, path, value);
+							}
+							if(this.__onChangeFct["isVisible"]){
+								for(let fct of this.__onChangeFct["isVisible"]){
+									fct("isVisible")
+									/*if(path == ""){
+										fct("isVisible")
+									}
+									else{
+										fct("isVisible."+path);
+									}*/
+								}
+							}
+						}					super.__prepareWatchesActions();
+				}__initWatches() {
+					super.__initWatches();
+					this["isVisible"] = false;
+				}
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(`:host{position:absolute;top:0;left:0;width:0;height:0;z-index:1000;overflow:visible;display:none}::slotted(.context-menu .context-menu-item){background-color:red}:host{--inserted: "here"}`);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<slot></slot>
+<div av-element="content"></div>`,
+            slots: {
+                'default':`<slot></slot>`
+            },
+            blocks: {
+                'default':`<slot></slot>
+<div av-element="content"></div>`
+            }
+        }
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvHideable", 0])
+        return temp;
+    }
+    __endConstructor() { super.__endConstructor(); (() => {    this.options = {        noHideItems: [this],        container: document.body,        beforeHide: this.defaultBeforeHide,        afterHide: this.defaultAfterHide,        canHide: this.defaultCanHide    };    this.checkCloseBinded = this.checkClose.bind(this);})() }
+    getClassName() {
+        return "AvHideable";
+    }
+    async  defaultBeforeHide(){}async  defaultAfterHide(){}async  defaultCanHide(){return true;} configure(options){if (options.noHideItems) {    this.options.noHideItems = options.noHideItems;}if (options.beforeHide) {    this.options.beforeHide = options.beforeHide;}if (options.afterHide) {    this.options.afterHide = options.afterHide;}if (options.canHide) {    this.options.canHide = options.canHide;}if (options.container) {    this.options.container = options.container;}} show(){if (this.isVisible) {    return;}this.isVisible = true;this.oldParent = this.parentNode;if (this.shadowRoot.querySelector("style").innerText.indexOf(":host{--inserted: \"here\"}") != -1) {    let newStyle = "";    const parentShadowRoot = this.oldParent.findParentByType(ShadowRoot);    if (parentShadowRoot instanceof ShadowRoot) {        let matchingArr = parentShadowRoot.querySelector("style").innerText.match(/av-hideable.*?\{.*?\}/g);        if (matchingArr) {            newStyle = matchingArr.join("").replace(/av-hideable/g, ":host");        }    }    this.shadowRoot.querySelector("style").innerText = this.shadowRoot.querySelector("style").innerText.replace(":host{--inserted: \"here\"}", newStyle);}this.loadCSSVariables();this.style.display = 'block';this.options.container.appendChild(this);this.options.container.addEventListener("pressaction_trigger", this.checkCloseBinded);this.pressManager = new PressManager({    element: this.options.container,    onPress: (e) => {        this.checkCloseBinded(e);    }});} getVisibility(){return this.isVisible;} onVisibilityChange(callback){this.onVisibilityChangeCallbacks.push(callback);} offVisibilityChange(callback){this.onVisibilityChangeCallbacks = this.onVisibilityChangeCallbacks.filter(cb => cb !== callback);} loadCSSVariables(){let styleSheets = this.shadowRoot.styleSheets;let realStyle = getComputedStyle(this);let propsToAdd = {};for (let i = 0; i < styleSheets.length; i++) {    let rules = styleSheets[i].cssRules;    for (let j = 0; j < rules.length; j++) {        for (let indexTxt in rules[j]["style"]) {            let index = Number(indexTxt);            if (isNaN(index)) {                break;            }            let prop = rules[j]["style"][index];            let value = rules[j]["style"][prop];            if (value.startsWith("var(")) {                let varToDef = value.match(/var\(.*?(\,|\))/g)[0].replace("var(", "").slice(0, -1);                let realValue = realStyle.getPropertyValue(varToDef);                propsToAdd[varToDef] = realValue.trim();            }        }    }}for (let key in propsToAdd) {    this.style.setProperty(key, propsToAdd[key]);}}async  hide(options){if (this.isVisible) {    if ((options === null || options === void 0 ? void 0 : options.force) || await this.options.canHide(options === null || options === void 0 ? void 0 : options.target)) {        await this.options.beforeHide();        this.isVisible = false;        this.style.display = 'none';        this.oldParent.appendChild(this);        this.options.container.removeEventListener("pressaction_trigger", this.checkCloseBinded);        this.pressManager.destroy();        await this.options.afterHide();    }}} checkClose(e){let realTargetEl;if (e instanceof PointerEvent) {    realTargetEl = e.realTarget();}else {    realTargetEl = e.detail.realEvent.realTarget();}for (var i = 0; i < this.options.noHideItems.length; i++) {    if (this.options.noHideItems[i].containsChild(realTargetEl)) {        return;    }}this.hide({    target: realTargetEl});} postCreation(){var listChild = this.getElementsInSlot();for (let i = 0; i < listChild.length; i++) {    this.content.appendChild(listChild[i]);}}}
+window.customElements.define('av-hideable', AvHideable);
+class AvFormElement extends WebComponent {
+    constructor() { super(); if (this.constructor == AvFormElement) { throw "can't instanciate an abstract class"; } }
+    get 'required'() {
+                        return this.hasAttribute('required');
+                    }
+                    set 'required'(val) {
+                        if(val === 1 || val === 'true' || val === ''){
+                            val = true;
+                        }
+                        else if(val === 0 || val === 'false' || val === null || val === undefined){
+                            val = false;
+                        }
+                        if(val !== false && val !== true){
+                            console.error("error setting boolean in required");
+                            val = false;
+                        }
+                        if (val) {
+                            this.setAttribute('required', 'true');
+                        } else{
+                            this.removeAttribute('required');
+                        }
+                    }get 'name'() {
+                        return this.getAttribute('name');
+                    }
+                    set 'name'(val) {
+						if(val === undefined || val === null){this.removeAttribute('name')}
+                        else{this.setAttribute('name',val)}
+                    }get 'focusable'() {
+                        return this.hasAttribute('focusable');
+                    }
+                    set 'focusable'(val) {
+                        if(val === 1 || val === 'true' || val === ''){
+                            val = true;
+                        }
+                        else if(val === 0 || val === 'false' || val === null || val === undefined){
+                            val = false;
+                        }
+                        if(val !== false && val !== true){
+                            console.error("error setting boolean in focusable");
+                            val = false;
+                        }
+                        if (val) {
+                            this.setAttribute('focusable', 'true');
+                        } else{
+                            this.removeAttribute('focusable');
+                        }
+                    }get 'value'() {
+						return this.__watch["value"];
+					}
+					set 'value'(val) {
+						this.__watch["value"] = val;
+					}get 'errors'() {
+						return this.__watch["errors"];
+					}
+					set 'errors'(val) {
+						this.__watch["errors"] = val;
+					}    __prepareWatchesActions() {
+					this.__watchActions["value"] = [];
+						this.__watchActionsCb["value"] = (action, path, value) => {
+							for (let fct of this.__watchActions["value"]) {
+								fct(this, action, path, value);
+							}
+							if(this.__onChangeFct["value"]){
+								for(let fct of this.__onChangeFct["value"]){
+									fct("value")
+									/*if(path == ""){
+										fct("value")
+									}
+									else{
+										fct("value."+path);
+									}*/
+								}
+							}
+						}this.__watchActions["errors"] = [((target) => {    console.log("Display errors");    target.displayErrors();})];
+						this.__watchActionsCb["errors"] = (action, path, value) => {
+							for (let fct of this.__watchActions["errors"]) {
+								fct(this, action, path, value);
+							}
+							if(this.__onChangeFct["errors"]){
+								for(let fct of this.__onChangeFct["errors"]){
+									fct("errors")
+									/*if(path == ""){
+										fct("errors")
+									}
+									else{
+										fct("errors."+path);
+									}*/
+								}
+							}
+						}					super.__prepareWatchesActions();
+				}__initWatches() {
+					super.__initWatches();
+					this["value"] = this.getDefaultValue();this["errors"] = [];
+				}
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(``);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<slot></slot>`,
+            slots: {
+                'default':`<slot></slot>`
+            },
+            blocks: {
+                'default':`<slot></slot>`
+            }
+        }
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvFormElement", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvFormElement";
+    }
+    __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('required')) { this.attributeChangedCallback('required', false, false); }if(!this.hasAttribute('name')){ this['name'] = ''; }if(!this.hasAttribute('focusable')) { this.attributeChangedCallback('focusable', false, false); } }
+    __listBoolProps() { return ["required","focusable"].concat(super.__listBoolProps()).filter((v, i, a) => a.indexOf(v) === i); }
+     postCreation(){this.findParentByType(AvForm).subscribe(this);} onValueChanged(){this.dispatchEvent(new CustomEvent("change", {    detail: {        value: this.value    }}));} setFocus(){} validate(){return true;} setError(message){this.errors.push(message);} clearErrors(){this.errors = [];} displayErrors(){}}
+window.customElements.define('av-form-element', AvFormElement);
+class AvForm extends WebComponent {
+    get 'loading'() {
+                        return this.hasAttribute('loading');
+                    }
+                    set 'loading'(val) {
+                        if(val === 1 || val === 'true' || val === ''){
+                            val = true;
+                        }
+                        else if(val === 0 || val === 'false' || val === null || val === undefined){
+                            val = false;
+                        }
+                        if(val !== false && val !== true){
+                            console.error("error setting boolean in loading");
+                            val = false;
+                        }
+                        if (val) {
+                            this.setAttribute('loading', 'true');
+                        } else{
+                            this.removeAttribute('loading');
+                        }
+                    }get 'method'() {
+                        return this.getAttribute('method');
+                    }
+                    set 'method'(val) {
+						if(val === undefined || val === null){this.removeAttribute('method')}
+                        else{this.setAttribute('method',val)}
+                    }get 'action'() {
+                        return this.getAttribute('action');
+                    }
+                    set 'action'(val) {
+						if(val === undefined || val === null){this.removeAttribute('action')}
+                        else{this.setAttribute('action',val)}
+                    }get 'use_event'() {
+                        return this.hasAttribute('use_event');
+                    }
+                    set 'use_event'(val) {
+                        if(val === 1 || val === 'true' || val === ''){
+                            val = true;
+                        }
+                        else if(val === 0 || val === 'false' || val === null || val === undefined){
+                            val = false;
+                        }
+                        if(val !== false && val !== true){
+                            console.error("error setting boolean in use_event");
+                            val = false;
+                        }
+                        if (val) {
+                            this.setAttribute('use_event', 'true');
+                        } else{
+                            this.removeAttribute('use_event');
+                        }
+                    }    __prepareVariables() { super.__prepareVariables(); if(this.fields === undefined) {this.fields = [];}if(this.submits === undefined) {this.submits = [];} }
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(``);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<slot></slot>`,
+            slots: {
+                'default':`<slot></slot>`
+            },
+            blocks: {
+                'default':`<slot></slot>`
+            }
+        }
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvForm", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvForm";
+    }
+    __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('loading')) { this.attributeChangedCallback('loading', false, false); }if(!this.hasAttribute('method')){ this['method'] = 'get'; }if(!this.hasAttribute('action')){ this['action'] = ''; }if(!this.hasAttribute('use_event')) { this.attributeChangedCallback('use_event', false, false); } }
+    __listBoolProps() { return ["loading","use_event"].concat(super.__listBoolProps()).filter((v, i, a) => a.indexOf(v) === i); }
+    async  submit(){if (!this.validate()) {    return;}const data = {};this.fields.forEach(field => {    if (field.required) {        data[field.name] = field.value;    }    else {        if (field.value) {            data[field.name] = field.value;        }    }});if (this.use_event) {    const customEvent = new CustomEvent("submit", {        detail: {            data,            action: this.action,            method: this.method        },        bubbles: true,        composed: true    });    this.dispatchEvent(customEvent);}else {    this.loading = true;    const formData = new FormData();    for (const key in data) {        formData.append(key, data[key]);    }    const request = new HttpRequest({        url: this.action,        method: HttpRequest.getMethod(this.method),        data: formData    });    this.loading = false;}} registerSubmit(submitElement){this.submits.push({    element: submitElement,    pressInstance: new PressManager({        element: submitElement,        onPress: () => {            this.submit();        }    })});} unregisterSubmit(submitElement){const index = this.submits.findIndex(submit => submit.element === submitElement);if (index !== -1) {    this.submits[index].pressInstance.destroy();    this.submits.splice(index, 1);}} subscribe(fieldHTML){const fieldIndex = this.fields.push(fieldHTML);const _goNext = (e, index = fieldIndex) => {    if (e.keyCode === 13) {        if (this.fields[index]) {            if (this.fields[index].focusable) {                this.fields[index].setFocus();            }            else {                _goNext(e, index + 1);            }        }        else {            this.submit();        }    }};fieldHTML.addEventListener("keydown", _goNext);} validate(){let valid = true;this.fields.forEach(field => {    if (!field.validate()) {        if (valid === true) {            field.setFocus();        }        valid = false;    }});return valid;} setFocus(){if (this.fields.length > 0) {    this.fields[0].setFocus();}}}
+window.customElements.define('av-form', AvForm);
+class AvFor extends WebComponent {
+    get 'item'() {
+                        return this.getAttribute('item');
+                    }
+                    set 'item'(val) {
+						if(val === undefined || val === null){this.removeAttribute('item')}
+                        else{this.setAttribute('item',val)}
+                    }get 'in'() {
+                        return this.getAttribute('in');
+                    }
+                    set 'in'(val) {
+						if(val === undefined || val === null){this.removeAttribute('in')}
+                        else{this.setAttribute('in',val)}
+                    }get 'index'() {
+                        return this.getAttribute('index');
+                    }
+                    set 'index'(val) {
+						if(val === undefined || val === null){this.removeAttribute('index')}
+                        else{this.setAttribute('index',val)}
+                    }    __prepareVariables() { super.__prepareVariables(); if(this.template === undefined) {this.template = "";}if(this.parent === undefined) {this.parent = undefined;}if(this.parentIndex === undefined) {this.parentIndex = 0;}if(this.parentFor === undefined) {this.parentFor = undefined;}if(this.otherPart === undefined) {this.otherPart = undefined;}if(this.elementsByPath === undefined) {this.elementsByPath = {};}if(this.elementsRootByIndex === undefined) {this.elementsRootByIndex = {};}if(this.forInside === undefined) {this.forInside = {};}if(this.maxIndex === undefined) {this.maxIndex = 0;}if(this.watchElement === undefined) {this.watchElement = undefined;}if(this.watchActionArray === undefined) {this.watchActionArray = undefined;}if(this.watchObjectArray === undefined) {this.watchObjectArray = undefined;}if(this.watchObjectName === undefined) {this.watchObjectName = undefined;} }
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(``);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<slot></slot>`,
+            slots: {
+                'default':`<slot></slot>`
+            },
+            blocks: {
+                'default':`<slot></slot>`
+            }
+        }
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvFor", 0])
+        return temp;
+    }
+    __endConstructor() { super.__endConstructor(); (() => {    this.init();})() }
+    getClassName() {
+        return "AvFor";
+    }
+    __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('item')){ this['item'] = ''; }if(!this.hasAttribute('in')){ this['in'] = ''; }if(!this.hasAttribute('index')){ this['index'] = ''; } }
+     init(){if (!this.parent) {    let shadow = this.getRootNode();    if (shadow.host) {        this.parent = shadow.host;        let parentsFor = this.findParents("av-for", this.parent);        let inParts = this.in.split(".");        let firstPart = inParts.splice(0, 1)[0];        if (this.parent["__watchActions"].hasOwnProperty(firstPart)) {            this.watchActionArray = this.parent["__watchActions"][firstPart];            this.watchObjectArray = this.parent["__watch"];            this.watchObjectName = firstPart;        }        else {            for (let parentFor of parentsFor) {                if (parentFor.item == firstPart) {                    this.parentFor = parentFor;                    this.watchActionArray = this.parentFor.watchActionArray;                    this.watchObjectArray = this.parentFor.watchObjectArray;                    this.watchObjectName = this.parentFor.watchObjectName;                    this.otherPart = inParts;                    break;                }            }        }        if (this.watchActionArray) {            let fctCb = (target, type, path, element) => {                path = path.replace(this.watchObjectName, "");                if (type == WatchAction.SET || path == this.getParentKey()) {                    this.reset();                    this.watchElement = element;                    let currentCreate = Object.prepareByPath(this.watchElement, this.getParentKey());                    if (currentCreate.canApply) {                        if (Array.isArray(currentCreate.objToApply)) {                            for (let i = 0; i < currentCreate.objToApply.length; i++) {                                this.createForElement(currentCreate.objToApply[i], "[" + i + "]");                            }                        }                        else {                            for (let key in currentCreate.objToApply) {                                this.createForElement(currentCreate.objToApply[key], key);                            }                        }                    }                    else if (!Array.isArray(element) && element !== undefined) {                        console.error("something went wrong, but I don't understand how this is possible");                    }                }                else {                    let otherPartRegexp = this.getParentKey().replace(/\[/g, "\\[").replace(/\]/g, "\\]");                    let regexNumberLoop = new RegExp("^" + otherPartRegexp + "\\[(\\d*?)\\]$", "g");                    let testPath = new RegExp("^" + otherPartRegexp + "(\\[\\d*?\\].*)$", "g").exec(path);                    if (testPath) {                        let pathToUse = testPath[1];                        let matchTemp = path.match(regexNumberLoop);                        if (matchTemp) {                            if (type == WatchAction.CREATED) {                                this.createForElement(element, pathToUse);                            }                            else if (type == WatchAction.UPDATED) {                                this.updateForElement(element, pathToUse);                            }                            else if (type == WatchAction.DELETED) {                                this.deleteForElement(element, pathToUse);                            }                        }                        else {                            if (type == WatchAction.CREATED) {                                this.updateForElement(element, pathToUse);                            }                            else if (type == WatchAction.UPDATED) {                                this.updateForElement(element, pathToUse);                            }                            else if (type == WatchAction.DELETED) {                                this.updateForElement(undefined, pathToUse);                            }                        }                    }                }            };            this.watchActionArray.push(fctCb);            if (this.watchObjectArray[this.watchObjectName]) {                fctCb(this.parentElement, WatchAction.SET, '', this.watchObjectArray[this.watchObjectName]);            }        }        else {            console.error("variable " + this.in + " in parent can't be found");        }    }}} createForElement(data,key){let temp = document.createElement("DIV");temp.innerHTML = this.parent["__loopTemplate"][this.getAttribute("_id")];let index = Number(key.replace("[", "").replace("]", ""));if (index > this.maxIndex) {    this.maxIndex = index;}let maxSaved = this.maxIndex;for (let i = maxSaved; i >= index; i--) {    if (this.elementsRootByIndex.hasOwnProperty(i)) {        if (i + 1 > this.maxIndex) {            this.maxIndex = i + 1;        }        this.elementsRootByIndex[i + 1] = this.elementsRootByIndex[i];        this.elementsByPath[i + 1] = this.elementsByPath[i];        this.forInside[i + 1] = this.forInside[i];        for (let elements of Object.values(this.elementsByPath[i + 1])) {            for (let element of elements) {                if (element["__values"].hasOwnProperty("$index$_" + this.index)) {                    element["__values"]["$index$_" + this.index] = i + 1;                    element["__templates"]["$index$_" + this.index].forEach((cb) => {                        cb(element);                    });                }            }        }        for (let forEl of this.forInside[i + 1]) {            forEl.parentIndex = i + 1;            forEl.updateIndexes(this.index, i + 1);        }    }}let result = this.parent['__prepareForCreate'][this.getAttribute("_id")](temp, data, key, this.getAllIndexes(index));let forEls = Array.from(temp.querySelectorAll("av-for"));this.forInside[index] = [];for (let forEl of forEls) {    forEl.parentIndex = index;    this.forInside[index].push(forEl);}this.elementsByPath[index] = result;this.elementsRootByIndex[index] = [];let appendChild = (el) => { this.appendChild(el); };if (index != this.maxIndex) {    let previous = this.elementsRootByIndex[index + 1][0];    appendChild = (el) => { this.insertBefore(el, previous); };}while (temp.children.length > 0) {    let el = temp.children[0];    this.elementsRootByIndex[index].push(el);    appendChild(el);}} updateForElement(data,key){let idendity = key.match(/\[\d*?\]/g)[0];let index = Number(idendity.replace("[", "").replace("]", ""));if (index > this.maxIndex) {    this.maxIndex = index;}key = key.replace(idendity, "");if (key.startsWith(".")) {    key = key.slice(1);}if (this.elementsByPath[index]) {    for (let pathName in this.elementsByPath[index]) {        for (let element of this.elementsByPath[index][pathName]) {            for (let valueName in element["__values"]) {                if (valueName == "") {                    element["__templates"][valueName].forEach((cb) => {                        cb(element, true);                    });                }                else if (valueName == key) {                    element["__values"][valueName] = data;                    element["__templates"][valueName].forEach((cb) => {                        cb(element);                    });                }                else if (valueName.startsWith(key)) {                    let temp = Object.prepareByPath(data, valueName, key);                    if (temp.canApply) {                        element["__values"][valueName] = temp.objToApply;                        element["__templates"][valueName].forEach((cb) => {                            cb(element);                        });                    }                }            }        }    }}else {    this.createForElement(this.watchElement[index], idendity);}} deleteForElement(data,key){let index = Number(key.replace("[", "").replace("]", ""));if (index > this.maxIndex) {    this.maxIndex = index;}if (this.elementsRootByIndex[index]) {    for (let el of this.elementsRootByIndex[index]) {        el.remove();    }    delete this.elementsRootByIndex[index];    delete this.elementsByPath[index];    for (let i = index; i <= this.maxIndex; i++) {        if (i == this.maxIndex) {            this.maxIndex--;        }        if (this.elementsRootByIndex.hasOwnProperty(i)) {            this.elementsRootByIndex[i - 1] = this.elementsRootByIndex[i];            this.elementsByPath[i - 1] = this.elementsByPath[i];            this.forInside[i - 1] = this.forInside[i];            for (let elements of Object.values(this.elementsByPath[i - 1])) {                for (let element of elements) {                    if (element["__values"].hasOwnProperty("$index$_" + this.index)) {                        element["__values"]["$index$_" + this.index] = i - 1;                        element["__templates"]["$index$_" + this.index].forEach((cb) => {                            cb(element);                        });                    }                }            }            for (let forEl of this.forInside[i - 1]) {                forEl.parentIndex = i - 1;                forEl.updateIndexes(this.index, i - 1);            }        }    }}} reset(){this.elementsByPath = {};this.elementsRootByIndex = {};this.forInside = {};this.maxIndex = 0;this.innerHTML = "";} postCreation(){this.init();} getParentKey(){let el = this;let result = "";while (el.parentFor) {    result = result + "[" + el.parentIndex + "]." + this.otherPart.join(".");    el = el.parentFor;}return result;} updateIndexes(indexName,indexValue){for (let position in this.elementsByPath) {    for (let elements of Object.values(this.elementsByPath[position])) {        for (let element of elements) {            if (element["__values"].hasOwnProperty("$index$_" + indexName)) {                element["__values"]["$index$_" + indexName] = indexValue;                element["__templates"]["$index$_" + indexName].forEach((cb) => {                    cb(element);                });            }        }    }}for (let index in this.forInside) {    this.forInside[index].forEach((forEl) => {        forEl.updateIndexes(indexName, indexValue);    });}} getAllIndexes(currentIndex){let result = {};let el = this;while (el.parentFor) {    result[el.parentFor.index] = el.parentIndex;    el = el.parentFor;}result[this.index] = currentIndex;return result;}}
+window.customElements.define('av-for', AvFor);
+class DisplayElement extends WebComponent {
+    constructor() { super(); if (this.constructor == DisplayElement) { throw "can't instanciate an abstract class"; } }
+    __prepareVariables() { super.__prepareVariables(); if(this.currentInstance === undefined) {this.currentInstance = undefined;}if(this.eventsFunctions === undefined) {this.eventsFunctions = {};} }
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(``);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<slot></slot>
+<div></div>`,
+            slots: {
+                'default':`<slot></slot>`
+            },
+            blocks: {
+                'default':`<slot></slot>
+<div></div>`
+            }
+        }
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["DisplayElement", 0])
+        return temp;
+    }
+    getClassName() {
+        return "DisplayElement";
+    }
+     onDeleteFunction(data){} onUpdateFunction(data){} destroy(){if (this.currentInstance) {    this.unsubscribeFromInstance();}} subscribeToInstance(){this.currentInstance.offUpdate(this.eventsFunctions.onUpdate);this.currentInstance.offDelete(this.eventsFunctions["onDelete"]);} unsubscribeFromInstance(){this.currentInstance.offUpdate(this.eventsFunctions["onUpdate"]);this.currentInstance.offDelete(this.eventsFunctions["onDelete"]);} switchInstance(newInstance){if (this.currentInstance) {    this.unsubscribeFromInstance();}this.currentInstance = newInstance;this.subscribeToInstance();this.displayInfos(newInstance);}}
+window.customElements.define('av-display-element', DisplayElement);
+Aventus.GenericRAMManager=GenericRAMManager;
+Aventus.RAMManager=RAMManager;
+Aventus.GenericSocketRAMManager=GenericSocketRAMManager;
+Aventus.SocketRAMManager=SocketRAMManager;
+Aventus.Utils=Utils;
+Aventus.StateManager=StateManager;
+Aventus.Socket=Socket;
+Aventus.ResourceLoader=ResourceLoader;
+Aventus.ResizeObserver=ResizeObserver;
+Aventus.PressManager=PressManager;
+Aventus.DefaultHttpRequestOptions=DefaultHttpRequestOptions;
+Aventus.HttpRequest=HttpRequest;
+Aventus.HttpRequestMethod=HttpRequestMethod;
+Aventus.DragAndDrop=DragAndDrop;
+Aventus.AnimationManager=AnimationManager;
+Aventus.WatchAction=WatchAction;
+Aventus.Coordinate=Coordinate;
+Aventus.WebComponent=WebComponent;
+Aventus.AvScrollable=AvScrollable;
+Aventus.AvRouterLink=AvRouterLink;
+Aventus.AvRouter=AvRouter;
+Aventus.AvPage=AvPage;
+Aventus.AvHideable=AvHideable;
+Aventus.AvFormElement=AvFormElement;
+Aventus.AvForm=AvForm;
+Aventus.AvFor=AvFor;
+Aventus.DisplayElement=DisplayElement;
+})(Aventus || (Aventus = {}));
+window.luxon = (function (exports) {
     'use strict';
   
     function _defineProperties(target, props) {
@@ -8500,6 +9141,7 @@ var luxon = (function (exports) {
     var VERSION = "2.3.2";
   
     exports.DateTime = DateTime;
+    exports.Date = DateTime;
     exports.Duration = Duration;
     exports.FixedOffsetZone = FixedOffsetZone;
     exports.IANAZone = IANAZone;
@@ -8516,48 +9158,46 @@ var luxon = (function (exports) {
     return exports;
   
   })({});
-
-class DefaultHttpRequestOptions {    url = "";    method = HttpRequestMethod.GET;}class HttpRequest {    options = {};    url = '';    static getMethod(method) {        let genericMethod = method.toLowerCase().trim();        if (genericMethod == "get") {            return HttpRequestMethod.GET;        }        if (genericMethod == "post") {            return HttpRequestMethod.POST;        }        if (genericMethod == "delete") {            return HttpRequestMethod.DELETE;        }        if (genericMethod == "put") {            return HttpRequestMethod.PUT;        }        if (genericMethod == "option") {            return HttpRequestMethod.OPTION;        }        console.error("unknow type " + method + ". I ll return GET by default");        return HttpRequestMethod.GET;    }    getMethod(method) {        if (method == HttpRequestMethod.GET)            return "GET";        if (method == HttpRequestMethod.POST)            return "POST";        if (method == HttpRequestMethod.DELETE)            return "DELETE";        if (method == HttpRequestMethod.OPTION)            return "OPTION";        if (method == HttpRequestMethod.PUT)            return "PUT";        return "GET";    }    constructor(options) {        options = {            ...new DefaultHttpRequestOptions(),            ...options        };        let optionsToSend = {            method: this.getMethod(options.method),        };        if (options.data) {            if (options.data instanceof FormData) {                optionsToSend.body = options.data;            }            else {                let formData = new FormData();                for (let key in options.data) {                    formData.append(key, options.data[key]);                }                optionsToSend.body = formData;            }        }        this.options = optionsToSend;        this.url = options.url;    }    async send() {        let result = await fetch(this.url, this.options);        if (result.ok) {        }    }    static get(url) {        return fetch(url, {            method: "GET"        });    }    static async post(url, data) {        let formData = new FormData();        for (let key in data) {            formData.append(key, data[key]);        }        const response = await fetch(url, {            method: "POST",            body: formData        });        const content = await response.json();        return new Promise((resolve, reject) => {            if (response.ok) {                resolve(content);            }            else {                reject(content);            }        });    }}/** * List of HTTP Method allowed */var HttpRequestMethod;(function (HttpRequestMethod) {    HttpRequestMethod[HttpRequestMethod["GET"] = 0] = "GET";    HttpRequestMethod[HttpRequestMethod["POST"] = 1] = "POST";    HttpRequestMethod[HttpRequestMethod["DELETE"] = 2] = "DELETE";    HttpRequestMethod[HttpRequestMethod["PUT"] = 3] = "PUT";    HttpRequestMethod[HttpRequestMethod["OPTION"] = 4] = "OPTION";})(HttpRequestMethod || (HttpRequestMethod = {}));
 Proxy.__maxProxyData = 0;
 Error.stackTraceLimit = Infinity;
 Object.transformIntoWatcher = function (obj, onDataChanged) {
-    if (obj == undefined) {
+    if(obj == undefined) {
         console.error("You must define an objet / array for your proxy");
         return;
     }
-    if (obj.__isProxy) {
+    if(obj.__isProxy) {
         obj.__subscribe(onDataChanged);
         return obj;
     }
     Proxy.__maxProxyData++;
     let setProxyPath = (newProxy, newPath) => {
-        if (newProxy instanceof Object && newProxy.__isProxy) {
+        if(newProxy instanceof Object && newProxy.__isProxy) {
             newProxy.__path = newPath;
-            if (!newProxy.__proxyData) {
+            if(!newProxy.__proxyData) {
                 newProxy.__proxyData = {};
             }
-            if (!newProxy.__proxyData[newPath]) {
+            if(!newProxy.__proxyData[newPath]) {
                 newProxy.__proxyData[newPath] = [];
             }
-            if (newProxy.__proxyData[newPath].indexOf(proxyData) == -1) {
+            if(newProxy.__proxyData[newPath].indexOf(proxyData) == -1) {
                 newProxy.__proxyData[newPath].push(proxyData);
             }
         }
     };
     let removeProxyPath = (oldValue, pathToDelete, recursive = true) => {
-        if (oldValue instanceof Object && oldValue.__isProxy) {
+        if(oldValue instanceof Object && oldValue.__isProxy) {
             let allProxies = oldValue.__proxyData;
-            for (let triggerPath in allProxies) {
-                if (triggerPath == pathToDelete) {
-                    for (let i = 0; i < allProxies[triggerPath].length; i++) {
-                        if (allProxies[triggerPath][i] == proxyData) {
+            for(let triggerPath in allProxies) {
+                if(triggerPath == pathToDelete) {
+                    for(let i = 0; i < allProxies[triggerPath].length; i++) {
+                        if(allProxies[triggerPath][i] == proxyData) {
                             allProxies[triggerPath].splice(i, 1);
                             i--;
                         }
                     }
-                    if (allProxies[triggerPath].length == 0) {
+                    if(allProxies[triggerPath].length == 0) {
                         delete allProxies[triggerPath];
-                        if (Object.keys(allProxies).length == 0) {
+                        if(Object.keys(allProxies).length == 0) {
                             delete oldValue.__proxyData;
                         }
                     }
@@ -8567,26 +9207,34 @@ Object.transformIntoWatcher = function (obj, onDataChanged) {
             // apply recursive delete
         }
     };
-    let currentTrace = new Error().stack.split("\n")
+    let jsonReplacer = (key, value) => {
+        if(key == "__path") return undefined;
+        else if(key == "__proxyData") return undefined;
+        else return value;
+    };
+    let currentTrace = new Error().stack.split("\n");
     currentTrace.shift();
     currentTrace.shift();
+    let onlyDuringInit = true;
     let proxyData = {
+        baseData: {},
         id: Proxy.__maxProxyData,
         callbacks: [onDataChanged],
         avoidUpdate: [],
         pathToRemove: [],
         history: [{
-            object: JSON.parse(JSON.stringify(obj)),
-            trace: currentTrace
+            object: JSON.parse(JSON.stringify(obj, jsonReplacer)),
+            trace: currentTrace,
         }],
+        useHistory: false,
         getProxyObject(target, element, prop) {
             let newProxy;
-            if (element instanceof Object && element.__isProxy) {
+            if(element instanceof Object && element.__isProxy) {
                 newProxy = element;
             }
             else {
                 try {
-                    if (element instanceof Object) {
+                    if(element instanceof Object) {
                         newProxy = new Proxy(element, this);
                     } else {
                         return element;
@@ -8597,20 +9245,20 @@ Object.transformIntoWatcher = function (obj, onDataChanged) {
                 }
             }
             let newPath = '';
-            if (Array.isArray(target)) {
-                if (prop != "length") {
-                    if (target.__path) {
+            if(Array.isArray(target)) {
+                if(prop != "length") {
+                    if(target.__path) {
                         newPath = target.__path;
                     }
                     newPath += "[" + prop + "]";
                     setProxyPath(newProxy, newPath);
                 }
             }
-            else if (element instanceof Date) {
+            else if(element instanceof Date) {
                 return element;
             }
             else {
-                if (target.__path) {
+                if(target.__path) {
                     newPath = target.__path + '.';
                 }
                 newPath += prop;
@@ -8620,51 +9268,70 @@ Object.transformIntoWatcher = function (obj, onDataChanged) {
 
         },
         tryCustomFunction(target, prop, receiver) {
-            if (prop == "__isProxy") {
+            if(prop == "__isProxy") {
                 return true;
             }
-            else if (prop == "__subscribe") {
+            else if(prop == "__subscribe") {
                 return (cb) => {
                     this.callbacks.push(cb);
                 };
             }
-            else if (prop == "__unsubscribe") {
+            else if(prop == "__unsubscribe") {
                 return (cb) => {
                     let index = this.callbacks.indexOf(cb);
-                    if (index > -1) {
+                    if(index > -1) {
                         this.callbacks.splice(index, 1);
                     }
                 };
             }
-            else if (prop == "__proxyId") {
+            else if(prop == "__proxyId") {
                 return this.id;
+            }
+            else if(prop == "getHistory") {
+                return () => {
+                    return this.history;
+                };
+            }
+            else if(prop == "clearHistory"){
+                this.history = [];
+            }
+            else if(prop == "enableHistory") {
+                return () => {
+                    this.useHistory = true;
+                };
+            }
+            else if(prop == "disableHistory") {
+                return () => {
+                    this.useHistory = false;
+                };
+            }
+            else if(prop == "__getTarget" && onlyDuringInit) {
+                return () => {
+                    return target;
+                };
             }
             return undefined;
         },
         get(target, prop, receiver) {
-            if (prop == "__proxyData") {
+            if(prop == "__proxyData") {
                 return target[prop];
             }
-            else if(prop == "getHistory"){
-                return () => {
-                    return this.history;
-                }
-            }
+            
             let customResult = this.tryCustomFunction(target, prop, receiver);
-            if (customResult !== undefined) {
+            if(customResult !== undefined) {
                 return customResult;
             }
 
             let element = target[prop];
-            if (typeof (element) == 'object') {
+            if(typeof (element) == 'object') {
                 return this.getProxyObject(target, element, prop);
             }
-            else if (typeof (element) == 'function') {
-                
-                if (Array.isArray(target)) {
+            else if(typeof (element) == 'function') {
+
+                if(Array.isArray(target)) {
                     let result;
-                    if (prop == 'push') {
-                        if (target.__isProxy) {
+                    if(prop == 'push') {
+                        if(target.__isProxy) {
                             result = (el) => {
                                 let index = target.push(el);
                                 return index;
@@ -8681,8 +9348,8 @@ Object.transformIntoWatcher = function (obj, onDataChanged) {
                             };
                         };
                     }
-                    else if (prop == 'splice') {
-                        if (target.__isProxy) {
+                    else if(prop == 'splice') {
+                        if(target.__isProxy) {
                             result = (index, nbRemove, ...insert) => {
                                 let res = target.splice(index, nbRemove, ...insert);
                                 return res;
@@ -8692,11 +9359,11 @@ Object.transformIntoWatcher = function (obj, onDataChanged) {
                             result = (index, nbRemove, ...insert) => {
                                 let res = target.splice(index, nbRemove, ...insert);
                                 let path = target.__path ? target.__path : '';
-                                for (let i = 0; i < res.length; i++) {
+                                for(let i = 0; i < res.length; i++) {
                                     trigger('DELETED', target, receiver, res[i], "[" + index + "]");
                                     removeProxyPath(res[i], path + "[" + (index + i) + "]");
                                 }
-                                for (let i = 0; i < insert.length; i++) {
+                                for(let i = 0; i < insert.length; i++) {
                                     // get real objetct with proxy to have the correct subscription
                                     let proxyEl = this.getProxyObject(target, insert[i], (index + i));
                                     target.splice((index + i), 1, proxyEl);
@@ -8705,15 +9372,15 @@ Object.transformIntoWatcher = function (obj, onDataChanged) {
                                 let fromIndex = index + insert.length;
                                 let baseDiff = index - insert.length + res.length + 1;
                                 // update path and subscription
-                                for (let i = fromIndex, j = 0; i < target.length; i++, j++) {
+                                for(let i = fromIndex, j = 0; i < target.length; i++, j++) {
                                     let oldPath = path + "[" + (j + baseDiff) + "]";
                                     removeProxyPath(target[i], oldPath, false);
                                     let proxyEl = this.getProxyObject(target, target[i], i);
 
                                     let recuUpdate = (childEl) => {
-                                        if (Array.isArray(childEl)) {
-                                            for (let i = 0; i < childEl.length; i++) {
-                                                if (childEl[i] instanceof Object && childEl[i].__path) {
+                                        if(Array.isArray(childEl)) {
+                                            for(let i = 0; i < childEl.length; i++) {
+                                                if(childEl[i] instanceof Object && childEl[i].__path) {
                                                     let oldPathRecu = proxyEl[i].__path.replace(proxyEl.__path, oldPath);
                                                     removeProxyPath(childEl[i], oldPathRecu, false);
                                                     let newProxyEl = this.getProxyObject(childEl, childEl[i], i);
@@ -8721,9 +9388,9 @@ Object.transformIntoWatcher = function (obj, onDataChanged) {
                                                 }
                                             }
                                         }
-                                        else if (childEl instanceof Object && !(childEl instanceof Date)) {
-                                            for (let key in childEl) {
-                                                if (childEl[key] instanceof Object && childEl[key].__path) {
+                                        else if(childEl instanceof Object && !(childEl instanceof Date)) {
+                                            for(let key in childEl) {
+                                                if(childEl[key] instanceof Object && childEl[key].__path) {
                                                     let oldPathRecu = proxyEl[key].__path.replace(proxyEl.__path, oldPath);
                                                     removeProxyPath(childEl[key], oldPathRecu, false);
                                                     let newProxyEl = this.getProxyObject(childEl, childEl[key], key);
@@ -8740,8 +9407,8 @@ Object.transformIntoWatcher = function (obj, onDataChanged) {
                         }
 
                     }
-                    else if (prop == 'pop') {
-                        if (target.__isProxy) {
+                    else if(prop == 'pop') {
+                        if(target.__isProxy) {
                             result = () => {
                                 let res = target.pop();
                                 return res;
@@ -8769,15 +9436,15 @@ Object.transformIntoWatcher = function (obj, onDataChanged) {
         },
         set(target, prop, value, receiver) {
             let triggerChange = false;
-            if (["__path", "__proxyData"].indexOf(prop) == -1) {
-                if (Array.isArray(target)) {
-                    if (prop != "length") {
+            if(["__path", "__proxyData"].indexOf(prop) == -1) {
+                if(Array.isArray(target)) {
+                    if(prop != "length") {
                         triggerChange = true;
                     }
                 }
                 else {
                     let oldValue = Reflect.get(target, prop, receiver);
-                    if (oldValue !== value) {
+                    if(oldValue !== value) {
                         triggerChange = true;
                     }
                 }
@@ -8786,10 +9453,10 @@ Object.transformIntoWatcher = function (obj, onDataChanged) {
 
             let result = Reflect.set(target, prop, value, receiver);
 
-            if (triggerChange) {
+            if(triggerChange) {
                 let index = this.avoidUpdate.indexOf(prop);
 
-                if (index == -1) {
+                if(index == -1) {
                     trigger('UPDATED', target, receiver, value, prop);
                 }
                 else {
@@ -8801,10 +9468,10 @@ Object.transformIntoWatcher = function (obj, onDataChanged) {
         deleteProperty(target, prop) {
             let triggerChange = false;
             let pathToDelete = '';
-            if (prop != "__path") {
-                if (Array.isArray(target)) {
-                    if (prop != "length") {
-                        if (target.__path) {
+            if(prop != "__path") {
+                if(Array.isArray(target)) {
+                    if(prop != "length") {
+                        if(target.__path) {
                             pathToDelete = target.__path;
                         }
                         pathToDelete += "[" + prop + "]";
@@ -8812,17 +9479,17 @@ Object.transformIntoWatcher = function (obj, onDataChanged) {
                     }
                 }
                 else {
-                    if (target.__path) {
+                    if(target.__path) {
                         pathToDelete = target.__path + '.';
                     }
                     pathToDelete += prop;
                     triggerChange = true;
                 }
             }
-            if (target.hasOwnProperty(prop)) {
+            if(target.hasOwnProperty(prop)) {
                 let oldValue = target[prop];
                 delete target[prop];
-                if (triggerChange) {
+                if(triggerChange) {
                     trigger('DELETED', target, null, oldValue, prop);
                     removeProxyPath(oldValue, pathToDelete);
                 }
@@ -8833,30 +9500,30 @@ Object.transformIntoWatcher = function (obj, onDataChanged) {
         defineProperty(target, prop, descriptor) {
             let triggerChange = false;
             let newPath = '';
-            if (["__path", "__proxyData"].indexOf(prop) == -1) {
-                if (Array.isArray(target)) {
-                    if (prop != "length") {
-                        if (target.__path) {
+            if(["__path", "__proxyData"].indexOf(prop) == -1) {
+                if(Array.isArray(target)) {
+                    if(prop != "length") {
+                        if(target.__path) {
                             newPath = target.__path;
                         }
                         newPath += "[" + prop + "]";
-                        if (!target.hasOwnProperty(prop)) {
+                        if(!target.hasOwnProperty(prop)) {
                             triggerChange = true;
                         }
                     }
                 }
                 else {
-                    if (target.__path) {
+                    if(target.__path) {
                         newPath = target.__path + '.';
                     }
                     newPath += prop;
-                    if (!target.hasOwnProperty(prop)) {
+                    if(!target.hasOwnProperty(prop)) {
                         triggerChange = true;
                     }
                 }
             }
             let result = Reflect.defineProperty(target, prop, descriptor);
-            if (triggerChange) {
+            if(triggerChange) {
                 this.avoidUpdate.push(prop);
                 let proxyEl = this.getProxyObject(target, descriptor.value, prop);
                 target[prop] = proxyEl;
@@ -8867,58 +9534,71 @@ Object.transformIntoWatcher = function (obj, onDataChanged) {
     };
     const trigger = (type, target, receiver, value, prop) => {
 
-        if (target.__isProxy) {
+        if(target.__isProxy) {
             return;
         }
         let allProxies = target.__proxyData;
         // trigger only if same id
         let receiverId = 0;
-        if (receiver == null) {
+        if(receiver == null) {
             receiverId = proxyData.id;
         }
         else {
             receiverId = receiver.__proxyId;
         }
-        if (proxyData.id == receiverId) {
+        if(proxyData.id == receiverId) {
             let stacks = [];
             let allStacks = new Error().stack.split("\n");
-            for (let i = allStacks.length - 1; i >= 0; i--) {
+            for(let i = allStacks.length - 1; i >= 0; i--) {
                 let current = allStacks[i].trim().replace("at ", "");
-                if (current.startsWith("Object.set") || current.startsWith("Proxy.result")) {
+                if(current.startsWith("Object.set") || current.startsWith("Proxy.result")) {
                     break;
                 }
                 stacks.push(current);
             }
-            proxyData.history.push({
-                object: JSON.parse(JSON.stringify(target)),
-                trace: stacks.reverse()
-            });
-            
-            for (let triggerPath in allProxies) {
 
-                for (let currentProxyData of allProxies[triggerPath]) {
+
+            for(let triggerPath in allProxies) {
+
+                for(let currentProxyData of allProxies[triggerPath]) {
+
+                    let pathToSend = triggerPath;
+                    if(pathToSend != "") {
+                        if(!prop.startsWith("[")) {
+                            pathToSend += ".";
+                        }
+                        pathToSend += prop;
+                    }
+                    else {
+                        pathToSend = prop;
+                    }
+
+                    if(proxyData.useHistory) {
+                        proxyData.history.push({
+                            object: JSON.parse(JSON.stringify(currentProxyData.baseData, jsonReplacer)),
+                            trace: stacks.reverse(),
+                            action:WatchAction[type],
+                            path:pathToSend
+                        });
+                    }
+
                     [...currentProxyData.callbacks].forEach((cb) => {
-                        let pathToSend = triggerPath;
-                        if (pathToSend != "") {
-                            if (!prop.startsWith("[")) {
-                                pathToSend += ".";
-                            }
-                            pathToSend += prop;
-                        }
-                        else {
-                            pathToSend = prop;
-                        }
+
                         cb(WatchAction[type], pathToSend, value);
                     });
+
                 }
+
             }
         }
     };
 
 
-    let proxy = new Proxy(obj, proxyData);
-    setProxyPath(proxy, '');
-    return proxy;
+    var realProxy = new Proxy(obj, proxyData);
+    proxyData.baseData = realProxy.__getTarget();
+    onlyDuringInit = false;
+    setProxyPath(realProxy, '');
+    return realProxy;
 };
 Object.prepareByPath = function (obj, path, currentPath = "") {
     let objToApply = obj;
@@ -8957,6 +9637,7 @@ Object.isPathMatching = function (p1, p2) {
     p2 = p2.replace(/\[\d*?\]/g, '[]');
     return p1 == p2;
 }
+
 Event.prototype.normalize = function () {
     if (
         this.type === "touchstart" ||
@@ -9214,624 +9895,13 @@ Array.prototype.last = function () {
     }
     return this[this.length - 1];
 }
-class DragAndDrop {    static defaultOffsetDrag = 20;    pressManager;    options;    startCursorPosition;    startElementPosition;    constructor(options) {        this.options = this.getDefaultOptions();        this.mergeProperties(options);        this.mergeFunctions(options);        this.init();    }    getDefaultOptions() {        return {            applyDrag: true,            element: null,            elementTrigger: null,            offsetDrag: DragAndDrop.defaultOffsetDrag,            shadow: {                enable: false,                container: document.body            },            strict: false,            targets: [],            usePercent: false,            isDragEnable: () => true,            getZoom: () => 1,            getOffsetX: () => 0,            getOffsetY: () => 0,            onStart: (e) => { },            onMove: (e) => { },            onStop: (e) => { },            onDrop: (element, targets) => { }        };    }    mergeProperties(options) {        if (options.element === void 0) {            throw "You must define the element for the drag&drop";        }        this.options.element = options.element;        if (options.elementTrigger === void 0) {            this.options.elementTrigger = this.options.element;        }        this.defaultMerge(options, "applyDrag");        this.defaultMerge(options, "offsetDrag");        this.defaultMerge(options, "strict");        this.defaultMerge(options, "targets");        this.defaultMerge(options, "usePercent");        if (options.shadow !== void 0) {            this.options.shadow.enable = options.shadow.enable;            if (options.shadow.container !== void 0) {                this.options.shadow.container = options.shadow.container;            }        }    }    mergeFunctions(options) {        this.defaultMerge(options, "isDragEnable");        this.defaultMerge(options, "getZoom");        this.defaultMerge(options, "getOffsetX");        this.defaultMerge(options, "getOffsetY");        this.defaultMerge(options, "onStart");        this.defaultMerge(options, "onMove");        this.defaultMerge(options, "onStop");        this.defaultMerge(options, "onDrop");    }    defaultMerge(options, name) {        if (options[name] !== void 0) {            this.options[name] = options[name];        }    }    init() {        this.pressManager = new PressManager({            element: this.options.elementTrigger,            onDragStart: this.onDragStart.bind(this),            onDrag: this.onDrag.bind(this),            onDragEnd: this.onDragEnd.bind(this),            offsetDrag: this.options.offsetDrag        });    }    draggableElement;    positionShadowRelativeToElement;    onDragStart(e) {        this.draggableElement = this.options.element;        this.startCursorPosition = {            x: e.pageX,            y: e.pageY        };        this.startElementPosition = {            x: this.draggableElement.offsetLeft,            y: this.draggableElement.offsetTop        };        if (this.options.shadow.enable) {            this.draggableElement = this.options.element.cloneNode(true);            const posRelativeToContainer = this.options.element.getPositionOnScreen(this.options.shadow.container);            this.positionShadowRelativeToElement = {                x: this.startCursorPosition.x - posRelativeToContainer.x,                y: this.startCursorPosition.y - posRelativeToContainer.y            };            this.draggableElement.style.position = "absolute";            this.draggableElement.style.top = posRelativeToContainer.y / this.options.getZoom() + 'px';            this.draggableElement.style.left = posRelativeToContainer.x / this.options.getZoom() + 'px';            this.options.shadow.container.appendChild(this.draggableElement);        }        this.options.onStart(e);    }    onDrag(e) {        let zoom = this.options.getZoom();        let diff = {            x: 0,            y: 0        };        if (this.options.shadow.enable) {            diff = {                x: e.pageX - (this.positionShadowRelativeToElement.x / this.options.getZoom()) + this.options.getOffsetX(),                y: e.pageY - (this.positionShadowRelativeToElement.y / this.options.getZoom()) + this.options.getOffsetY(),            };        }        else {            diff = {                x: (e.pageX - this.startCursorPosition.x) / zoom + this.startElementPosition.x + this.options.getOffsetX(),                y: (e.pageY - this.startCursorPosition.y) / zoom + this.startElementPosition.y + this.options.getOffsetY()            };        }        let newPos = this.setPosition(diff);        this.options.onMove(e, newPos);    }    onDragEnd(e) {        let targets = this.getMatchingTargets();        if (this.options.shadow.enable) {            this.draggableElement.parentNode?.removeChild(this.draggableElement);        }        if (targets.length > 0) {            this.options.onDrop(this.draggableElement, targets);        }    }    setPosition(position) {        if (this.options.usePercent) {            let elementParent = this.draggableElement.offsetParent;            const percentLeft = (position.x / elementParent.offsetWidth) * 100;            const percentTop = (position.y / elementParent.offsetHeight) * 100;            if (this.options.applyDrag) {                this.draggableElement.style.left = percentLeft + '%';                this.draggableElement.style.top = percentTop + '%';            }            return {                x: percentLeft,                y: percentTop            };        }        else {            if (this.options.applyDrag) {                this.draggableElement.style.left = position.x + 'px';                this.draggableElement.style.top = position.y + 'px';            }        }        return position;    }    getMatchingTargets() {        let matchingTargets = [];        for (let target of this.options.targets) {            const elementCoordinates = this.draggableElement.getBoundingClientRect();            const targetCoordinates = target.getBoundingClientRect();            let offsetX = this.options.getOffsetX();            let offsetY = this.options.getOffsetY();            let zoom = this.options.getZoom();            targetCoordinates.x += offsetX;            targetCoordinates.y += offsetY;            targetCoordinates.width *= zoom;            targetCoordinates.height *= zoom;            if (this.options.strict) {                if ((elementCoordinates.x >= targetCoordinates.x && elementCoordinates.x + elementCoordinates.width <= targetCoordinates.x + targetCoordinates.width) &&                    (elementCoordinates.y >= targetCoordinates.y && elementCoordinates.y + elementCoordinates.height <= targetCoordinates.y + targetCoordinates.height)) {                    matchingTargets.push(target);                }            }            else {                let elementLeft = elementCoordinates.x;                let elementRight = elementCoordinates.x + elementCoordinates.width;                let elementTop = elementCoordinates.y;                let elementBottom = elementCoordinates.y + elementCoordinates.height;                let targetLeft = targetCoordinates.x;                let targetRight = targetCoordinates.x + targetCoordinates.width;                let targetTop = targetCoordinates.y;                let targetBottom = targetCoordinates.y + targetCoordinates.height;                if (!(elementRight < targetLeft ||                    elementLeft > targetRight ||                    elementBottom < targetTop ||                    elementTop > targetBottom)) {                    matchingTargets.push(target);                }            }        }        return matchingTargets;    }    setTargets(targets) {        this.options.targets = targets;    }}
-class Color {    subscribers = [];    currentColor;    static createFromRgb(r, g, b) {        return new Color(`rgb(${r}, ${g}, ${b})`);    }    /**     * The hex format of the color     */    get hex() {        return this.rgbToHex(this.currentColor.r, this.currentColor.g, this.currentColor.b);    }    set hex(hexString) {        this.currentColor = this.hexStringToRgb(hexString);        this.emitEvent();    }    /**     * The rgb format of the color     */    get rgb() {        return this.currentColor;    }    set rgb(value) {        if (typeof value === 'object' &&            !Array.isArray(value) &&            value !== null) {            value.r = Math.min(Math.max(value.r, 0), 255);            value.g = Math.min(Math.max(value.g, 0), 255);            value.b = Math.min(Math.max(value.b, 0), 255);            this.currentColor = value;            this.emitEvent();        }    }    get r() {        return this.currentColor.r;    }    set r(newValue) {        if (newValue >= 0 && newValue <= 255) {            this.currentColor.r = newValue;            this.emitEvent();        }        else {            throw new Error("Invalid value");        }    }    get g() {        return this.currentColor.g;    }    set g(newValue) {        if (newValue >= 0 && newValue <= 255) {            this.currentColor.g = newValue;            this.emitEvent();        }        else {            throw new Error("Invalid value");        }    }    get b() {        return this.currentColor.b;    }    set b(newValue) {        if (newValue >= 0 && newValue <= 255) {            this.currentColor.b = newValue;            this.emitEvent();        }        else {            throw new Error("Invalid value");        }    }    /**     * Create a new color     */    constructor(colorString) {        let colorType = this.getColorType(colorString);        if (colorType !== ColorTypes.unkown) {            if (colorType === ColorTypes.rgb) {                this.currentColor = this.stringToRgb(colorString);            }            else if (colorType === ColorTypes.hex) {                this.currentColor = this.hexStringToRgb(colorString);            }            else if (colorType === ColorTypes.rgba) {                console.log("Not implemented yet");            }            else {                throw new Error("Unknown color type");            }        }        else {            throw new Error(`${colorString} is not a supported color`);        }    }    getColorType(colorString) {        let treatedColor = colorString.replaceAll(" ", "");        if (treatedColor[0] === "#") {            return ColorTypes.hex;        }        else if (/^rgb\((\d{1,3},*){3}\)$/.test(treatedColor)) {            return ColorTypes.rgb;        }        else if (/^rgb\((\d{1,3},*){4}\)$/.test(treatedColor)) {            return ColorTypes.rgba;        }        else {            console.warn(`Got an unknown color : ${treatedColor}`);            return ColorTypes.unkown;        }    }    stringToRgb(rgbColorString) {        let splitted = rgbColorString.replaceAll(/[\(\)rgb ]/g, "").split(",");        for (let i = 0; i < 3; i++) {            splitted[i] = Math.min(Math.max(parseInt(splitted[i])), 255);        }        return {            r: splitted[0],            g: splitted[1],            b: splitted[2]        };    }    hexStringToRgb(hexColorString) {        // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")        let shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;        hexColorString = hexColorString.replace(shorthandRegex, function (m, r, g, b) {            return r + r + g + g + b + b;        });        let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hexColorString);        if (!result) {            console.error(`Invalid hex string : ${hexColorString}`);            return {                r: 0,                g: 0,                b: 0            };        }        else {            return {                r: parseInt(result[1], 16),                g: parseInt(result[2], 16),                b: parseInt(result[3], 16)            };        }    }    rgbToHex(r, g, b) {        return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);    }    onChange(callback) {        if (this.subscribers.indexOf(callback) !== -1) {            console.error("Callback was already present in the subscribers");            return;        }        this.subscribers.push(callback);    }    offChange(callback) {        let index = this.subscribers.indexOf(callback);        if (index === -1) {            console.error("Callback was not present in the subscribers");            return;        }        else {            this.subscribers.splice(index, 1);        }    }    emitEvent() {        [...this.subscribers].forEach(subscriber => {            subscriber(this);        });    }}
-class AnimationManager {    static FPS_DEFAULT = 60;    options;    nextFrame;    fpsInterval;    continueAnimation = false;    constructor(options) {        if (!options.animate) {            options.animate = () => { };        }        if (!options.stopped) {            options.stopped = () => { };        }        if (!options.fps) {            options.fps = AnimationManager.FPS_DEFAULT;        }        this.options = options;        this.fpsInterval = 1000 / this.options.fps;    }    animate() {        let now = window.performance.now();        let elapsed = now - this.nextFrame;        if (elapsed <= this.fpsInterval) {            requestAnimationFrame(() => this.animate());            return;        }        this.nextFrame = now - (elapsed % this.fpsInterval);        setTimeout(() => {            this.options.animate();        }, 0);        if (this.continueAnimation) {            requestAnimationFrame(() => this.animate());        }        else {            this.options.stopped();        }    }    /**     * Start the of animation     */    start() {        if (this.continueAnimation == false) {            this.continueAnimation = true;            this.nextFrame = window.performance.now();            this.animate();        }    }    /**     * Stop the animation     */    stop() {        this.continueAnimation = false;    }    /**     * Get the FPS     *     * @returns {number}     */    getFPS() {        return this.options.fps;    }    /**     * Set the FPS     *     * @param fps     */    setFPS(fps) {        this.options.fps = fps;        this.fpsInterval = 1000 / this.options.fps;    }    /**     * Get the animation status (true if animation is running)     *     * @returns {boolean}     */    isStarted() {        return this.continueAnimation;    }}
-
-
-class WebComponent extends HTMLElement {    static get observedAttributes() {        return [];    }    _first;    _isReady;    get isReady() {        return this._isReady;    }    _translations;    currentState = "";    statesList;    _components;    __onChangeFct = {};    getSlugFct;    __watch;    __watchActions = {};    __prepareForCreate = [];    __prepareForUpdate = [];    __loopTemplate = {};    __watchActionsCb = {};    getClassName() {        return this.constructor.name;    }    ;    constructor() {        super();        if (this.constructor == WebComponent) {            throw "can't instanciate an abstract class";        }        this._first = true;        this._isReady = false;        this.__prepareVariables();        this.__prepareTranslations();        this.__prepareWatchesActions();        this.__initWatches();        this.__prepareTemplate();        this.__selectElementNeeded();        this.__registerOnChange();        this.__createStates();        this.__prepareForLoop();        this.__endConstructor();    }    __prepareVariables() { }    __prepareWatchesActions() {        if (Object.keys(this.__watchActions).length > 0) {            if (!this.__watch) {                this.__watch = Object.transformIntoWatcher({}, (type, path, element) => {                    let action = this.__watchActionsCb[path.split(".")[0]] || this.__watchActionsCb[path.split("[")[0]];                    action(type, path, element);                });            }        }    }    __initWatches() { }    __prepareForLoop() { }    __getLangTranslations() {        return [];    }    __prepareTranslations() {        this._translations = {};        let langs = this.__getLangTranslations();        for (let i = 0; i < langs.length; i++) {            this._translations[langs[i]] = {};        }        this.__setTranslations();    }    __setTranslations() {    }    __getStyle() {        return [":host{display:inline-block;box-sizing:border-box}:host *{box-sizing:border-box}"];    }    __getHtml() {        return {            html: '<slot></slot>',            slots: {                default: '<slot></slot>'            }        };    }    __prepareTemplate() {        let tmpl = document.createElement('template');        tmpl.innerHTML = `        <style>            ${this.__getStyle().join("\r\n")}        </style>${this.__getHtml().html}`;        let shadowRoot = this.attachShadow({ mode: 'open' });        shadowRoot.appendChild(tmpl.content.cloneNode(true));    }    __createStates() {        this.currentState = "default";        this.statesList = {            "default": this.getDefaultStateCallbacks()        };        this.getSlugFct = {};    }    getDefaultStateCallbacks() {        return {            active: () => { },            inactive: () => { }        };    }    __getMaxId() {        return [];    }    __selectElementNeeded(ids = null) {        if (ids == null) {            var _maxId = this.__getMaxId();            this._components = {};            for (var i = 0; i < _maxId.length; i++) {                for (let j = 0; j < _maxId[i][1]; j++) {                    let key = _maxId[i][0].toLowerCase() + "_" + j;                    this._components[key] = Array.from(this.shadowRoot.querySelectorAll('[_id="' + key + '"]'));                }            }        }        else {            for (let i = 0; i < ids.length; i++) {                //this._components[ids[i]] = this.shadowRoot.querySelectorAll('[_id="component' + ids[i] + '"]');            }        }        this.__mapSelectedElement();    }    __mapSelectedElement() {    }    __registerOnChange() {    }    __endConstructor() { }    connectedCallback() {        this.__defaultValue();        this.__upgradeAttributes();        this.__addEvents();        if (this._first) {            this._first = false;            this.__applyTranslations();            setTimeout(() => {                this.__subscribeState();                this.postCreation();                this._isReady = true;                this.dispatchEvent(new CustomEvent('ready'));            });        }    }    __defaultValue() { }    __upgradeAttributes() { }    __listBoolProps() {        return [];    }    __upgradeProperty(prop) {        let boolProps = this.__listBoolProps();        if (boolProps.indexOf(prop) != -1) {            if (this.hasAttribute(prop) && (this.getAttribute(prop) === "true" || this.getAttribute(prop) === "")) {                let value = this.getAttribute(prop);                delete this[prop];                this[prop] = value;            }            else {                this.removeAttribute(prop);                this[prop] = false;            }        }        else {            if (this.hasAttribute(prop)) {                let value = this.getAttribute(prop);                delete this[prop];                this[prop] = value;            }        }    }    __addEvents() { }    __applyTranslations() { }    __getTranslation(key) {        if (!this._translations)            return;        var lang = localStorage.getItem('lang');        if (lang === null) {            lang = 'en';        }        if (key.indexOf('lang.') === 0) {            key = key.substring(5);        }        if (this._translations[lang] !== undefined) {            return this._translations[lang][key];        }        return key;    }    getStateManagerName() {        return undefined;    }    __subscribeState() {        var currentState = StateManager.getInstance(this.getStateManagerName()).getActiveState() || "";        var currentSlug = StateManager.getInstance(this.getStateManagerName()).getActiveSlug() || "*";        var stateSlugged = currentState.replace("*", currentSlug);        if (this.statesList.hasOwnProperty(stateSlugged)) {            this.statesList[stateSlugged].active(stateSlugged);        }        else {            this.statesList["default"].active("default");        }        for (let route in this.statesList) {            StateManager.getInstance(this.getStateManagerName()).subscribe(route, this.statesList[route]);        }    }    attributeChangedCallback(name, oldValue, newValue) {        if (oldValue !== newValue) {            if (this.__onChangeFct.hasOwnProperty(name)) {                for (let fct of this.__onChangeFct[name]) {                    fct('');                }            }        }    }    postCreation() { }    _unsubscribeState() {        if (this.statesList) {            for (let key in this.statesList) {                StateManager.getInstance(this.getStateManagerName()).unsubscribe(key, this.statesList[key]);            }        }    }}
-
-
-var WatchAction;(function (WatchAction) {    WatchAction[WatchAction["SET"] = 0] = "SET";    WatchAction[WatchAction["CREATED"] = 1] = "CREATED";    WatchAction[WatchAction["UPDATED"] = 2] = "UPDATED";    WatchAction[WatchAction["DELETED"] = 3] = "DELETED";})(WatchAction || (WatchAction = {}));
-
-class Coordinate {    x = 0;    y = 0;}
-var ColorTypes;(function (ColorTypes) {    ColorTypes[ColorTypes["rgb"] = 0] = "rgb";    ColorTypes[ColorTypes["hex"] = 1] = "hex";    ColorTypes[ColorTypes["rgba"] = 2] = "rgba";    ColorTypes[ColorTypes["unkown"] = 3] = "unkown";})(ColorTypes || (ColorTypes = {}));
-class ColorData {    r = 0;    g = 0;    b = 0;}
-
-
-
-class AvScrollable extends WebComponent {
-    static get observedAttributes() {return ["disable_scroll", "zoom"].concat(super.observedAttributes).filter((v, i, a) => a.indexOf(v) === i);}
-    get 'disable_scroll'() {
-                        return this.hasAttribute('disable_scroll');
-                    }
-                    set 'disable_scroll'(val) {
-                        if(val === 1 || val === 'true' || val === ''){
-                            val = true;
-                        }
-                        else if(val === 0 || val === 'false' || val === null || val === undefined){
-                            val = false;
-                        }
-                        if(val !== false && val !== true){
-                            console.error("error setting boolean in disable_scroll");
-                            val = false;
-                        }
-                        if (val) {
-                            this.setAttribute('disable_scroll', 'true');
-                        } else{
-                            this.removeAttribute('disable_scroll');
-                        }
-                    }get 'zoom'() {
-                        return Number(this.getAttribute('zoom'));
-                    }
-                    set 'zoom'(val) {
-                        this.setAttribute('zoom',val);
-                    }get 'floating_scroll'() {
-                        return this.hasAttribute('floating_scroll');
-                    }
-                    set 'floating_scroll'(val) {
-                        if(val === 1 || val === 'true' || val === ''){
-                            val = true;
-                        }
-                        else if(val === 0 || val === 'false' || val === null || val === undefined){
-                            val = false;
-                        }
-                        if(val !== false && val !== true){
-                            console.error("error setting boolean in floating_scroll");
-                            val = false;
-                        }
-                        if (val) {
-                            this.setAttribute('floating_scroll', 'true');
-                        } else{
-                            this.removeAttribute('floating_scroll');
-                        }
-                    }get 'only_vertical'() {
-                        return this.hasAttribute('only_vertical');
-                    }
-                    set 'only_vertical'(val) {
-                        if(val === 1 || val === 'true' || val === ''){
-                            val = true;
-                        }
-                        else if(val === 0 || val === 'false' || val === null || val === undefined){
-                            val = false;
-                        }
-                        if(val !== false && val !== true){
-                            console.error("error setting boolean in only_vertical");
-                            val = false;
-                        }
-                        if (val) {
-                            this.setAttribute('only_vertical', 'true');
-                        } else{
-                            this.removeAttribute('only_vertical');
-                        }
-                    }    __prepareVariables() { super.__prepareVariables(); if(this.verticalScrollVisible === undefined) {this.verticalScrollVisible = false;}if(this.horizontalScrollVisible === undefined) {this.horizontalScrollVisible = false;}if(this.observer === undefined) {this.observer = undefined;}if(this.wheelAction === undefined) {this.wheelAction = undefined;}if(this.touchWheelAction === undefined) {this.touchWheelAction = undefined;}if(this.contentHidderWidth === undefined) {this.contentHidderWidth = 0;}if(this.contentHidderHeight === undefined) {this.contentHidderHeight = 0;}if(this.content === undefined) {this.content = {"vertical":{"value":0,"max":0},"horizontal":{"value":0,"max":0}};}if(this.scrollbar === undefined) {this.scrollbar = {"vertical":{"value":0,"max":0},"horizontal":{"value":0,"max":0}};}if(this.refreshTimeout === undefined) {this.refreshTimeout = 100;} }
-    __getStyle() {
-        let arrStyle = super.__getStyle();
-        arrStyle.push(`:host{--internal-scrollbar-content-overflow: var(--scrollbar-content-overflow, hidden);--internal-scrollbar-content-height: var(--scrollbar-content-height, auto);--internal-scrollbar-content-width: var(--scrollbar-content-width, 100%);--internal-scrollbar-container-color: var(--scrollbar-container-color, transparent);--internal-scrollbar-color: var(--scrollbar-color, #757575);--internal-scrollbar-active-color: var(--scrollbar-active-color, #757575);--internal-scroller-width: var(--scroller-width, 6px);--internal-scroller-bottom: var(--scroller-bottom, 3px);--internal-scroller-right: var(--scroller-right, 3px);--internal-scroller-left: var(--scroller-left, 3px);--internal-scroller-top: var(--scroller-top, 3px);--internal-scroller-vertical-shadow: var(--scroller-shadow, var(--scroller-vertical-shadow, none));--internal-scroller-horizontal-shadow: var(--scroller-shadow, var(--scroller-horizontal-shadow, none));--internal-scollable-delay: var(--scrollable-delay, 0.3s)}:host{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-drag:none}:host *{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-drag:none;box-sizing:border-box}:host{display:block;position:relative;height:100%;width:100%}:host .scroll-main-container{display:block;position:relative;height:100%;width:100%}:host .scroll-main-container .content-zoom{display:block;position:relative;height:100%;width:100%;transform-origin:0 0}:host .scroll-main-container .content-hidder{overflow:var(--internal-scrollbar-content-overflow);width:100%;height:100%;position:relative;display:block}:host .scroll-main-container .content-wrapper{position:absolute;display:inline-block;top:0;left:0;height:var(--internal-scrollbar-content-height);width:var(--internal-scrollbar-content-width);transition:top var(--internal-scollable-delay) linear,left var(--internal-scollable-delay) linear}:host .scroll-main-container .container-scroller{position:absolute;background-color:var(--internal-scrollbar-container-color);border-radius:5px;z-index:5;display:none}:host .scroll-main-container .scroller{background-color:var(--internal-scrollbar-color);border-radius:5px;position:absolute;z-index:5;cursor:pointer}:host .scroll-main-container .scroller.active{background-color:var(--internal-scrollbar-active-color);transition:none !important}:host .scroll-main-container .container-scroller.vertical{width:calc(var(--internal-scroller-width) + var(--internal-scroller-left));padding-left:var(--internal-scroller-left);top:var(--internal-scroller-bottom);height:calc(100% - var(--internal-scroller-bottom)*2 - var(--internal-scroller-width));right:var(--internal-scroller-right)}:host .scroll-main-container .scroller.vertical{width:calc(100% - var(--internal-scroller-left));top:0;transition:top var(--internal-scollable-delay) linear;box-shadow:var(--internal-scroller-vertical-shadow)}:host .scroll-main-container .container-scroller.horizontal{height:calc(var(--internal-scroller-width) + var(--internal-scroller-top));padding-top:var(--internal-scroller-top);left:var(--internal-scroller-right);width:calc(100% - var(--internal-scroller-right)*2 - var(--internal-scroller-width));bottom:var(--internal-scroller-bottom)}:host .scroll-main-container .scroller.horizontal{height:calc(100% - var(--internal-scroller-top));left:0;transition:left var(--internal-scollable-delay) linear;box-shadow:var(--internal-scroller-horizontal-shadow)}:host([disable_scroll]) .content-wrapper{height:100%}:host([disable_scroll]) .scroller{display:none}:host(.scrolling) .content-wrapper *{user-select:none}:host(.scrolling) ::slotted{user-select:none}`);
-        return arrStyle;
-    }
-    __getHtml() {
-        let parentInfo = super.__getHtml();
-        let info = {
-            html: `<div class="scroll-main-container" _id="avscrollable_0">
-    <div class="content-zoom" _id="avscrollable_1">
-        <div class="content-hidder" _id="avscrollable_2">
-            <div class="content-wrapper" _id="avscrollable_3">
-                <slot></slot>
-            </div>
-        </div>
-    </div>
-    <div _id="avscrollable_4">
-        <div class="container-scroller vertical" _id="avscrollable_5">
-            <div class="scroller vertical" _id="avscrollable_6"></div>
-        </div>
-        <div class="container-scroller horizontal" _id="avscrollable_7">
-            <div class="scroller horizontal" _id="avscrollable_8"></div>
-        </div>
-    </div>
-</div>`,
-            slots: {
-                'default':`<slot></slot>`
-            },
-            blocks: {
-                'default':`<div class="scroll-main-container" _id="avscrollable_0">
-    <div class="content-zoom" _id="avscrollable_1">
-        <div class="content-hidder" _id="avscrollable_2">
-            <div class="content-wrapper" _id="avscrollable_3">
-                <slot></slot>
-            </div>
-        </div>
-    </div>
-    <div _id="avscrollable_4">
-        <div class="container-scroller vertical" _id="avscrollable_5">
-            <div class="scroller vertical" _id="avscrollable_6"></div>
-        </div>
-        <div class="container-scroller horizontal" _id="avscrollable_7">
-            <div class="scroller horizontal" _id="avscrollable_8"></div>
-        </div>
-    </div>
-</div>`
-            }
-        }
-        return info;
-    }
-    __getMaxId() {
-        let temp = super.__getMaxId();
-        temp.push(["AvScrollable", 9])
-        return temp;
-    }
-    __mapSelectedElement() { super.__mapSelectedElement(); this.elToCalculate = this.shadowRoot.querySelector('[_id="avscrollable_0"]');this.contentZoom = this.shadowRoot.querySelector('[_id="avscrollable_1"]');this.contentHidder = this.shadowRoot.querySelector('[_id="avscrollable_2"]');this.contentWrapper = this.shadowRoot.querySelector('[_id="avscrollable_3"]');this.contentscroller = this.shadowRoot.querySelector('[_id="avscrollable_4"]');this.verticalScrollerContainer = this.shadowRoot.querySelector('[_id="avscrollable_5"]');this.verticalScroller = this.shadowRoot.querySelector('[_id="avscrollable_6"]');this.horizontalScrollerContainer = this.shadowRoot.querySelector('[_id="avscrollable_7"]');this.horizontalScroller = this.shadowRoot.querySelector('[_id="avscrollable_8"]');}
-    __registerOnChange() { super.__registerOnChange(); this.__onChangeFct['disable_scroll'] = []this.__onChangeFct['disable_scroll'].push((path) => {((target) => {    if (target.disable_scroll) {        target.removeResizeObserver();        target.removeWheelAction();        target.contentZoom.style.width = '';        target.contentZoom.style.height = '';    }    else {        target.addResizeObserver();        target.addWheelAction();    }})(this);})this.__onChangeFct['zoom'] = []this.__onChangeFct['zoom'].push((path) => {((target) => {    target.changeZoom();})(this);}) }
-    getClassName() {
-        return "AvScrollable";
-    }
-    __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('disable_scroll')) { this.attributeChangedCallback('disable_scroll', false, false); }if(!this.hasAttribute('zoom')){ this['zoom'] = '1'; }if(!this.hasAttribute('floating_scroll')) { this.attributeChangedCallback('floating_scroll', false, false); }if(!this.hasAttribute('only_vertical')) { this.attributeChangedCallback('only_vertical', false, false); } }
-    __upgradeAttributes() { super.__upgradeAttributes(); this.__upgradeProperty('disable_scroll');this.__upgradeProperty('zoom'); }
-    __listBoolProps() { return ["disable_scroll","floating_scroll","only_vertical"].concat(super.__listBoolProps()).filter((v, i, a) => a.indexOf(v) === i); }
-     getVisibleBox(){return {    top: this.content.vertical.value,    left: this.content.horizontal.value,    width: this.contentHidder.offsetWidth,    height: this.contentHidder.offsetHeight};} changeZoom(){if (!this.disable_scroll) {    this.contentZoom.style.transform = 'scale(' + this.zoom + ')';    this.dimensionRefreshed();}} dimensionRefreshed(entries){this.calculateRealSize();if (this.contentWrapper.scrollHeight - this.contentHidderHeight > 2) {    if (!this.verticalScrollVisible) {        this.verticalScrollerContainer.style.display = "block";        this.verticalScrollVisible = true;        this.afterShowVerticalScroller();    }    var verticalScrollerHeight = (this.contentHidderHeight / this.contentWrapper.scrollHeight * 100);    this.verticalScroller.style.height = verticalScrollerHeight + '%';    this.scrollVerticalScrollbar(this.scrollbar.vertical.value);}else if (this.verticalScrollVisible) {    this.verticalScrollerContainer.style.display = "none";    this.verticalScrollVisible = false;    this.afterShowVerticalScroller();    this.scrollVerticalScrollbar(0);}if (!this.only_vertical) {    if (this.contentWrapper.scrollWidth - this.contentHidderWidth > 2) {        if (!this.horizontalScrollVisible) {            this.horizontalScrollerContainer.style.display = "block";            this.horizontalScrollVisible = true;            this.afterShowHorizontalScroller();        }        var horizontalScrollerWidth = (this.contentHidderWidth / this.contentWrapper.scrollWidth * 100);        this.horizontalScroller.style.width = horizontalScrollerWidth + '%';        this.scrollHorizontalScrollbar(this.scrollbar.horizontal.value);    }    else if (this.horizontalScrollVisible) {        this.horizontalScrollerContainer.style.display = "none";        this.horizontalScrollVisible = false;        this.afterShowHorizontalScroller();        this.scrollHorizontalScrollbar(0);    }}if (entries && entries[0].target == this) {    if (this.zoom != 1) {        this.contentZoom.style.width = '';        this.contentZoom.style.height = '';        this.changeZoom();    }}} calculateRealSize(){if (!this.disable_scroll) {    var currentOffsetWidth = this.contentZoom.offsetWidth;    var currentOffsetHeight = this.contentZoom.offsetHeight;    this.contentHidderHeight = currentOffsetHeight;    this.contentHidderWidth = currentOffsetWidth;    if (this.zoom < 1) {        this.contentZoom.style.width = this.elToCalculate.offsetWidth / this.zoom + 'px';        this.contentZoom.style.height = this.elToCalculate.offsetHeight / this.zoom + 'px';    }    else {        let inlineStyle = this.getAttribute("style");        if (inlineStyle) {            let arrStyle = inlineStyle.split(";");            for (let i = 0; i < arrStyle.length; i++) {                if (arrStyle[i].trim().startsWith("width") || arrStyle[i].trim().startsWith("height")) {                    this.contentZoom.style.width = '';                    this.contentZoom.style.height = '';                }            }        }        this.contentHidderHeight = currentOffsetHeight / this.zoom;        this.contentHidderWidth = currentOffsetWidth / this.zoom;    }}} afterShowVerticalScroller(){var leftMissing = this.elToCalculate.offsetWidth - this.verticalScrollerContainer.offsetLeft;if (leftMissing > 0 && this.verticalScrollVisible && !this.floating_scroll) {    this.contentHidder.style.width = 'calc(100% - ' + leftMissing + 'px)';    this.contentHidder.style.marginRight = leftMissing + 'px';}else {    this.contentHidder.style.width = '';    this.contentHidder.style.marginRight = '';}} afterShowHorizontalScroller(){var topMissing = this.elToCalculate.offsetHeight - this.horizontalScrollerContainer.offsetTop;if (topMissing > 0 && this.horizontalScrollVisible && !this.floating_scroll) {    this.contentHidder.style.height = 'calc(100% - ' + topMissing + 'px)';    this.contentHidder.style.marginBottom = topMissing + 'px';}else {    this.contentHidder.style.height = '';    this.contentHidder.style.marginBottom = '';}} createResizeObserver(){let inProgress = false;this.observer = new AvResizeObserver({    callback: entries => {        if (inProgress) {            return;        }        inProgress = true;        this.dimensionRefreshed(entries);        inProgress = false;    },    fps: 30});} addResizeObserver(){if (this.observer == undefined) {    this.createResizeObserver();}this.observer.observe(this.contentWrapper);this.observer.observe(this);} removeResizeObserver(){this.observer.unobserve(this.contentWrapper);this.observer.unobserve(this);} addVerticalScrollAction(){var diff = 0;var oldDiff = 0;var intervalTimer = undefined;var intervalMove = () => {    if (diff != oldDiff) {        oldDiff = diff;        this.scrollVerticalScrollbar(diff);    }};let mouseDown = (e) => {    e.normalize();    var startY = e.pageY;    var oldVerticalScrollPosition = this.verticalScroller.offsetTop;    this.classList.add("scrolling");    this.verticalScroller.classList.add("active");    intervalTimer = setInterval(intervalMove, this.refreshTimeout);    var mouseMove = (e) => {        e.normalize();        diff = oldVerticalScrollPosition + e.pageY - startY;    };    var mouseUp = (e) => {        clearInterval(intervalTimer);        this.scrollVerticalScrollbar(diff);        this.classList.remove("scrolling");        this.verticalScroller.classList.remove("active");        document.removeEventListener("mousemove", mouseMove);        document.removeEventListener("touchmove", mouseMove);        document.removeEventListener("mouseup", mouseUp);        document.removeEventListener("touchend", mouseUp);    };    document.addEventListener("mousemove", mouseMove);    document.addEventListener("touchmove", mouseMove);    document.addEventListener("mouseup", mouseUp);    document.addEventListener("touchend", mouseUp);    return false;};this.verticalScroller.addEventListener("mousedown", mouseDown);this.verticalScroller.addEventListener("touchstart", mouseDown);this.verticalScroller.addEventListener("dragstart", this.preventDrag);this.verticalScroller.addEventListener("drop", this.preventDrag);} addHorizontalScrollAction(){var diff = 0;var oldDiff = 0;var intervalTimer = undefined;var intervalMove = () => {    if (diff != oldDiff) {        oldDiff = diff;        this.scrollHorizontalScrollbar(diff);    }};let mouseDown = (e) => {    e.normalize();    var startX = e.pageX;    var oldHoritzontalScrollPosition = this.horizontalScroller.offsetLeft;    this.classList.add("scrolling");    this.horizontalScroller.classList.add("active");    intervalTimer = setInterval(intervalMove, this.refreshTimeout);    var mouseMove = (e) => {        e.normalize();        diff = oldHoritzontalScrollPosition + e.pageX - startX;    };    var mouseUp = (e) => {        clearInterval(intervalTimer);        this.scrollHorizontalScrollbar(diff);        this.classList.remove("scrolling");        this.horizontalScroller.classList.remove("active");        document.removeEventListener("mousemove", mouseMove);        document.removeEventListener("touchmove", mouseMove);        document.removeEventListener("mouseup", mouseUp);        document.removeEventListener("touchend", mouseUp);    };    document.addEventListener("mousemove", mouseMove);    document.addEventListener("touchmove", mouseMove);    document.addEventListener("mouseup", mouseUp);    document.addEventListener("touchend", mouseUp);};this.horizontalScroller.addEventListener("mousedown", mouseDown);this.horizontalScroller.addEventListener("touchstart", mouseDown);this.horizontalScroller.addEventListener("dragstart", this.preventDrag);this.horizontalScroller.addEventListener("drop", this.preventDrag);} createTouchWheelAction(){this.touchWheelAction = (e) => {    e.normalize();    let startX = e.pageX;    let startY = e.pageY;    let startVertical = this.scrollbar.vertical.value;    let startHorizontal = this.scrollbar.horizontal.value;    let touchMove = (e) => {        e.normalize();        let diffX = startX - e.pageX;        let diffY = startY - e.pageY;        this.scrollHorizontalScrollbar(startHorizontal + diffX);        this.scrollVerticalScrollbar(startVertical + diffY);    };    let touchEnd = () => {        window.removeEventListener("touchmove", touchMove);        window.removeEventListener("touchend", touchEnd);    };    window.addEventListener("touchmove", touchMove);    window.addEventListener("touchend", touchEnd);};} createWheelAction(){this.wheelAction = (e) => {    if (e.altKey) {        if (this.horizontalScrollVisible) {            var scrollX = e.deltaY / 5;            this.scrollHorizontalScrollbar(this.scrollbar.horizontal.value + scrollX);            let maxHorizontal = this.horizontalScrollerContainer.offsetWidth - this.horizontalScroller.offsetWidth;            if (this.scrollbar.horizontal.value != 0 && this.scrollbar.horizontal.value != maxHorizontal) {                e.preventDefault();                e.stopPropagation();            }        }    }    else {        if (this.verticalScrollVisible) {            var scrollY = e.deltaY / 5;            this.scrollVerticalScrollbar(this.scrollbar.vertical.value + scrollY);            let maxVertical = this.verticalScrollerContainer.offsetHeight - this.verticalScroller.offsetHeight;            if (this.scrollbar.vertical.value != 0 && this.scrollbar.vertical.value != maxVertical) {                e.preventDefault();                e.stopPropagation();            }        }    }};} addWheelAction(){if (!this.wheelAction) {    this.createWheelAction();}if (!this.touchWheelAction) {    this.createTouchWheelAction();}this.addEventListener("wheel", this.wheelAction);this.addEventListener("touchstart", this.touchWheelAction);} removeWheelAction(){if (this.wheelAction) {    this.removeEventListener("wheel", this.wheelAction);}if (this.touchWheelAction) {    this.removeEventListener("touchstart", this.touchWheelAction);}} scrollScrollbarTo(horizontalValue,verticalValue){this.scrollHorizontalScrollbar(horizontalValue);this.scrollVerticalScrollbar(verticalValue);} scrollHorizontalScrollbar(horizontalValue){if (!this.only_vertical) {    if (horizontalValue != undefined) {        var maxScroller = this.horizontalScrollerContainer.offsetWidth - this.horizontalScroller.offsetWidth;        this.scrollbar.horizontal.max = maxScroller;        var maxScrollContent = this.contentWrapper.scrollWidth - this.contentHidderWidth;        if (maxScrollContent < 0) {            maxScrollContent = 0;        }        this.content.horizontal.max = maxScrollContent;        if (horizontalValue < 0) {            horizontalValue = 0;        }        else if (horizontalValue > maxScroller) {            horizontalValue = maxScroller;        }        this.scrollbar.horizontal.value = horizontalValue;        this.horizontalScroller.style.left = horizontalValue + 'px';        if (maxScroller != 0) {            var percent = maxScrollContent / maxScroller;            this.content.horizontal.value = Math.round(horizontalValue * percent);        }        else {            this.content.horizontal.value = 0;        }        this.contentWrapper.style.left = -1 * this.content.horizontal.value + 'px';        this.emitScroll();    }}} scrollVerticalScrollbar(verticalValue){if (verticalValue != undefined) {    var maxScroller = this.verticalScrollerContainer.offsetHeight - this.verticalScroller.offsetHeight;    this.scrollbar.vertical.max = maxScroller;    var maxScrollContent = this.contentWrapper.scrollHeight - this.contentHidderHeight;    if (maxScrollContent < 0) {        maxScrollContent = 0;    }    this.content.vertical.max = maxScrollContent;    if (verticalValue < 0) {        verticalValue = 0;    }    else if (verticalValue > maxScroller) {        verticalValue = maxScroller;    }    this.scrollbar.vertical.value = verticalValue;    this.verticalScroller.style.top = verticalValue + 'px';    if (maxScroller != 0) {        var percent = maxScrollContent / maxScroller;        this.content.vertical.value = Math.round(verticalValue * percent);    }    else {        this.content.vertical.value = 0;    }    this.contentWrapper.style.top = -1 * this.content.vertical.value + 'px';    this.emitScroll();}} scrollHorizontal(horizontalValue){if (!this.only_vertical) {    if (horizontalValue != undefined) {        var maxScroller = this.horizontalScrollerContainer.offsetWidth - this.horizontalScroller.offsetWidth;        this.scrollbar.horizontal.max = maxScroller;        var maxScrollContent = this.contentWrapper.scrollWidth - this.contentHidderWidth;        if (maxScrollContent < 0) {            maxScrollContent = 0;        }        this.content.horizontal.max = maxScrollContent;        if (horizontalValue < 0) {            horizontalValue = 0;        }        else if (horizontalValue > maxScrollContent) {            horizontalValue = maxScrollContent;        }        this.content.horizontal.value = horizontalValue;        this.contentWrapper.style.left = -horizontalValue + 'px';        if (maxScroller != 0) {            var percent = maxScrollContent / maxScroller;            this.scrollbar.horizontal.value = Math.round(horizontalValue / percent);        }        else {            this.scrollbar.horizontal.value = 0;        }        this.horizontalScroller.style.left = this.scrollbar.horizontal.value + 'px';        this.emitScroll();    }}} scrollVertical(verticalValue){if (verticalValue != undefined) {    var maxScroller = this.verticalScrollerContainer.offsetHeight - this.verticalScroller.offsetHeight;    this.scrollbar.vertical.max = maxScroller;    var maxScrollContent = this.contentWrapper.scrollHeight - this.contentHidderHeight;    if (maxScrollContent < 0) {        maxScrollContent = 0;    }    this.content.vertical.max = maxScroller;    if (verticalValue < 0) {        verticalValue = 0;    }    else if (verticalValue > maxScrollContent) {        verticalValue = maxScrollContent;    }    this.content.vertical.value = verticalValue;    this.verticalScroller.style.top = -verticalValue + 'px';    if (maxScroller != 0) {        var percent = maxScrollContent / maxScroller;        this.scrollbar.vertical.value = Math.round(verticalValue / percent);    }    else {        this.scrollbar.vertical.value = 0;    }    this.verticalScroller.style.top = this.scrollbar.vertical.value + 'px';    this.contentWrapper.style.top = -1 * this.content.vertical.value + 'px';    this.emitScroll();}} scrollToPosition(horizontalValue,verticalValue){this.scrollHorizontal(horizontalValue);this.scrollVertical(verticalValue);} emitScroll(){var customEvent = new CustomEvent("scroll");this.dispatchEvent(customEvent);} preventDrag(e){e.preventDefault();return false;} postCreation(){if (!this.disable_scroll) {    this.addResizeObserver();    this.addWheelAction();}this.addVerticalScrollAction();this.addHorizontalScrollAction();this.contentHidder.addEventListener("scroll", () => {    if (this.contentHidder.scrollTop != 0) {        this.contentHidder.scrollTop = 0;    }});}}
-window.customElements.define('av-scrollable', AvScrollable);
-class AvRouterLink extends WebComponent {
-    get 'state'() {
-                        return this.getAttribute('state');
-                    }
-                    set 'state'(val) {
-                        this.setAttribute('state',val);
-                    }    __getStyle() {
-        let arrStyle = super.__getStyle();
-        arrStyle.push(``);
-        return arrStyle;
-    }
-    __getHtml() {
-        let parentInfo = super.__getHtml();
-        let info = {
-            html: `<slot></slot>`,
-            slots: {
-                'default':`<slot></slot>`
-            },
-            blocks: {
-                'default':`<slot></slot>`
-            }
-        }
-        return info;
-    }
-    __getMaxId() {
-        let temp = super.__getMaxId();
-        temp.push(["AvRouterLink", 0])
-        return temp;
-    }
-    getClassName() {
-        return "AvRouterLink";
-    }
-    __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('state')){ this['state'] = ''; } }
-     postCreation(){StateManager.getInstance("navigation").subscribe(this.state, {    active: () => {        this.classList.add("active");    },    inactive: () => {        this.classList.remove("active");    }});new PressManager({    element: this,    onPress: () => {        StateManager.getInstance("navigation").setActiveState(this.state);    }});}}
-window.customElements.define('av-router-link', AvRouterLink);
-class AvRouter extends WebComponent {
-    constructor() { super(); if (this.constructor == AvRouter) { throw "can't instanciate an abstract class"; } }
-    __prepareVariables() { super.__prepareVariables(); if(this.oldPage === undefined) {this.oldPage = undefined;} }
-    __getStyle() {
-        let arrStyle = super.__getStyle();
-        arrStyle.push(``);
-        return arrStyle;
-    }
-    __getHtml() {
-        let parentInfo = super.__getHtml();
-        let info = {
-            html: `<slot name="before"></slot>
-<div class="content" _id="avrouter_0"></div>
-<slot name="after"></slot>`,
-            slots: {
-                'before':`<slot name="before"></slot>`,'after':`<slot name="after"></slot>`
-            },
-            blocks: {
-                'default':`<slot name="before"></slot>
-<div class="content" _id="avrouter_0"></div>
-<slot name="after"></slot>`
-            }
-        }
-        return info;
-    }
-    __getMaxId() {
-        let temp = super.__getMaxId();
-        temp.push(["AvRouter", 1])
-        return temp;
-    }
-    __mapSelectedElement() { super.__mapSelectedElement(); this.contentEl = this.shadowRoot.querySelector('[_id="avrouter_0"]');}
-    getClassName() {
-        return "AvRouter";
-    }
-     register(){let routes = this.defineRoutes();for (let key in routes) {    this.initRoute(key, new routes[key]());}} initRoute(path,element){this.contentEl.appendChild(element);StateManager.getInstance("navigation").subscribe(path, {    active: (currentState) => {        if (this.oldPage && this.oldPage != element) {            this.oldPage.show = false;        }        element.show = true;        this.oldPage = element;        if (window.location.pathname != currentState) {            let newUrl = window.location.origin + currentState;            document.title = element.defineTitle();            window.history.pushState({}, element.defineTitle(), newUrl);        }    }});} postCreation(){this.register();if (window.localStorage.getItem("navigation_url")) {    StateManager.getInstance("navigation").setActiveState(window.localStorage.getItem("navigation_url"));    window.localStorage.removeItem("navigation_url");}else {    StateManager.getInstance("navigation").setActiveState(window.location.pathname);}window.onpopstate = (e) => {    if (window.location.pathname != StateManager.getInstance("navigation").getActiveState()) {        StateManager.getInstance("navigation").setActiveState(window.location.pathname);    }};}}
-window.customElements.define('av-router', AvRouter);
-class AvPage extends WebComponent {
-    constructor() { super(); if (this.constructor == AvPage) { throw "can't instanciate an abstract class"; } }
-    get 'show'() {
-                        return this.hasAttribute('show');
-                    }
-                    set 'show'(val) {
-                        if(val === 1 || val === 'true' || val === ''){
-                            val = true;
-                        }
-                        else if(val === 0 || val === 'false' || val === null || val === undefined){
-                            val = false;
-                        }
-                        if(val !== false && val !== true){
-                            console.error("error setting boolean in show");
-                            val = false;
-                        }
-                        if (val) {
-                            this.setAttribute('show', 'true');
-                        } else{
-                            this.removeAttribute('show');
-                        }
-                    }    __getStyle() {
-        let arrStyle = super.__getStyle();
-        arrStyle.push(`:host{display:none}:host([show]){display:block}`);
-        return arrStyle;
-    }
-    __getHtml() {
-        let parentInfo = super.__getHtml();
-        let info = {
-            html: `<slot></slot>`,
-            slots: {
-                'default':`<slot></slot>`
-            },
-            blocks: {
-                'default':`<slot></slot>`
-            }
-        }
-        return info;
-    }
-    __getMaxId() {
-        let temp = super.__getMaxId();
-        temp.push(["AvPage", 0])
-        return temp;
-    }
-    getClassName() {
-        return "AvPage";
-    }
-    __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('show')) { this.attributeChangedCallback('show', false, false); } }
-    __listBoolProps() { return ["show"].concat(super.__listBoolProps()).filter((v, i, a) => a.indexOf(v) === i); }
-}
-window.customElements.define('av-page', AvPage);
-class AvHideable extends WebComponent {
-    get 'isVisible'() {
-						return this.__watch["isVisible"];
-					}
-					set 'isVisible'(val) {
-						this.__watch["isVisible"] = val;
-					}    __prepareVariables() { super.__prepareVariables(); if(this.oldParent === undefined) {this.oldParent = "undefined";}if(this.options === undefined) {this.options = undefined;}if(this.checkCloseBinded === undefined) {this.checkCloseBinded = undefined;}if(this.pressManager === undefined) {this.pressManager = undefined;}if(this.onVisibilityChangeCallbacks === undefined) {this.onVisibilityChangeCallbacks = [];} }
-    __prepareWatchesActions() {
-					this.__watchActions["isVisible"] = [((target) => {    target.onVisibilityChangeCallbacks.forEach(callback => callback(target.isVisible));})];
-						this.__watchActionsCb["isVisible"] = (action, path, value) => {
-							for (let fct of this.__watchActions["isVisible"]) {
-								fct(this, action, path, value);
-							}
-							if(this.__onChangeFct["isVisible"]){
-								for(let fct of this.__onChangeFct["isVisible"]){
-									fct("isVisible")
-									/*if(path == ""){
-										fct("isVisible")
-									}
-									else{
-										fct("isVisible."+path);
-									}*/
-								}
-							}
-						}					super.__prepareWatchesActions();
-				}__initWatches() {
-					super.__initWatches();
-					this["isVisible"] = false;
-				}
-    __getStyle() {
-        let arrStyle = super.__getStyle();
-        arrStyle.push(`:host{position:absolute;top:0;left:0;width:0;height:0;z-index:1000;overflow:visible;display:none}::slotted(.context-menu .context-menu-item){background-color:red}:host{--inserted: "here"}`);
-        return arrStyle;
-    }
-    __getHtml() {
-        let parentInfo = super.__getHtml();
-        let info = {
-            html: `<slot></slot>
-<div _id="avhideable_0"></div>`,
-            slots: {
-                'default':`<slot></slot>`
-            },
-            blocks: {
-                'default':`<slot></slot>
-<div _id="avhideable_0"></div>`
-            }
-        }
-        return info;
-    }
-    __getMaxId() {
-        let temp = super.__getMaxId();
-        temp.push(["AvHideable", 1])
-        return temp;
-    }
-    __mapSelectedElement() { super.__mapSelectedElement(); this.content = this.shadowRoot.querySelector('[_id="avhideable_0"]');}
-    __endConstructor() { super.__endConstructor(); (() => {    this.options = {        noHideItems: [this],        container: document.body,        beforeHide: this.defaultBeforeHide,        afterHide: this.defaultAfterHide,        canHide: this.defaultCanHide    };    this.checkCloseBinded = this.checkClose.bind(this);})() }
-    getClassName() {
-        return "AvHideable";
-    }
-    async  defaultBeforeHide(){}async  defaultAfterHide(){}async  defaultCanHide(){return true;} configure(options){if (options.noHideItems) {    this.options.noHideItems = options.noHideItems;}if (options.beforeHide) {    this.options.beforeHide = options.beforeHide;}if (options.afterHide) {    this.options.afterHide = options.afterHide;}if (options.canHide) {    this.options.canHide = options.canHide;}if (options.container) {    this.options.container = options.container;}} show(){if (this.isVisible) {    return;}this.isVisible = true;this.oldParent = this.parentNode;if (this.shadowRoot.querySelector("style").innerText.indexOf(":host{--inserted: \"here\"}") != -1) {    let newStyle = "";    const parentShadowRoot = this.oldParent.findParentByType(ShadowRoot);    if (parentShadowRoot instanceof ShadowRoot) {        let matchingArr = parentShadowRoot.querySelector("style").innerText.match(/av-hideable.*?\{.*?\}/g);        if (matchingArr) {            newStyle = matchingArr.join("").replace(/av-hideable/g, ":host");        }    }    this.shadowRoot.querySelector("style").innerText = this.shadowRoot.querySelector("style").innerText.replace(":host{--inserted: \"here\"}", newStyle);}this.loadCSSVariables();this.style.display = 'block';this.options.container.appendChild(this);this.options.container.addEventListener("pressaction_trigger", this.checkCloseBinded);this.pressManager = new PressManager({    element: this.options.container,    onPress: (e) => {        this.checkCloseBinded(e);    }});} getVisibility(){return this.isVisible;} onVisibilityChange(callback){this.onVisibilityChangeCallbacks.push(callback);} offVisibilityChange(callback){this.onVisibilityChangeCallbacks = this.onVisibilityChangeCallbacks.filter(cb => cb !== callback);} loadCSSVariables(){let styleSheets = this.shadowRoot.styleSheets;let realStyle = getComputedStyle(this);let propsToAdd = {};for (let i = 0; i < styleSheets.length; i++) {    let rules = styleSheets[i].cssRules;    for (let j = 0; j < rules.length; j++) {        for (let indexTxt in rules[j]["style"]) {            let index = Number(indexTxt);            if (isNaN(index)) {                break;            }            let prop = rules[j]["style"][index];            let value = rules[j]["style"][prop];            if (value.startsWith("var(")) {                let varToDef = value.match(/var\(.*?(\,|\))/g)[0].replace("var(", "").slice(0, -1);                let realValue = realStyle.getPropertyValue(varToDef);                propsToAdd[varToDef] = realValue.trim();            }        }    }}for (let key in propsToAdd) {    this.style.setProperty(key, propsToAdd[key]);}}async  hide(options){if (this.isVisible) {    if ((options === null || options === void 0 ? void 0 : options.force) || await this.options.canHide(options === null || options === void 0 ? void 0 : options.target)) {        await this.options.beforeHide();        this.isVisible = false;        this.style.display = 'none';        this.oldParent.appendChild(this);        this.options.container.removeEventListener("pressaction_trigger", this.checkCloseBinded);        this.pressManager.destroy();        await this.options.afterHide();    }}} checkClose(e){let realTargetEl;if (e instanceof PointerEvent) {    realTargetEl = e.realTarget();}else {    realTargetEl = e.detail.realEvent.realTarget();}for (var i = 0; i < this.options.noHideItems.length; i++) {    if (this.options.noHideItems[i].containsChild(realTargetEl)) {        return;    }}this.hide({    target: realTargetEl});} postCreation(){var listChild = this.getElementsInSlot();for (let i = 0; i < listChild.length; i++) {    this.content.appendChild(listChild[i]);}}}
-window.customElements.define('av-hideable', AvHideable);
-class AvFormElement extends WebComponent {
-    constructor() { super(); if (this.constructor == AvFormElement) { throw "can't instanciate an abstract class"; } }
-    get 'required'() {
-                        return this.hasAttribute('required');
-                    }
-                    set 'required'(val) {
-                        if(val === 1 || val === 'true' || val === ''){
-                            val = true;
-                        }
-                        else if(val === 0 || val === 'false' || val === null || val === undefined){
-                            val = false;
-                        }
-                        if(val !== false && val !== true){
-                            console.error("error setting boolean in required");
-                            val = false;
-                        }
-                        if (val) {
-                            this.setAttribute('required', 'true');
-                        } else{
-                            this.removeAttribute('required');
-                        }
-                    }get 'name'() {
-                        return this.getAttribute('name');
-                    }
-                    set 'name'(val) {
-                        this.setAttribute('name',val);
-                    }get 'focusable'() {
-                        return this.hasAttribute('focusable');
-                    }
-                    set 'focusable'(val) {
-                        if(val === 1 || val === 'true' || val === ''){
-                            val = true;
-                        }
-                        else if(val === 0 || val === 'false' || val === null || val === undefined){
-                            val = false;
-                        }
-                        if(val !== false && val !== true){
-                            console.error("error setting boolean in focusable");
-                            val = false;
-                        }
-                        if (val) {
-                            this.setAttribute('focusable', 'true');
-                        } else{
-                            this.removeAttribute('focusable');
-                        }
-                    }get 'value'() {
-						return this.__watch["value"];
-					}
-					set 'value'(val) {
-						this.__watch["value"] = val;
-					}get 'errors'() {
-						return this.__watch["errors"];
-					}
-					set 'errors'(val) {
-						this.__watch["errors"] = val;
-					}    __prepareWatchesActions() {
-					this.__watchActions["value"] = [];
-						this.__watchActionsCb["value"] = (action, path, value) => {
-							for (let fct of this.__watchActions["value"]) {
-								fct(this, action, path, value);
-							}
-							if(this.__onChangeFct["value"]){
-								for(let fct of this.__onChangeFct["value"]){
-									fct("value")
-									/*if(path == ""){
-										fct("value")
-									}
-									else{
-										fct("value."+path);
-									}*/
-								}
-							}
-						}this.__watchActions["errors"] = [((target) => {    console.log("Display errors");    target.displayErrors();})];
-						this.__watchActionsCb["errors"] = (action, path, value) => {
-							for (let fct of this.__watchActions["errors"]) {
-								fct(this, action, path, value);
-							}
-							if(this.__onChangeFct["errors"]){
-								for(let fct of this.__onChangeFct["errors"]){
-									fct("errors")
-									/*if(path == ""){
-										fct("errors")
-									}
-									else{
-										fct("errors."+path);
-									}*/
-								}
-							}
-						}					super.__prepareWatchesActions();
-				}__initWatches() {
-					super.__initWatches();
-					this["value"] = this.getDefaultValue();this["errors"] = [];
-				}
-    __getStyle() {
-        let arrStyle = super.__getStyle();
-        arrStyle.push(``);
-        return arrStyle;
-    }
-    __getHtml() {
-        let parentInfo = super.__getHtml();
-        let info = {
-            html: `<slot></slot>`,
-            slots: {
-                'default':`<slot></slot>`
-            },
-            blocks: {
-                'default':`<slot></slot>`
-            }
-        }
-        return info;
-    }
-    __getMaxId() {
-        let temp = super.__getMaxId();
-        temp.push(["AvFormElement", 0])
-        return temp;
-    }
-    getClassName() {
-        return "AvFormElement";
-    }
-    __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('required')) { this.attributeChangedCallback('required', false, false); }if(!this.hasAttribute('name')){ this['name'] = ''; }if(!this.hasAttribute('focusable')) { this.attributeChangedCallback('focusable', false, false); } }
-    __listBoolProps() { return ["required","focusable"].concat(super.__listBoolProps()).filter((v, i, a) => a.indexOf(v) === i); }
-     postCreation(){this.findParentByType(AvForm).subscribe(this);} onValueChanged(){this.dispatchEvent(new CustomEvent("change", {    detail: {        value: this.value    }}));} setFocus(){} validate(){return true;} setError(message){this.errors.push(message);} clearErrors(){this.errors = [];} displayErrors(){}}
-window.customElements.define('av-form-element', AvFormElement);
-class AvForm extends WebComponent {
-    get 'loading'() {
-                        return this.hasAttribute('loading');
-                    }
-                    set 'loading'(val) {
-                        if(val === 1 || val === 'true' || val === ''){
-                            val = true;
-                        }
-                        else if(val === 0 || val === 'false' || val === null || val === undefined){
-                            val = false;
-                        }
-                        if(val !== false && val !== true){
-                            console.error("error setting boolean in loading");
-                            val = false;
-                        }
-                        if (val) {
-                            this.setAttribute('loading', 'true');
-                        } else{
-                            this.removeAttribute('loading');
-                        }
-                    }get 'method'() {
-                        return this.getAttribute('method');
-                    }
-                    set 'method'(val) {
-                        this.setAttribute('method',val);
-                    }get 'action'() {
-                        return this.getAttribute('action');
-                    }
-                    set 'action'(val) {
-                        this.setAttribute('action',val);
-                    }get 'use_event'() {
-                        return this.hasAttribute('use_event');
-                    }
-                    set 'use_event'(val) {
-                        if(val === 1 || val === 'true' || val === ''){
-                            val = true;
-                        }
-                        else if(val === 0 || val === 'false' || val === null || val === undefined){
-                            val = false;
-                        }
-                        if(val !== false && val !== true){
-                            console.error("error setting boolean in use_event");
-                            val = false;
-                        }
-                        if (val) {
-                            this.setAttribute('use_event', 'true');
-                        } else{
-                            this.removeAttribute('use_event');
-                        }
-                    }    __prepareVariables() { super.__prepareVariables(); if(this.fields === undefined) {this.fields = [];}if(this.submits === undefined) {this.submits = [];} }
-    __getStyle() {
-        let arrStyle = super.__getStyle();
-        arrStyle.push(``);
-        return arrStyle;
-    }
-    __getHtml() {
-        let parentInfo = super.__getHtml();
-        let info = {
-            html: `<slot></slot>`,
-            slots: {
-                'default':`<slot></slot>`
-            },
-            blocks: {
-                'default':`<slot></slot>`
-            }
-        }
-        return info;
-    }
-    __getMaxId() {
-        let temp = super.__getMaxId();
-        temp.push(["AvForm", 0])
-        return temp;
-    }
-    getClassName() {
-        return "AvForm";
-    }
-    __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('loading')) { this.attributeChangedCallback('loading', false, false); }if(!this.hasAttribute('method')){ this['method'] = 'get'; }if(!this.hasAttribute('action')){ this['action'] = ''; }if(!this.hasAttribute('use_event')) { this.attributeChangedCallback('use_event', false, false); } }
-    __listBoolProps() { return ["loading","use_event"].concat(super.__listBoolProps()).filter((v, i, a) => a.indexOf(v) === i); }
-    async  submit(){if (!this.validate()) {    return;}const data = {};this.fields.forEach(field => {    if (field.required) {        data[field.name] = field.value;    }    else {        if (field.value) {            data[field.name] = field.value;        }    }});if (this.use_event) {    const customEvent = new CustomEvent("submit", {        detail: {            data,            action: this.action,            method: this.method        },        bubbles: true,        composed: true    });    this.dispatchEvent(customEvent);}else {    this.loading = true;    const formData = new FormData();    for (const key in data) {        formData.append(key, data[key]);    }    const request = new HttpRequest({        url: this.action,        method: HttpRequest.getMethod(this.method),        data: formData    });    this.loading = false;}} registerSubmit(submitElement){this.submits.push({    element: submitElement,    pressInstance: new PressManager({        element: submitElement,        onPress: () => {            this.submit();        }    })});} unregisterSubmit(submitElement){const index = this.submits.findIndex(submit => submit.element === submitElement);if (index !== -1) {    this.submits[index].pressInstance.destroy();    this.submits.splice(index, 1);}} subscribe(fieldHTML){const fieldIndex = this.fields.push(fieldHTML);const _goNext = (e, index = fieldIndex) => {    if (e.keyCode === 13) {        if (this.fields[index]) {            if (this.fields[index].focusable) {                this.fields[index].setFocus();            }            else {                _goNext(e, index + 1);            }        }        else {            this.submit();        }    }};fieldHTML.addEventListener("keydown", _goNext);} validate(){let valid = true;this.fields.forEach(field => {    if (!field.validate()) {        if (valid === true) {            field.setFocus();        }        valid = false;    }});return valid;} setFocus(){if (this.fields.length > 0) {    this.fields[0].setFocus();}}}
-window.customElements.define('av-form', AvForm);
-class AvFor extends WebComponent {
-    get 'item'() {
-                        return this.getAttribute('item');
-                    }
-                    set 'item'(val) {
-                        this.setAttribute('item',val);
-                    }get 'in'() {
-                        return this.getAttribute('in');
-                    }
-                    set 'in'(val) {
-                        this.setAttribute('in',val);
-                    }get 'index'() {
-                        return this.getAttribute('index');
-                    }
-                    set 'index'(val) {
-                        this.setAttribute('index',val);
-                    }    __prepareVariables() { super.__prepareVariables(); if(this.template === undefined) {this.template = "";}if(this.parent === undefined) {this.parent = undefined;}if(this.parentIndex === undefined) {this.parentIndex = 0;}if(this.parentFor === undefined) {this.parentFor = undefined;}if(this.otherPart === undefined) {this.otherPart = undefined;}if(this.elementsByPath === undefined) {this.elementsByPath = {};}if(this.elementsRootByIndex === undefined) {this.elementsRootByIndex = {};}if(this.forInside === undefined) {this.forInside = {};}if(this.maxIndex === undefined) {this.maxIndex = 0;}if(this.watchElement === undefined) {this.watchElement = undefined;}if(this.watchActionArray === undefined) {this.watchActionArray = undefined;}if(this.watchObjectArray === undefined) {this.watchObjectArray = undefined;}if(this.watchObjectName === undefined) {this.watchObjectName = undefined;} }
-    __getStyle() {
-        let arrStyle = super.__getStyle();
-        arrStyle.push(``);
-        return arrStyle;
-    }
-    __getHtml() {
-        let parentInfo = super.__getHtml();
-        let info = {
-            html: `<slot></slot>`,
-            slots: {
-                'default':`<slot></slot>`
-            },
-            blocks: {
-                'default':`<slot></slot>`
-            }
-        }
-        return info;
-    }
-    __getMaxId() {
-        let temp = super.__getMaxId();
-        temp.push(["AvFor", 0])
-        return temp;
-    }
-    __endConstructor() { super.__endConstructor(); (() => {    this.init();})() }
-    getClassName() {
-        return "AvFor";
-    }
-    __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('item')){ this['item'] = ''; }if(!this.hasAttribute('in')){ this['in'] = ''; }if(!this.hasAttribute('index')){ this['index'] = ''; } }
-     init(){if (!this.parent) {    let shadow = this.getRootNode();    if (shadow.host) {        this.parent = shadow.host;        let parentsFor = this.findParents("av-for", this.parent);        let inParts = this.in.split(".");        let firstPart = inParts.splice(0, 1)[0];        if (this.parent["__watchActions"].hasOwnProperty(firstPart)) {            this.watchActionArray = this.parent["__watchActions"][firstPart];            this.watchObjectArray = this.parent["__watch"];            this.watchObjectName = firstPart;        }        else {            for (let parentFor of parentsFor) {                if (parentFor.item == firstPart) {                    this.parentFor = parentFor;                    this.watchActionArray = this.parentFor.watchActionArray;                    this.watchObjectArray = this.parentFor.watchObjectArray;                    this.watchObjectName = this.parentFor.watchObjectName;                    this.otherPart = inParts;                    break;                }            }        }        if (this.watchActionArray) {            let fctCb = (target, type, path, element) => {                path = path.replace(this.watchObjectName, "");                if (type == WatchAction.SET || path == this.getParentKey()) {                    this.reset();                    this.watchElement = element;                    let currentCreate = Object.prepareByPath(this.watchElement, this.getParentKey());                    if (currentCreate.canApply) {                        if (Array.isArray(currentCreate.objToApply)) {                            for (let i = 0; i < currentCreate.objToApply.length; i++) {                                this.createForElement(currentCreate.objToApply[i], "[" + i + "]");                            }                        }                        else {                            for (let key in currentCreate.objToApply) {                                this.createForElement(currentCreate.objToApply[key], key);                            }                        }                    }                    else if (!Array.isArray(element) && element !== undefined) {                        console.error("something went wrong, but I don't understand how this is possible");                    }                }                else {                    let otherPartRegexp = this.getParentKey().replace(/\[/g, "\\[").replace(/\]/g, "\\]");                    let regexNumberLoop = new RegExp("^" + otherPartRegexp + "\\[(\\d*?)\\]$", "g");                    let testPath = new RegExp("^" + otherPartRegexp + "(\\[\\d*?\\].*)$", "g").exec(path);                    if (testPath) {                        let pathToUse = testPath[1];                        let matchTemp = path.match(regexNumberLoop);                        if (matchTemp) {                            if (type == WatchAction.CREATED) {                                this.createForElement(element, pathToUse);                            }                            else if (type == WatchAction.UPDATED) {                                this.updateForElement(element, pathToUse);                            }                            else if (type == WatchAction.DELETED) {                                this.deleteForElement(element, pathToUse);                            }                        }                        else {                            if (type == WatchAction.CREATED) {                                this.updateForElement(element, pathToUse);                            }                            else if (type == WatchAction.UPDATED) {                                this.updateForElement(element, pathToUse);                            }                            else if (type == WatchAction.DELETED) {                                this.updateForElement(undefined, pathToUse);                            }                        }                    }                }            };            this.watchActionArray.push(fctCb);            if (this.watchObjectArray[this.watchObjectName]) {                fctCb(this.parentElement, WatchAction.SET, '', this.watchObjectArray[this.watchObjectName]);            }        }        else {            console.error("variable " + this.in + " in parent can't be found");        }    }}} createForElement(data,key){let temp = document.createElement("DIV");temp.innerHTML = this.parent["__loopTemplate"][this.getAttribute("_id")];let index = Number(key.replace("[", "").replace("]", ""));if (index > this.maxIndex) {    this.maxIndex = index;}let maxSaved = this.maxIndex;for (let i = maxSaved; i >= index; i--) {    if (this.elementsRootByIndex.hasOwnProperty(i)) {        if (i + 1 > this.maxIndex) {            this.maxIndex = i + 1;        }        this.elementsRootByIndex[i + 1] = this.elementsRootByIndex[i];        this.elementsByPath[i + 1] = this.elementsByPath[i];        this.forInside[i + 1] = this.forInside[i];        for (let elements of Object.values(this.elementsByPath[i + 1])) {            for (let element of elements) {                if (element["__values"].hasOwnProperty("$index$_" + this.index)) {                    element["__values"]["$index$_" + this.index] = i + 1;                    element["__templates"]["$index$_" + this.index].forEach((cb) => {                        cb(element);                    });                }            }        }        for (let forEl of this.forInside[i + 1]) {            forEl.parentIndex = i + 1;            forEl.updateIndexes(this.index, i + 1);        }    }}let result = this.parent['__prepareForCreate'][this.getAttribute("_id")](temp, data, key, this.getAllIndexes(index));let forEls = Array.from(temp.querySelectorAll("av-for"));this.forInside[index] = [];for (let forEl of forEls) {    forEl.parentIndex = index;    this.forInside[index].push(forEl);}this.elementsByPath[index] = result;this.elementsRootByIndex[index] = [];let appendChild = (el) => { this.appendChild(el); };if (index != this.maxIndex) {    let previous = this.elementsRootByIndex[index + 1][0];    appendChild = (el) => { this.insertBefore(el, previous); };}while (temp.children.length > 0) {    let el = temp.children[0];    this.elementsRootByIndex[index].push(el);    appendChild(el);}} updateForElement(data,key){let idendity = key.match(/\[\d*?\]/g)[0];let index = Number(idendity.replace("[", "").replace("]", ""));if (index > this.maxIndex) {    this.maxIndex = index;}key = key.replace(idendity, "");if (key.startsWith(".")) {    key = key.slice(1);}if (this.elementsByPath[index]) {    for (let pathName in this.elementsByPath[index]) {        for (let element of this.elementsByPath[index][pathName]) {            for (let valueName in element["__values"]) {                if (valueName == "") {                    element["__templates"][valueName].forEach((cb) => {                        cb(element, true);                    });                }                else if (valueName == key) {                    element["__values"][valueName] = data;                    element["__templates"][valueName].forEach((cb) => {                        cb(element);                    });                }                else if (valueName.startsWith(key)) {                    let temp = Object.prepareByPath(data, valueName, key);                    if (temp.canApply) {                        element["__values"][valueName] = temp.objToApply;                        element["__templates"][valueName].forEach((cb) => {                            cb(element);                        });                    }                }            }        }    }}else {    this.createForElement(this.watchElement[index], idendity);}} deleteForElement(data,key){let index = Number(key.replace("[", "").replace("]", ""));if (index > this.maxIndex) {    this.maxIndex = index;}if (this.elementsRootByIndex[index]) {    for (let el of this.elementsRootByIndex[index]) {        el.remove();    }    delete this.elementsRootByIndex[index];    delete this.elementsByPath[index];    for (let i = index; i <= this.maxIndex; i++) {        if (i == this.maxIndex) {            this.maxIndex--;        }        if (this.elementsRootByIndex.hasOwnProperty(i)) {            this.elementsRootByIndex[i - 1] = this.elementsRootByIndex[i];            this.elementsByPath[i - 1] = this.elementsByPath[i];            this.forInside[i - 1] = this.forInside[i];            for (let elements of Object.values(this.elementsByPath[i - 1])) {                for (let element of elements) {                    if (element["__values"].hasOwnProperty("$index$_" + this.index)) {                        element["__values"]["$index$_" + this.index] = i - 1;                        element["__templates"]["$index$_" + this.index].forEach((cb) => {                            cb(element);                        });                    }                }            }            for (let forEl of this.forInside[i - 1]) {                forEl.parentIndex = i - 1;                forEl.updateIndexes(this.index, i - 1);            }        }    }}} reset(){this.elementsByPath = {};this.elementsRootByIndex = {};this.forInside = {};this.maxIndex = 0;this.innerHTML = "";} postCreation(){this.init();} getParentKey(){let el = this;let result = "";while (el.parentFor) {    result = result + "[" + el.parentIndex + "]." + this.otherPart.join(".");    el = el.parentFor;}return result;} updateIndexes(indexName,indexValue){for (let position in this.elementsByPath) {    for (let elements of Object.values(this.elementsByPath[position])) {        for (let element of elements) {            if (element["__values"].hasOwnProperty("$index$_" + indexName)) {                element["__values"]["$index$_" + indexName] = indexValue;                element["__templates"]["$index$_" + indexName].forEach((cb) => {                    cb(element);                });            }        }    }}for (let index in this.forInside) {    this.forInside[index].forEach((forEl) => {        forEl.updateIndexes(indexName, indexValue);    });}} getAllIndexes(currentIndex){let result = {};let el = this;while (el.parentFor) {    result[el.parentFor.index] = el.parentIndex;    el = el.parentFor;}result[this.index] = currentIndex;return result;}}
-window.customElements.define('av-for', AvFor);
-class DisplayElement extends WebComponent {
-    constructor() { super(); if (this.constructor == DisplayElement) { throw "can't instanciate an abstract class"; } }
-    __prepareVariables() { super.__prepareVariables(); if(this.currentInstance === undefined) {this.currentInstance = undefined;}if(this.eventsFunctions === undefined) {this.eventsFunctions = {};} }
-    __getStyle() {
-        let arrStyle = super.__getStyle();
-        arrStyle.push(``);
-        return arrStyle;
-    }
-    __getHtml() {
-        let parentInfo = super.__getHtml();
-        let info = {
-            html: `<slot></slot>
-<div></div>`,
-            slots: {
-                'default':`<slot></slot>`
-            },
-            blocks: {
-                'default':`<slot></slot>
-<div></div>`
-            }
-        }
-        return info;
-    }
-    __getMaxId() {
-        let temp = super.__getMaxId();
-        temp.push(["DisplayElement", 0])
-        return temp;
-    }
-    getClassName() {
-        return "DisplayElement";
-    }
-     onDeleteFunction(data){} onUpdateFunction(data){} destroy(){if (this.currentInstance) {    this.unsubscribeFromInstance();}} subscribeToInstance(){this.currentInstance.offUpdate(this.eventsFunctions.onUpdate);this.currentInstance.offDelete(this.eventsFunctions["onDelete"]);} unsubscribeFromInstance(){this.currentInstance.offUpdate(this.eventsFunctions["onUpdate"]);this.currentInstance.offDelete(this.eventsFunctions["onDelete"]);} switchInstance(newInstance){if (this.currentInstance) {    this.unsubscribeFromInstance();}this.currentInstance = newInstance;this.subscribeToInstance();this.displayInfos(newInstance);}}
-window.customElements.define('display-element', DisplayElement);
+var TodoList;(function (TodoList) {
 class AvRessourceManager {    static memory = {};    static waiting = {};    static async get(url) {        if (AvRessourceManager.memory.hasOwnProperty(url)) {            return AvRessourceManager.memory[url];        }        else if (AvRessourceManager.waiting.hasOwnProperty(url)) {            await this.awaitFct(url);            return AvRessourceManager.memory[url];        }        else {            AvRessourceManager.waiting[url] = [];            if (url.endsWith('.svg')) {                let result = await fetch(url);                let text = await result.text();                AvRessourceManager.memory[url] = text;                this.releaseAwaitFct(url);                return AvRessourceManager.memory[url];            }            else {                let result = await fetch(url, {                    headers: {                        responseType: 'blob'                    }                });                let blob = await result.blob();                AvRessourceManager.memory[url] = await this.readFile(blob);                ;                this.releaseAwaitFct(url);                return AvRessourceManager.memory[url];            }        }    }    static releaseAwaitFct(url) {        if (AvRessourceManager.waiting[url]) {            for (let i = 0; i < AvRessourceManager.waiting[url].length; i++) {                AvRessourceManager.waiting[url][i]();            }            delete AvRessourceManager.waiting[url];        }    }    static awaitFct(url) {        return new Promise((resolve) => {            AvRessourceManager.waiting[url].push(() => {                resolve('');            });        });    }    static readFile(blob) {        return new Promise((resolve) => {            var reader = new FileReader();            reader.onloadend = function () {                resolve(reader.result);            };            reader.readAsDataURL(blob);        });    }}
 
 
 
 
-class AvHome extends AvPage {
+class AvHome extends Aventus.AvPage {
     __getStyle() {
         let arrStyle = super.__getStyle();
         arrStyle.push(`:host{width:100%;height:100%}:host av-scrollable{width:100%;height:calc(100% + 15px)}:host av-scrollable .logo{margin:50px auto;display:flex;align-items:center;justify-content:center;max-width:1000px}:host av-scrollable .logo av-img{width:50%}:host av-scrollable .logo .right-part{width:50%}:host av-scrollable .logo .right-part p{color:var(--darker);font-size:35px}:host av-scrollable .content{background-color:var(--lighter);box-shadow:0 -5px 5px var(--lighter);padding:50px 0}:host av-scrollable .content .advantages{max-width:1500px;margin:auto}:host av-scrollable .content .advantages av-col{padding:0 50px}:host av-scrollable .content .advantages av-col .title{font-weight:bold;margin-bottom:10px}:host av-scrollable .content .advantages av-col .description{text-align:justify}`);
@@ -9943,8 +10013,7 @@ class AvHome extends AvPage {
     }
      defineTitle(){return "Aventus";}}
 window.customElements.define('av-home', AvHome);
-
-class AvGenericPage extends AvPage {
+class AvGenericPage extends Aventus.AvPage {
     constructor() { super(); if (this.constructor == AvGenericPage) { throw "can't instanciate an abstract class"; } }
     __getStyle() {
         let arrStyle = super.__getStyle();
@@ -10080,12 +10149,60 @@ class AvGettingStartedRouting extends AvGenericPage {
         let info = {
             html: `<section>
     <h1>Route configuration</h1>
+    <p>For our SPA, we need a central router with two pages</p>
+    <ul>
+        <li>the landing page</li>
+        <li>the todo page</li>
+    </ul>
+    <p>Create a new directory <i>./src/pages</i> and create two components (single or multiple as you want)</p>
+    <ul>
+        <li>HomePage</li>
+        <li>TodoPage</li>
+    </ul>
+    <p>
+        You can change parent of your new pages from <b>WebComponent</b> to <b>AvPage</b>, then implements your classes to correct errors.
+        You can find an example below.
+    </p>
+    <av-code language="typescript">
+export class AvHomePage extends AvPage implements DefaultComponent {
+    defineTitle(): string {
+        return "Todo - Home";
+    }
+}
+    </av-code>
+</section>
+<section>
+    <av-navigation-footer previous_state="/introduction/webcomponent" previous_name="Web component" next_state="/introduction/routing" next_name="Routing"></av-navigation-footer>
 </section>`,
             slots: {
             },
             blocks: {
                 'default':`<section>
     <h1>Route configuration</h1>
+    <p>For our SPA, we need a central router with two pages</p>
+    <ul>
+        <li>the landing page</li>
+        <li>the todo page</li>
+    </ul>
+    <p>Create a new directory <i>./src/pages</i> and create two components (single or multiple as you want)</p>
+    <ul>
+        <li>HomePage</li>
+        <li>TodoPage</li>
+    </ul>
+    <p>
+        You can change parent of your new pages from <b>WebComponent</b> to <b>AvPage</b>, then implements your classes to correct errors.
+        You can find an example below.
+    </p>
+    <av-code language="typescript">
+export class AvHomePage extends AvPage implements DefaultComponent {
+    defineTitle(): string {
+        return "Todo - Home";
+    }
+}
+    </av-code>
+</section>
+<section>
+    <av-navigation-footer previous_state="/introduction/webcomponent" previous_name="Web component" next_state="/introduction/routing" next_name="Routing"></av-navigation-footer>
 </section>`
             }
         }
@@ -10109,7 +10226,894 @@ class AvGettingStartedRouting extends AvGenericPage {
     }
      defineTitle(){return "Aventus - Routing";} postCreation(){setTimeout(() => {    this.scrollElement.scrollToPosition(0, 99999);}, 100);}}
 window.customElements.define('av-getting-started-routing', AvGettingStartedRouting);
-
+class AvGettingStartedWebcomponent extends AvGenericPage {
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(``);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<section>
+    <h1>Web Component</h1>
+    <p>A web component is a javascript class that allow to create some html tags with embedded logic and style. If you
+        need more information about web component you can read this explanation : <a href="https://css-tricks.com/an-introduction-to-web-components/" target="_blank">css-trick.com</a>
+    </p>
+    <p>Inside Aventus there are two kind of components:</p>
+    <ul>
+        <li><b>Single File Component</b> : Style - JS - HTML are wrapped inside the same file<br>Use it for small component</li>
+        <li><b>Multiple Files Component</b> : Style - JS - HTML are wrapped inside the same file<br>Use it for complex component</li>
+    </ul>
+    <p>
+      During the previous section, you created a new component called : <b>app.wc.avt</b>. It's a single file component.
+    </p>
+    <av-code language="html">
+&lt;script&gt;
+    export class AvApp extends WebComponent implements DefaultComponent {
+    }
+&lt;/script&gt;
+&lt;template&gt;
+    &lt;slot&gt;&lt;/slot&gt;
+&lt;/template&gt;
+&lt;style&gt;
+    :host {
+    }
+&lt;/style&gt;
+    </av-code>
+</section>
+<section>
+    <h2>Edit the view</h2>
+    <p>You can try to replace the <b>&lt;slot&gt;&lt;/slot&gt;</b> by <b>&lt;h1&gt;Hello World&lt;/h1&gt;</b>. Inside the tag <b>template</b> you can write <b>HTML</b></p>
+        <av-code language="html">
+&lt;script&gt;
+    export class AvApp extends WebComponent implements DefaultComponent {
+    }
+&lt;/script&gt;
+&lt;template&gt;
+    &lt;h1&gt;Hello World&lt;/h1&gt;
+&lt;/template&gt;
+&lt;style&gt;
+    :host {
+    }
+&lt;/style&gt;
+    </av-code>
+    <p>
+        You can render the website and show your first Hello world with Aventus
+    </p>
+    <av-row>
+        <av-col size="12" center="">
+            <av-img src="/img/gettingStarted/first_hello_world.png"></av-img>
+        </av-col>
+    </av-row>
+    <p></p>
+</section>
+<section>
+    <h2>Edit the style</h2>
+    <p>
+        Now you can add color to this Hello world. Inside the tag <b>style</b> you can write <b>SCSS</b>. 
+        When you targetting :host, it means you targeting the component itself.
+        By default Aventus WebComponent has display: inline-block; and box-sizing: border-box; set.
+    </p>
+    <p>
+        Try to add a background and a font color to the host and specify a new different color for your h1
+    </p>
+    <av-code language="scss">
+:host {
+    color: red;
+    background-color: rgb(200, 200, 200);
+    h1 {
+        color: blue;
+    }
+}
+    </av-code>
+    <av-row>
+        <av-col size="12" center="">
+            <av-img src="/img/gettingStarted/color_hello_world.png" style="height:100px"></av-img>
+        </av-col>
+    </av-row>
+    <p>As you can see, the title color is blue.</p>
+    <p>Style inside webcomponent can't be modified by the outside. To understand it, you can create a new file <i>static/default.scss</i> with the content below and link it to your index.html file</p>
+    <av-code language="scss">
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+av-app {
+    text-decoration: underline;
+}  
+    </av-code>
+    <p>This code will correctly underline (in red) your component. Now if you try to target h1 inside av-app it won't work. Because we can't change style from outside a component.</p>
+    <av-code language="scss">
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+av-app h1 {
+    text-decoration: underline;
+}  
+    </av-code>
+    <p>It's still possible to change h1 style with css variables</p>
+    <av-row>
+        <av-col size_xs="12" size_md="6">
+            <div>Style - App.wc.avt</div>
+            <av-code language="scss">
+:host {
+    color: red;
+    background-color: rgb(200, 200, 200);
+    h1 {
+        color: blue;
+        text-decoration: var(--app-title-text-decoration);
+    }
+}
+            </av-code>
+        </av-col>
+        <av-col size_xs="12" size_md="6">
+            <div>Style - default.scss</div>
+            <av-code language="scss">
+av-app {
+    --app-title-text-decoration: underline;
+}
+            </av-code>
+        </av-col>
+    </av-row>
+    <p>
+        For more informations about css variables, you can read <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Using_CSS_custom_properties" target="_blank">this</a><br>
+        To have a deeper explanation and good pratices for css variables inside Aventus you can read <av-router-link state="/">this</av-router-link>
+    </p>
+</section>
+<section>
+    <h2>Edit the script</h2>
+    <p>
+        Finally, you can bring some logical part to your component. We will write each letter of <i>world</i> after 1 second. When a custom element tag is written to the dom
+        the custom element class <b>constructor</b> is called. You can extend the constructor like below :
+    </p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    constructor() {
+        // mandatory
+        super();
+        alert("hello world constructor")
+    }
+}
+    </av-code>
+    <p>A web component can also be created inside your Javascript by calling</p>
+    <av-code language="typescript">
+let app = new AvApp();
+document.body.appendChild(app);
+    </av-code>
+    <p>
+        In our example, we must trigger a function only when the component is rendered inside the DOM. There is a function called <b>postCreation</b> that would be triggerd only 
+        the first time the component is added to the DOM. The lifecylce is the following : constructor =&gt; postCreation (when rendering)
+    </p>
+    <av-code language="typescript">
+protected override postCreation(): void {
+    alert("rendering hello world")
+}
+    </av-code>
+    <p>
+        When the first alert is displayed, you can't see your component on your browser, but when the second is displayed, your component is rendered. Now we can delete the 
+        constructor and remove the alert inside the postCreation. The base script is the following :
+    </p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    protected override postCreation(): void {
+    }
+}
+    </av-code>
+    <p>We will see 3 different way to write each letter :</p>
+    <ul>
+        <li>Using function</li>
+        <li>Using attribute / property</li>
+        <li>Using watch</li>
+    </ul>
+</section>
+<section>
+    <h3>Writting <i>world</i> - Using function</h3>
+    <p>
+        When rendering av-app component, we will call a function <i>writeWorld</i>
+    </p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    public writeWorld() {
+    }
+    protected override postCreation(): void {
+        this.writeWorld();
+    }
+}
+    </av-code>
+    <p>
+        First, we must select the title to edit the innerHTML property. The method <i>querySelector</i> can be use here to select a element like in normal javascript.
+        However you can't use document.querySelector or this.querySelector because the HTML code is encapsulated inside the shadowRoot. For more information about shadowRoot you can 
+        read <a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_shadow_DOM" target="_blank">this article</a>. 
+    </p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    public writeWorld() {
+        let titleEl: HTMLElement = this.shadowRoot.querySelector("h1");
+    }
+    protected override postCreation(): void {
+        this.writeWorld();
+    }
+}
+    </av-code>
+    <p>
+        To improve readability you can target an element in your view by adding a attribute called <b>@element</b> or <b>av-element</b> (where av is your identifier) with the name of the variable to store. 
+        Now your element is available directly inside your component scope.
+    </p>
+    <av-code language="html">
+&lt;h1 @element="titleEl"&gt;Hello world&lt;/h1&gt;
+    </av-code>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    public titleEl: HTMLElement;
+    public writeWorld() {
+    }
+    protected override postCreation(): void {
+        this.writeWorld();
+    }
+}
+    </av-code>
+    <p>
+        Now we can write the code for the function <i>writeWorld</i>.
+    </p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    public titleEl: HTMLElement;
+    public writeWorld() {
+        while(true) {
+            // clear the word "world"
+            this.titleEl.innerHTML = "Hello ";
+            let letters = "world";
+            // for each letter of "world";
+            for(let letter of letters) {
+                // wait 1 second
+                await this.sleep(1000);
+                // add letter to the current text
+                this.titleEl.innerHTML += letter;
+            }
+            await this.sleep(1000);
+        }
+    }
+    private sleep(x): Promise&lt;void&gt; {
+        return new Promise((resolve) =&gt; setTimeout(() =&gt; resolve(), x));
+    }
+    protected override postCreation(): void {
+        this.writeWorld();
+    }
+}
+    </av-code>
+    <p>Well done! You created a component with his embedded logic. Now we can look at other methods</p>
+</section>
+<section>
+    <h3>Writting <i>world</i> - Using attribute / property</h3>
+    <p>
+        For the example, the result will be an av-app tag with an attribute changing each second 
+    </p>
+    <av-code language="html">
+<av-app content="Hello ">Hello </av-app>
+<av-app content="Hello w">Hello w</av-app>
+<av-app content="Hello wo">Hello wo</av-app>
+    </av-code>
+    <p>
+        In the script part, we can specify that we want an attribute on the generated tag by adding a property to the class 
+        and a decorator (<b>@attribute</b> or <b>@property</b>) over the property. The @property decorator will look at changes.<br>
+        You can only use <i>string, number, boolean, luxon.Date and luxon.DateTime</i> as type for your property. This can be used to 
+        add a specify style for a component
+    </p>
+    <av-code language="typescript">
+@property()
+public property: string = "";
+@property((target: AvApp) =&gt; {
+    console.log("change");
+})
+public propertyWithChange: string = "";
+@attribute()
+public attribute: string = "";
+    </av-code>
+    <p>For this part, we need a attribute that will trigger change event. We can transform the code like below:</p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    @property((target: AvApp) =&gt; {
+        // update the view content with the new attribute value
+        target.titleEl.innerHTML = target.content;
+    })
+    public content: string = "Hello ";
+    public titleEl: HTMLElement;
+    public async renderWorld(): Promise&lt;void&gt; {
+        while(true) {
+            // update the content attribute instead of the HTML
+            this.content = "Hello ";
+            let letters = "world";
+            for(let letter of letters) {
+                await this.sleep(1000);
+                // update the content attribute instead of the HTML
+                this.content += letter;
+            }
+            await this.sleep(1000);
+        }
+    }
+    private sleep(x): Promise&lt;void&gt; {
+        return new Promise((resolve) =&gt; setTimeout(() =&gt; resolve(), x));
+    }
+    protected override postCreation(): void {
+        this.renderWorld();
+    }
+}
+    </av-code>
+    <p>To improve readability again, you can remove the callback function inside @property and using injection inside view with {{propertyName}}</p>
+    <av-code language="typescript">
+@property()
+public content: string = "Hello ";
+    </av-code>
+    <av-code language="html">
+&lt;h1 @element="titleEl"&gt;{{content}}&lt;/h1&gt;
+    </av-code>
+    <p>
+        We can add some style to make the text green when Hello world is written
+    </p>
+    <av-code language="scss">
+// specific style when attribute content = "Hello world"
+:host([content="Hello world"]) {
+    h1 {
+        color: green;
+    }
+}
+    </av-code>
+    <p>Here we go! You can now update a view based on the component attribute and define custom style</p>
+</section>
+<section>
+    <h3>Writting <i>world</i> - Using watch</h3>
+    <p>Now we want to get rid of the attribute but still having view change. We just have to replace @property by a new decorator <b>@watch</b></p>
+    <p>The watch decorator use a proxy to store any kind of data inside your component and notify changes.</p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    @watch()
+    public content: string = "Hello ";
+    public titleEl: HTMLElement;
+    public async renderWorld(): Promise&lt;void&gt; {
+        while(true) {
+            // update the content attribute instead of the HTML
+            this.content = "Hello ";
+            let letters = "world";
+            for(let letter of letters) {
+                await this.sleep(1000);
+                // update the content attribute instead of the HTML
+                this.content += letter;
+            }
+            await this.sleep(1000);
+        }
+    }
+    private sleep(x): Promise&lt;void&gt; {
+        return new Promise((resolve) =&gt; setTimeout(() =&gt; resolve(), x));
+    }
+    protected override postCreation(): void {
+        this.renderWorld();
+    }
+}
+    </av-code>
+    <p>If you look your browser, you can see that when it's written "Hello world" the color isn't green anymore</p>
+    <p>We will just add a new property inside the class to try more watchable property</p>
+    <av-code language="typescript">
+@watch((target: AvApp, action: WatchAction, path: string, value: any) =&gt; {
+    // this log will be shown when something inside status is updated
+    console.log(WatchAction[action] + " on path " + path + " with value ", value);
+})
+public status = {
+    name: "",
+    value: 0
+};
+...
+public async renderWorld(): Promise&lt;void&gt; {
+    while(true) {
+        this.content = "Hello ";
+        this.status.name = "Progress";
+        let letters = "world";
+        for(let letter of letters) {
+            await this.sleep(1000);
+            this.content += letter;
+        }
+        this.status = {
+            name: "Done",
+            value: this.status.value + 1
+        };
+        await this.sleep(1000);
+    }
+}
+    </av-code>
+    <p>Open the dev console in your browser and look what's happening.</p>
+    <p>
+        It can be tricky to know who is editing a watchable property. Aventus provides a tools to store each change. Before your class
+        you can add a decorator @Debugger
+    </p>
+    <av-code language="typescript">
+@Debugger({
+    enableWatchHistory: true,
+})
+export class AvApp extends WebComponent implements DefaultComponent {}
+    </av-code>
+    <p>
+        Now open your dev console, store the av-app as a variable. You can call the function <b>.getWatchHistory()</b> to obtain all changes 
+        triggered on this component. If you want to reset history use the function <b>.clearWatchHistory()</b>.
+    </p>
+    <av-row>
+        <av-col size="12">
+            <av-img src="/img/gettingStarted/init_webcomponent_debugger_watch.png"></av-img>
+        </av-col>
+    </av-row>
+    <p>
+        You saw the main concept on Aventus webcomponent. For the example, we worked on a single file component but you can split logical, 
+        style and view on 3 different files. Now you can clear the file App.wc.avt to keep only the script with the class definition for the next section.
+    </p>
+    <av-code language="html">
+&lt;script&gt;
+    export class AvApp extends WebComponent implements DefaultComponent {
+    }
+&lt;/script&gt;
+    </av-code>
+</section>
+<p></p>
+<section>
+    <av-navigation-footer previous_state="/introduction/init" previous_name="Init" next_state="/introduction/routing" next_name="Routing"></av-navigation-footer>
+</section>`,
+            slots: {
+            },
+            blocks: {
+                'default':`<section>
+    <h1>Web Component</h1>
+    <p>A web component is a javascript class that allow to create some html tags with embedded logic and style. If you
+        need more information about web component you can read this explanation : <a href="https://css-tricks.com/an-introduction-to-web-components/" target="_blank">css-trick.com</a>
+    </p>
+    <p>Inside Aventus there are two kind of components:</p>
+    <ul>
+        <li><b>Single File Component</b> : Style - JS - HTML are wrapped inside the same file<br>Use it for small component</li>
+        <li><b>Multiple Files Component</b> : Style - JS - HTML are wrapped inside the same file<br>Use it for complex component</li>
+    </ul>
+    <p>
+      During the previous section, you created a new component called : <b>app.wc.avt</b>. It's a single file component.
+    </p>
+    <av-code language="html">
+&lt;script&gt;
+    export class AvApp extends WebComponent implements DefaultComponent {
+    }
+&lt;/script&gt;
+&lt;template&gt;
+    &lt;slot&gt;&lt;/slot&gt;
+&lt;/template&gt;
+&lt;style&gt;
+    :host {
+    }
+&lt;/style&gt;
+    </av-code>
+</section>
+<section>
+    <h2>Edit the view</h2>
+    <p>You can try to replace the <b>&lt;slot&gt;&lt;/slot&gt;</b> by <b>&lt;h1&gt;Hello World&lt;/h1&gt;</b>. Inside the tag <b>template</b> you can write <b>HTML</b></p>
+        <av-code language="html">
+&lt;script&gt;
+    export class AvApp extends WebComponent implements DefaultComponent {
+    }
+&lt;/script&gt;
+&lt;template&gt;
+    &lt;h1&gt;Hello World&lt;/h1&gt;
+&lt;/template&gt;
+&lt;style&gt;
+    :host {
+    }
+&lt;/style&gt;
+    </av-code>
+    <p>
+        You can render the website and show your first Hello world with Aventus
+    </p>
+    <av-row>
+        <av-col size="12" center="">
+            <av-img src="/img/gettingStarted/first_hello_world.png"></av-img>
+        </av-col>
+    </av-row>
+    <p></p>
+</section>
+<section>
+    <h2>Edit the style</h2>
+    <p>
+        Now you can add color to this Hello world. Inside the tag <b>style</b> you can write <b>SCSS</b>. 
+        When you targetting :host, it means you targeting the component itself.
+        By default Aventus WebComponent has display: inline-block; and box-sizing: border-box; set.
+    </p>
+    <p>
+        Try to add a background and a font color to the host and specify a new different color for your h1
+    </p>
+    <av-code language="scss">
+:host {
+    color: red;
+    background-color: rgb(200, 200, 200);
+    h1 {
+        color: blue;
+    }
+}
+    </av-code>
+    <av-row>
+        <av-col size="12" center="">
+            <av-img src="/img/gettingStarted/color_hello_world.png" style="height:100px"></av-img>
+        </av-col>
+    </av-row>
+    <p>As you can see, the title color is blue.</p>
+    <p>Style inside webcomponent can't be modified by the outside. To understand it, you can create a new file <i>static/default.scss</i> with the content below and link it to your index.html file</p>
+    <av-code language="scss">
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+av-app {
+    text-decoration: underline;
+}  
+    </av-code>
+    <p>This code will correctly underline (in red) your component. Now if you try to target h1 inside av-app it won't work. Because we can't change style from outside a component.</p>
+    <av-code language="scss">
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+av-app h1 {
+    text-decoration: underline;
+}  
+    </av-code>
+    <p>It's still possible to change h1 style with css variables</p>
+    <av-row>
+        <av-col size_xs="12" size_md="6">
+            <div>Style - App.wc.avt</div>
+            <av-code language="scss">
+:host {
+    color: red;
+    background-color: rgb(200, 200, 200);
+    h1 {
+        color: blue;
+        text-decoration: var(--app-title-text-decoration);
+    }
+}
+            </av-code>
+        </av-col>
+        <av-col size_xs="12" size_md="6">
+            <div>Style - default.scss</div>
+            <av-code language="scss">
+av-app {
+    --app-title-text-decoration: underline;
+}
+            </av-code>
+        </av-col>
+    </av-row>
+    <p>
+        For more informations about css variables, you can read <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Using_CSS_custom_properties" target="_blank">this</a><br>
+        To have a deeper explanation and good pratices for css variables inside Aventus you can read <av-router-link state="/">this</av-router-link>
+    </p>
+</section>
+<section>
+    <h2>Edit the script</h2>
+    <p>
+        Finally, you can bring some logical part to your component. We will write each letter of <i>world</i> after 1 second. When a custom element tag is written to the dom
+        the custom element class <b>constructor</b> is called. You can extend the constructor like below :
+    </p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    constructor() {
+        // mandatory
+        super();
+        alert("hello world constructor")
+    }
+}
+    </av-code>
+    <p>A web component can also be created inside your Javascript by calling</p>
+    <av-code language="typescript">
+let app = new AvApp();
+document.body.appendChild(app);
+    </av-code>
+    <p>
+        In our example, we must trigger a function only when the component is rendered inside the DOM. There is a function called <b>postCreation</b> that would be triggerd only 
+        the first time the component is added to the DOM. The lifecylce is the following : constructor =&gt; postCreation (when rendering)
+    </p>
+    <av-code language="typescript">
+protected override postCreation(): void {
+    alert("rendering hello world")
+}
+    </av-code>
+    <p>
+        When the first alert is displayed, you can't see your component on your browser, but when the second is displayed, your component is rendered. Now we can delete the 
+        constructor and remove the alert inside the postCreation. The base script is the following :
+    </p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    protected override postCreation(): void {
+    }
+}
+    </av-code>
+    <p>We will see 3 different way to write each letter :</p>
+    <ul>
+        <li>Using function</li>
+        <li>Using attribute / property</li>
+        <li>Using watch</li>
+    </ul>
+</section>
+<section>
+    <h3>Writting <i>world</i> - Using function</h3>
+    <p>
+        When rendering av-app component, we will call a function <i>writeWorld</i>
+    </p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    public writeWorld() {
+    }
+    protected override postCreation(): void {
+        this.writeWorld();
+    }
+}
+    </av-code>
+    <p>
+        First, we must select the title to edit the innerHTML property. The method <i>querySelector</i> can be use here to select a element like in normal javascript.
+        However you can't use document.querySelector or this.querySelector because the HTML code is encapsulated inside the shadowRoot. For more information about shadowRoot you can 
+        read <a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_shadow_DOM" target="_blank">this article</a>. 
+    </p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    public writeWorld() {
+        let titleEl: HTMLElement = this.shadowRoot.querySelector("h1");
+    }
+    protected override postCreation(): void {
+        this.writeWorld();
+    }
+}
+    </av-code>
+    <p>
+        To improve readability you can target an element in your view by adding a attribute called <b>@element</b> or <b>av-element</b> (where av is your identifier) with the name of the variable to store. 
+        Now your element is available directly inside your component scope.
+    </p>
+    <av-code language="html">
+&lt;h1 @element="titleEl"&gt;Hello world&lt;/h1&gt;
+    </av-code>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    public titleEl: HTMLElement;
+    public writeWorld() {
+    }
+    protected override postCreation(): void {
+        this.writeWorld();
+    }
+}
+    </av-code>
+    <p>
+        Now we can write the code for the function <i>writeWorld</i>.
+    </p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    public titleEl: HTMLElement;
+    public writeWorld() {
+        while(true) {
+            // clear the word "world"
+            this.titleEl.innerHTML = "Hello ";
+            let letters = "world";
+            // for each letter of "world";
+            for(let letter of letters) {
+                // wait 1 second
+                await this.sleep(1000);
+                // add letter to the current text
+                this.titleEl.innerHTML += letter;
+            }
+            await this.sleep(1000);
+        }
+    }
+    private sleep(x): Promise&lt;void&gt; {
+        return new Promise((resolve) =&gt; setTimeout(() =&gt; resolve(), x));
+    }
+    protected override postCreation(): void {
+        this.writeWorld();
+    }
+}
+    </av-code>
+    <p>Well done! You created a component with his embedded logic. Now we can look at other methods</p>
+</section>
+<section>
+    <h3>Writting <i>world</i> - Using attribute / property</h3>
+    <p>
+        For the example, the result will be an av-app tag with an attribute changing each second 
+    </p>
+    <av-code language="html">
+<av-app content="Hello ">Hello </av-app>
+<av-app content="Hello w">Hello w</av-app>
+<av-app content="Hello wo">Hello wo</av-app>
+    </av-code>
+    <p>
+        In the script part, we can specify that we want an attribute on the generated tag by adding a property to the class 
+        and a decorator (<b>@attribute</b> or <b>@property</b>) over the property. The @property decorator will look at changes.<br>
+        You can only use <i>string, number, boolean, luxon.Date and luxon.DateTime</i> as type for your property. This can be used to 
+        add a specify style for a component
+    </p>
+    <av-code language="typescript">
+@property()
+public property: string = "";
+@property((target: AvApp) =&gt; {
+    console.log("change");
+})
+public propertyWithChange: string = "";
+@attribute()
+public attribute: string = "";
+    </av-code>
+    <p>For this part, we need a attribute that will trigger change event. We can transform the code like below:</p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    @property((target: AvApp) =&gt; {
+        // update the view content with the new attribute value
+        target.titleEl.innerHTML = target.content;
+    })
+    public content: string = "Hello ";
+    public titleEl: HTMLElement;
+    public async renderWorld(): Promise&lt;void&gt; {
+        while(true) {
+            // update the content attribute instead of the HTML
+            this.content = "Hello ";
+            let letters = "world";
+            for(let letter of letters) {
+                await this.sleep(1000);
+                // update the content attribute instead of the HTML
+                this.content += letter;
+            }
+            await this.sleep(1000);
+        }
+    }
+    private sleep(x): Promise&lt;void&gt; {
+        return new Promise((resolve) =&gt; setTimeout(() =&gt; resolve(), x));
+    }
+    protected override postCreation(): void {
+        this.renderWorld();
+    }
+}
+    </av-code>
+    <p>To improve readability again, you can remove the callback function inside @property and using injection inside view with {{propertyName}}</p>
+    <av-code language="typescript">
+@property()
+public content: string = "Hello ";
+    </av-code>
+    <av-code language="html">
+&lt;h1 @element="titleEl"&gt;{{content}}&lt;/h1&gt;
+    </av-code>
+    <p>
+        We can add some style to make the text green when Hello world is written
+    </p>
+    <av-code language="scss">
+// specific style when attribute content = "Hello world"
+:host([content="Hello world"]) {
+    h1 {
+        color: green;
+    }
+}
+    </av-code>
+    <p>Here we go! You can now update a view based on the component attribute and define custom style</p>
+</section>
+<section>
+    <h3>Writting <i>world</i> - Using watch</h3>
+    <p>Now we want to get rid of the attribute but still having view change. We just have to replace @property by a new decorator <b>@watch</b></p>
+    <p>The watch decorator use a proxy to store any kind of data inside your component and notify changes.</p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    @watch()
+    public content: string = "Hello ";
+    public titleEl: HTMLElement;
+    public async renderWorld(): Promise&lt;void&gt; {
+        while(true) {
+            // update the content attribute instead of the HTML
+            this.content = "Hello ";
+            let letters = "world";
+            for(let letter of letters) {
+                await this.sleep(1000);
+                // update the content attribute instead of the HTML
+                this.content += letter;
+            }
+            await this.sleep(1000);
+        }
+    }
+    private sleep(x): Promise&lt;void&gt; {
+        return new Promise((resolve) =&gt; setTimeout(() =&gt; resolve(), x));
+    }
+    protected override postCreation(): void {
+        this.renderWorld();
+    }
+}
+    </av-code>
+    <p>If you look your browser, you can see that when it's written "Hello world" the color isn't green anymore</p>
+    <p>We will just add a new property inside the class to try more watchable property</p>
+    <av-code language="typescript">
+@watch((target: AvApp, action: WatchAction, path: string, value: any) =&gt; {
+    // this log will be shown when something inside status is updated
+    console.log(WatchAction[action] + " on path " + path + " with value ", value);
+})
+public status = {
+    name: "",
+    value: 0
+};
+...
+public async renderWorld(): Promise&lt;void&gt; {
+    while(true) {
+        this.content = "Hello ";
+        this.status.name = "Progress";
+        let letters = "world";
+        for(let letter of letters) {
+            await this.sleep(1000);
+            this.content += letter;
+        }
+        this.status = {
+            name: "Done",
+            value: this.status.value + 1
+        };
+        await this.sleep(1000);
+    }
+}
+    </av-code>
+    <p>Open the dev console in your browser and look what's happening.</p>
+    <p>
+        It can be tricky to know who is editing a watchable property. Aventus provides a tools to store each change. Before your class
+        you can add a decorator @Debugger
+    </p>
+    <av-code language="typescript">
+@Debugger({
+    enableWatchHistory: true,
+})
+export class AvApp extends WebComponent implements DefaultComponent {}
+    </av-code>
+    <p>
+        Now open your dev console, store the av-app as a variable. You can call the function <b>.getWatchHistory()</b> to obtain all changes 
+        triggered on this component. If you want to reset history use the function <b>.clearWatchHistory()</b>.
+    </p>
+    <av-row>
+        <av-col size="12">
+            <av-img src="/img/gettingStarted/init_webcomponent_debugger_watch.png"></av-img>
+        </av-col>
+    </av-row>
+    <p>
+        You saw the main concept on Aventus webcomponent. For the example, we worked on a single file component but you can split logical, 
+        style and view on 3 different files. Now you can clear the file App.wc.avt to keep only the script with the class definition for the next section.
+    </p>
+    <av-code language="html">
+&lt;script&gt;
+    export class AvApp extends WebComponent implements DefaultComponent {
+    }
+&lt;/script&gt;
+    </av-code>
+</section>
+<p></p>
+<section>
+    <av-navigation-footer previous_state="/introduction/init" previous_name="Init" next_state="/introduction/routing" next_name="Routing"></av-navigation-footer>
+</section>`
+            }
+        }
+                let newHtml = parentInfo.html
+                for (let blockName in info.blocks) {
+                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
+                        throw "can't found slot with name " + blockName;
+                    }
+                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
+                }
+                info.html = newHtml;
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvGettingStartedWebcomponent", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvGettingStartedWebcomponent";
+    }
+     defineTitle(){return "Aventus - Web component";}}
+window.customElements.define('av-getting-started-webcomponent', AvGettingStartedWebcomponent);
 class AvGettingStartedInitProject extends AvGenericPage {
     __getStyle() {
         let arrStyle = super.__getStyle();
@@ -10432,6 +11436,268 @@ class AvGettingStartedInitProject extends AvGenericPage {
     }
      defineTitle(){return "Aventus - Init project";}}
 window.customElements.define('av-getting-started-init-project', AvGettingStartedInitProject);
+class AvGettingStarted extends AvGenericPage {
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(``);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<section>
+    <h1>Getting started with Aventus</h1>
+    <p>Welcome to Aventus !</p>
+    <p>This tutorial introduces you to the essentials of Aventus by walking through building a Todo list.</p>
+    <p>Let's get started !!!</p>
+</section>
+<av-separation></av-separation>
+<section>
+    <h2>Prerequistes</h2>
+    <p>Before everythink you need to : </p>
+    <ul>
+        <li>Have knowledge of HTML, CSS and Javascript</li>
+        <li>Install Aventus : <av-router-link state="/installation">here</av-router-link>
+        </li>
+    </ul>
+</section>
+<av-separation></av-separation>
+<section>
+    <h2>The concept</h2>
+    <p>Aventus is a framework that allow you to create complex user interfaces by splitting common parts of a
+        front-end application in several well knowned files. It builds on top of standard HTML, CSS, Javascript
+        and provide a way to keep your development under control.</p>
+    <p>The core features are :</p>
+    <ul>
+        <li>Data consistency based on store</li>
+        <li>Reusability with web component</li>
+        <li>Simplified communication with websocket</li>
+        <li>Reactivity</li>
+    </ul>
+</section>
+<av-separation></av-separation>
+<section>
+    <h2>Understand files</h2>
+    <p>
+        First of all, you need to understand all files you can use inside Aventus. This is just a summary, a better
+        explanation will be provided later
+    </p>
+    <div class="table">
+        <av-row class="header">
+            <av-col size="4" center="">Extension</av-col>
+            <av-col size="8" center="">Role</av-col>
+        </av-row>
+        <av-row>
+            <av-col size="4" center="">aventus.conf.json</av-col>
+            <av-col size="8">
+                <div class="title">Configuration</div>
+                <div class="description">Inside this file you can find configuration for your project</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="4" center="">*.wcl.avt</av-col>
+            <av-col size="8">
+                <div class="title">Web Component Logic</div>
+                <div class="description">Inside this file you can find the logical part in Typescript for your
+                    web
+                    component</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="4" center="">*.wcs.avt</av-col>
+            <av-col size="8">
+                <div class="title">Web Component Style</div>
+                <div class="description">Inside this file you can find the style in SCSS for your web component
+                </div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="4" center="">*.wcv.avt</av-col>
+            <av-col size="8">
+                <div class="title">Web Component View</div>
+                <div class="description">Inside this file you can find the structure in HTML for your web
+                    component
+                </div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="4" center="">*.data.avt</av-col>
+            <av-col size="8">
+                <div class="title">Data</div>
+                <div class="description">This file is a class / interface / enum representing usable objects for
+                    your application</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="4" center="">*.lib.avt</av-col>
+            <av-col size="8">
+                <div class="title">Library</div>
+                <div class="description">This file allow you to create some logical part for your project
+                    without
+                    web component</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="4" center="">*.ram.avt</av-col>
+            <av-col size="8">
+                <div class="title">RAM</div>
+                <div class="description">This file allow you to create store for your data</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="4" center="">*.socket.avt</av-col>
+            <av-col size="8">
+                <div class="title">WebSocket</div>
+                <div class="description">This file allow you to create websocket instance to send message to
+                    your
+                    backend</div>
+            </av-col>
+        </av-row>
+    </div>
+</section>
+<av-separation></av-separation>
+<section>
+    <av-navigation-footer no_previous="" next_state="/introduction/init" next_name="Init"></av-navigation-footer>
+</section>`,
+            slots: {
+            },
+            blocks: {
+                'default':`<section>
+    <h1>Getting started with Aventus</h1>
+    <p>Welcome to Aventus !</p>
+    <p>This tutorial introduces you to the essentials of Aventus by walking through building a Todo list.</p>
+    <p>Let's get started !!!</p>
+</section>
+<av-separation></av-separation>
+<section>
+    <h2>Prerequistes</h2>
+    <p>Before everythink you need to : </p>
+    <ul>
+        <li>Have knowledge of HTML, CSS and Javascript</li>
+        <li>Install Aventus : <av-router-link state="/installation">here</av-router-link>
+        </li>
+    </ul>
+</section>
+<av-separation></av-separation>
+<section>
+    <h2>The concept</h2>
+    <p>Aventus is a framework that allow you to create complex user interfaces by splitting common parts of a
+        front-end application in several well knowned files. It builds on top of standard HTML, CSS, Javascript
+        and provide a way to keep your development under control.</p>
+    <p>The core features are :</p>
+    <ul>
+        <li>Data consistency based on store</li>
+        <li>Reusability with web component</li>
+        <li>Simplified communication with websocket</li>
+        <li>Reactivity</li>
+    </ul>
+</section>
+<av-separation></av-separation>
+<section>
+    <h2>Understand files</h2>
+    <p>
+        First of all, you need to understand all files you can use inside Aventus. This is just a summary, a better
+        explanation will be provided later
+    </p>
+    <div class="table">
+        <av-row class="header">
+            <av-col size="4" center="">Extension</av-col>
+            <av-col size="8" center="">Role</av-col>
+        </av-row>
+        <av-row>
+            <av-col size="4" center="">aventus.conf.json</av-col>
+            <av-col size="8">
+                <div class="title">Configuration</div>
+                <div class="description">Inside this file you can find configuration for your project</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="4" center="">*.wcl.avt</av-col>
+            <av-col size="8">
+                <div class="title">Web Component Logic</div>
+                <div class="description">Inside this file you can find the logical part in Typescript for your
+                    web
+                    component</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="4" center="">*.wcs.avt</av-col>
+            <av-col size="8">
+                <div class="title">Web Component Style</div>
+                <div class="description">Inside this file you can find the style in SCSS for your web component
+                </div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="4" center="">*.wcv.avt</av-col>
+            <av-col size="8">
+                <div class="title">Web Component View</div>
+                <div class="description">Inside this file you can find the structure in HTML for your web
+                    component
+                </div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="4" center="">*.data.avt</av-col>
+            <av-col size="8">
+                <div class="title">Data</div>
+                <div class="description">This file is a class / interface / enum representing usable objects for
+                    your application</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="4" center="">*.lib.avt</av-col>
+            <av-col size="8">
+                <div class="title">Library</div>
+                <div class="description">This file allow you to create some logical part for your project
+                    without
+                    web component</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="4" center="">*.ram.avt</av-col>
+            <av-col size="8">
+                <div class="title">RAM</div>
+                <div class="description">This file allow you to create store for your data</div>
+            </av-col>
+        </av-row>
+        <av-row>
+            <av-col size="4" center="">*.socket.avt</av-col>
+            <av-col size="8">
+                <div class="title">WebSocket</div>
+                <div class="description">This file allow you to create websocket instance to send message to
+                    your
+                    backend</div>
+            </av-col>
+        </av-row>
+    </div>
+</section>
+<av-separation></av-separation>
+<section>
+    <av-navigation-footer no_previous="" next_state="/introduction/init" next_name="Init"></av-navigation-footer>
+</section>`
+            }
+        }
+                let newHtml = parentInfo.html
+                for (let blockName in info.blocks) {
+                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
+                        throw "can't found slot with name " + blockName;
+                    }
+                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
+                }
+                info.html = newHtml;
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvGettingStarted", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvGettingStarted";
+    }
+     defineTitle(){return "Aventus - Getting started";}}
+window.customElements.define('av-getting-started', AvGettingStarted);
 class AvExample extends AvGenericPage {
     __getStyle() {
         let arrStyle = super.__getStyle();
@@ -10993,7 +12259,7 @@ class AvApiConfiguration extends AvGenericPage {
     }
      defineTitle(){return "Aventus - API Configuration";}}
 window.customElements.define('av-api-configuration', AvApiConfiguration);
-class AvNavigationFooter extends WebComponent {
+class AvNavigationFooter extends Aventus.WebComponent {
     static get observedAttributes() {return ["previous_state", "previous_name", "next_state", "next_name"].concat(super.observedAttributes).filter((v, i, a) => a.indexOf(v) === i);}
     get 'no_previous'() {
                         return this.hasAttribute('no_previous');
@@ -11018,12 +12284,14 @@ class AvNavigationFooter extends WebComponent {
                         return this.getAttribute('previous_state');
                     }
                     set 'previous_state'(val) {
-                        this.setAttribute('previous_state',val);
+						if(val === undefined || val === null){this.removeAttribute('previous_state')}
+						else{this.setAttribute('previous_state',val)}
                     }get 'previous_name'() {
                         return this.getAttribute('previous_name');
                     }
                     set 'previous_name'(val) {
-                        this.setAttribute('previous_name',val);
+						if(val === undefined || val === null){this.removeAttribute('previous_name')}
+						else{this.setAttribute('previous_name',val)}
                     }get 'no_next'() {
                         return this.hasAttribute('no_next');
                     }
@@ -11047,12 +12315,14 @@ class AvNavigationFooter extends WebComponent {
                         return this.getAttribute('next_state');
                     }
                     set 'next_state'(val) {
-                        this.setAttribute('next_state',val);
+						if(val === undefined || val === null){this.removeAttribute('next_state')}
+						else{this.setAttribute('next_state',val)}
                     }get 'next_name'() {
                         return this.getAttribute('next_name');
                     }
                     set 'next_name'(val) {
-                        this.setAttribute('next_name',val);
+						if(val === undefined || val === null){this.removeAttribute('next_name')}
+						else{this.setAttribute('next_name',val)}
                     }    __getStyle() {
         let arrStyle = super.__getStyle();
         arrStyle.push(`:host{display:flex;width:100%}:host .navigation av-img{height:40px}:host .navigation .previous{display:flex;align-items:center;justify-content:center}:host .navigation .previous av-router-link{display:flex;align-items:center;justify-content:center;cursor:pointer;color:#000;text-decoration:none}:host .navigation .previous av-router-link span{margin-left:15px}:host .navigation .next{display:flex;align-items:center;justify-content:center}:host .navigation .next av-router-link{display:flex;align-items:center;justify-content:center;cursor:pointer;color:#000;text-decoration:none}:host .navigation .next av-router-link span{margin-right:15px}:host([no_previous]) .previous{opacity:0;pointer-events:none}:host([no_next]) .next{opacity:0;pointer-events:none}`);
@@ -11126,7 +12396,7 @@ class AvNavigationFooter extends WebComponent {
     __listBoolProps() { return ["no_previous","no_next"].concat(super.__listBoolProps()).filter((v, i, a) => a.indexOf(v) === i); }
 }
 window.customElements.define('av-navigation-footer', AvNavigationFooter);
-class AvNavbar extends WebComponent {
+class AvNavbar extends Aventus.WebComponent {
     __getStyle() {
         let arrStyle = super.__getStyle();
         arrStyle.push(`:host{height:70px;padding:10px;width:100%;background-color:var(--primary-color);box-shadow:0 5px 5px #c8c8c8;display:flex;justify-content:space-between}:host .routing{display:flex;height:100%}:host .routing av-router-link{margin:0 8px;padding:0 8px;display:flex;height:100%;align-items:center;color:var(--secondary-color);transition:background .4s var(--bezier-curve);cursor:pointer;border-radius:5px}:host .routing av-router-link:hover{background-color:var(--lighter)}:host .routing av-router-link.active{background-color:var(--lighter)}`);
@@ -11166,7 +12436,7 @@ class AvNavbar extends WebComponent {
     }
 }
 window.customElements.define('av-navbar', AvNavbar);
-class AvSeparation extends WebComponent {
+class AvSeparation extends Aventus.WebComponent {
     __getStyle() {
         let arrStyle = super.__getStyle();
         arrStyle.push(`:host{height:1px;width:calc(100% - 50px);margin:25px;background-color:var(--darker)}`);
@@ -11193,12 +12463,13 @@ class AvSeparation extends WebComponent {
     }
 }
 window.customElements.define('av-separation', AvSeparation);
-class AvRow extends WebComponent {
+class AvRow extends Aventus.WebComponent {
     get 'max_width'() {
                         return this.getAttribute('max_width');
                     }
                     set 'max_width'(val) {
-                        this.setAttribute('max_width',val);
+						if(val === undefined || val === null){this.removeAttribute('max_width')}
+                        else{this.setAttribute('max_width',val)}
                     }    __prepareVariables() { super.__prepareVariables(); if(this.sizes === undefined) {this.sizes = {"xs":300,"sm":540,"md":720,"lg":960,"xl":1140};} }
     __getStyle() {
         let arrStyle = super.__getStyle();
@@ -11228,97 +12499,115 @@ class AvRow extends WebComponent {
     }
      _calculateWidth(){var size = this.offsetWidth;var labels = [];for (var key in this.sizes) {    var value = this.sizes[key];    if (size > value) {        labels.push(key);    }    else {        break;    }}this.max_width = labels.join(" ");} postCreation(){this._calculateWidth();new ResizeObserver(entries => {    this._calculateWidth();}).observe(this);}}
 window.customElements.define('av-row', AvRow);
-class AvCol extends WebComponent {
+class AvCol extends Aventus.WebComponent {
     get 'size'() {
                         return Number(this.getAttribute('size'));
                     }
                     set 'size'(val) {
-                        this.setAttribute('size',val);
+						if(val === undefined || val === null){this.removeAttribute('size')}
+                        else{this.setAttribute('size',val)}
                     }get 'size_xs'() {
                         return Number(this.getAttribute('size_xs'));
                     }
                     set 'size_xs'(val) {
-                        this.setAttribute('size_xs',val);
+						if(val === undefined || val === null){this.removeAttribute('size_xs')}
+                        else{this.setAttribute('size_xs',val)}
                     }get 'size_sm'() {
                         return Number(this.getAttribute('size_sm'));
                     }
                     set 'size_sm'(val) {
-                        this.setAttribute('size_sm',val);
+						if(val === undefined || val === null){this.removeAttribute('size_sm')}
+                        else{this.setAttribute('size_sm',val)}
                     }get 'size_md'() {
                         return Number(this.getAttribute('size_md'));
                     }
                     set 'size_md'(val) {
-                        this.setAttribute('size_md',val);
+						if(val === undefined || val === null){this.removeAttribute('size_md')}
+                        else{this.setAttribute('size_md',val)}
                     }get 'size_lg'() {
                         return Number(this.getAttribute('size_lg'));
                     }
                     set 'size_lg'(val) {
-                        this.setAttribute('size_lg',val);
+						if(val === undefined || val === null){this.removeAttribute('size_lg')}
+                        else{this.setAttribute('size_lg',val)}
                     }get 'size_xl'() {
                         return Number(this.getAttribute('size_xl'));
                     }
                     set 'size_xl'(val) {
-                        this.setAttribute('size_xl',val);
+						if(val === undefined || val === null){this.removeAttribute('size_xl')}
+                        else{this.setAttribute('size_xl',val)}
                     }get 'offset'() {
                         return Number(this.getAttribute('offset'));
                     }
                     set 'offset'(val) {
-                        this.setAttribute('offset',val);
+						if(val === undefined || val === null){this.removeAttribute('offset')}
+                        else{this.setAttribute('offset',val)}
                     }get 'offset_xs'() {
                         return Number(this.getAttribute('offset_xs'));
                     }
                     set 'offset_xs'(val) {
-                        this.setAttribute('offset_xs',val);
+						if(val === undefined || val === null){this.removeAttribute('offset_xs')}
+                        else{this.setAttribute('offset_xs',val)}
                     }get 'offset_sm'() {
                         return Number(this.getAttribute('offset_sm'));
                     }
                     set 'offset_sm'(val) {
-                        this.setAttribute('offset_sm',val);
+						if(val === undefined || val === null){this.removeAttribute('offset_sm')}
+                        else{this.setAttribute('offset_sm',val)}
                     }get 'offset_md'() {
                         return Number(this.getAttribute('offset_md'));
                     }
                     set 'offset_md'(val) {
-                        this.setAttribute('offset_md',val);
+						if(val === undefined || val === null){this.removeAttribute('offset_md')}
+                        else{this.setAttribute('offset_md',val)}
                     }get 'offset_lg'() {
                         return Number(this.getAttribute('offset_lg'));
                     }
                     set 'offset_lg'(val) {
-                        this.setAttribute('offset_lg',val);
+						if(val === undefined || val === null){this.removeAttribute('offset_lg')}
+                        else{this.setAttribute('offset_lg',val)}
                     }get 'offset_xl'() {
                         return Number(this.getAttribute('offset_xl'));
                     }
                     set 'offset_xl'(val) {
-                        this.setAttribute('offset_xl',val);
+						if(val === undefined || val === null){this.removeAttribute('offset_xl')}
+                        else{this.setAttribute('offset_xl',val)}
                     }get 'offset_right'() {
                         return Number(this.getAttribute('offset_right'));
                     }
                     set 'offset_right'(val) {
-                        this.setAttribute('offset_right',val);
+						if(val === undefined || val === null){this.removeAttribute('offset_right')}
+                        else{this.setAttribute('offset_right',val)}
                     }get 'offset_right_xs'() {
                         return Number(this.getAttribute('offset_right_xs'));
                     }
                     set 'offset_right_xs'(val) {
-                        this.setAttribute('offset_right_xs',val);
+						if(val === undefined || val === null){this.removeAttribute('offset_right_xs')}
+                        else{this.setAttribute('offset_right_xs',val)}
                     }get 'offset_right_sm'() {
                         return Number(this.getAttribute('offset_right_sm'));
                     }
                     set 'offset_right_sm'(val) {
-                        this.setAttribute('offset_right_sm',val);
+						if(val === undefined || val === null){this.removeAttribute('offset_right_sm')}
+                        else{this.setAttribute('offset_right_sm',val)}
                     }get 'offset_right_md'() {
                         return Number(this.getAttribute('offset_right_md'));
                     }
                     set 'offset_right_md'(val) {
-                        this.setAttribute('offset_right_md',val);
+						if(val === undefined || val === null){this.removeAttribute('offset_right_md')}
+                        else{this.setAttribute('offset_right_md',val)}
                     }get 'offset_right_lg'() {
                         return Number(this.getAttribute('offset_right_lg'));
                     }
                     set 'offset_right_lg'(val) {
-                        this.setAttribute('offset_right_lg',val);
+						if(val === undefined || val === null){this.removeAttribute('offset_right_lg')}
+                        else{this.setAttribute('offset_right_lg',val)}
                     }get 'offset_right_xl'() {
                         return Number(this.getAttribute('offset_right_xl'));
                     }
                     set 'offset_right_xl'(val) {
-                        this.setAttribute('offset_right_xl',val);
+						if(val === undefined || val === null){this.removeAttribute('offset_right_xl')}
+                        else{this.setAttribute('offset_right_xl',val)}
                     }get 'nobreak'() {
                         return this.hasAttribute('nobreak');
                     }
@@ -11387,13 +12676,14 @@ class AvCol extends WebComponent {
     __listBoolProps() { return ["nobreak","center"].concat(super.__listBoolProps()).filter((v, i, a) => a.indexOf(v) === i); }
      postCreation(){}}
 window.customElements.define('av-col', AvCol);
-class AvCode extends WebComponent {
+class AvCode extends Aventus.WebComponent {
     static get observedAttributes() {return ["language"].concat(super.observedAttributes).filter((v, i, a) => a.indexOf(v) === i);}
     static primsCSS = "";static isLoading = false;static waitingLoad = [];    get 'language'() {
                         return this.getAttribute('language');
                     }
                     set 'language'(val) {
-                        this.setAttribute('language',val);
+						if(val === undefined || val === null){this.removeAttribute('language')}
+						else{this.setAttribute('language',val)}
                     }    __getStyle() {
         let arrStyle = super.__getStyle();
         arrStyle.push(`:host{display:flex}:host pre{border-radius:5px;width:100%}:host .hided{display:none}`);
@@ -11438,15 +12728,16 @@ class AvCode extends WebComponent {
     }
     __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('language')){ this['language'] = 'plain'; } }
     __upgradeAttributes() { super.__upgradeAttributes(); this.__upgradeProperty('language'); }
-    static async  loadScript(src){return new Promise((resolve, reject) => {    let script = document.createElement('script');    script.setAttribute('src', src);    document.head.appendChild(script);    script.addEventListener("load", () => {        resolve();    });    script.addEventListener("error", (ev) => {        reject();    });});}static async  loadingPrism(){if (!AvCode.isLoading) {    AvCode.isLoading = true;    await AvCode.loadScript("/libs/prism.js");    await AvCode.loadScript("/libs/prism-normalize-whitespace.min.js");    AvCode.primsCSS = await(await fetch("/libs/prism_vscode_theme.css")).text();    AvCode.releaseAwaitFct();    AvCode.isLoading = false;}else {    await AvCode.awaitFct();}}static  releaseAwaitFct(){for (let waiting of AvCode.waitingLoad) {    waiting();}AvCode.waitingLoad = [];}static  awaitFct(){return new Promise((resolve) => {    AvCode.waitingLoad.push(() => {        resolve('');    });});}async  loadFiles(){await AvCode.loadingPrism();this.init();} init(){if (!window.Prism.languages.hasOwnProperty(this.language)) {    this.language = 'plain';}this.codeEl.innerHTML = this.innerHTML.trim().replace(/</g, "&lt;").replace(/>/g, "&gt;");this.innerHTML = "";let style = this.shadowRoot.querySelector("style");style.innerHTML = style.innerHTML.trim() + AvCode.primsCSS;window.Prism.highlightElement(this.codeEl);} postCreation(){if (!window.Prism) {    this.loadFiles();}else {    this.init();}}}
+    static async  loadScript(src){return new Promise((resolve, reject) => {    let script = document.createElement('script');    script.setAttribute('src', src);    document.head.appendChild(script);    script.addEventListener("load", () => {        resolve();    });    script.addEventListener("error", (ev) => {        reject();    });});}static async  loadingPrism(){if (!AvCode.isLoading) {    AvCode.isLoading = true;    AvCode.primsCSS = await(await fetch("/libs/prism_vscode_theme.css")).text();    await AvCode.loadScript("/libs/prism.js");    AvCode.releaseAwaitFct();    AvCode.isLoading = false;}else {    await AvCode.awaitFct();}}static  releaseAwaitFct(){for (let waiting of AvCode.waitingLoad) {    waiting();}AvCode.waitingLoad = [];}static  awaitFct(){return new Promise((resolve) => {    AvCode.waitingLoad.push(() => {        resolve('');    });});}async  loadFiles(){await AvCode.loadingPrism();this.init();} init(){if (!window.Prism.languages.hasOwnProperty(this.language)) {    this.language = 'plain';}this.codeEl.innerHTML = this.innerHTML.trim().replace(/</g, "&lt;").replace(/>/g, "&gt;");this.innerHTML = "";let style = this.shadowRoot.querySelector("style");style.innerHTML = style.innerHTML.trim() + AvCode.primsCSS;window.Prism.highlightElement(this.codeEl);} postCreation(){if (!window.Prism) {    this.loadFiles();}else {    this.init();}}}
 window.customElements.define('av-code', AvCode);
-class AvImg extends WebComponent {
+class AvImg extends Aventus.WebComponent {
     static get observedAttributes() {return ["src", "mode"].concat(super.observedAttributes).filter((v, i, a) => a.indexOf(v) === i);}
     get 'src'() {
                         return this.getAttribute('src');
                     }
                     set 'src'(val) {
-                        this.setAttribute('src',val);
+						if(val === undefined || val === null){this.removeAttribute('src')}
+						else{this.setAttribute('src',val)}
                     }get 'display_bigger'() {
                         return this.hasAttribute('display_bigger');
                     }
@@ -11470,7 +12761,8 @@ class AvImg extends WebComponent {
                         return this.getAttribute('mode');
                     }
                     set 'mode'(val) {
-                        this.setAttribute('mode',val);
+						if(val === undefined || val === null){this.removeAttribute('mode')}
+						else{this.setAttribute('mode',val)}
                     }    __prepareVariables() { super.__prepareVariables(); if(this.bigImg === undefined) {this.bigImg = "undefined";}if(this.ratio === undefined) {this.ratio = 1;}if(this._maxCalculateSize === undefined) {this._maxCalculateSize = 10;}if(this._isCalculing === undefined) {this._isCalculing = false;}if(this.checkCloseBinded === undefined) {this.checkCloseBinded = undefined;} }
     __getStyle() {
         let arrStyle = super.__getStyle();
@@ -11507,7 +12799,7 @@ class AvImg extends WebComponent {
     __listBoolProps() { return ["display_bigger"].concat(super.__listBoolProps()).filter((v, i, a) => a.indexOf(v) === i); }
      checkClose(e){if (e instanceof KeyboardEvent) {    if (e.key == 'Escape') {        this.close();    }}else {    let realTargetEl = e.realTarget();    if (realTargetEl != this.bigImg) {        this.close();    }}} close(){this.bigImg.style.opacity = '0';document.body.removeEventListener('click', this.checkCloseBinded);setTimeout(() => {    this.bigImg.remove();}, 710);} calculateSize(attempt){if (this._isCalculing) {    return;}if (this.src == "") {    return;}this._isCalculing = true;if (getComputedStyle(this).display == 'none') {    return;}if (attempt == this._maxCalculateSize) {    this._isCalculing = false;    return;}let element = this.imgEl;if (this.src.endsWith(".svg")) {    element = this.svgEl;}this.style.width = '';this.style.height = '';element.style.width = '';element.style.height = '';if (element.offsetWidth == 0 && element.offsetHeight == 0) {    setTimeout(() => {        this._isCalculing = false;        this.calculateSize(attempt + 1);    }, 100);    return;}let style = getComputedStyle(this);let addedY = Number(style.paddingTop.replace("px", "")) + Number(style.paddingBottom.replace("px", "")) + Number(style.borderTopWidth.replace("px", "")) + Number(style.borderBottomWidth.replace("px", ""));let addedX = Number(style.paddingLeft.replace("px", "")) + Number(style.paddingRight.replace("px", "")) + Number(style.borderLeftWidth.replace("px", "")) + Number(style.borderRightWidth.replace("px", ""));let availableHeight = this.offsetHeight - addedY;let availableWidth = this.offsetWidth - addedX;let sameWidth = (element.offsetWidth == availableWidth);let sameHeight = (element.offsetHeight == availableHeight);this.ratio = element.offsetWidth / element.offsetHeight;if (sameWidth && !sameHeight) {    element.style.width = (availableHeight * this.ratio) + 'px';    element.style.height = availableHeight + 'px';}else if (!sameWidth && sameHeight) {    element.style.width = availableWidth + 'px';    element.style.height = (availableWidth / this.ratio) + 'px';}else if (!sameWidth && !sameHeight) {    if (this.mode == "stretch") {        element.style.width = '100%';        element.style.height = '100%';    }    else if (this.mode == "contains") {        let newWidth = (availableHeight * this.ratio);        if (newWidth <= availableWidth) {            element.style.width = newWidth + 'px';            element.style.height = availableHeight + 'px';        }        else {            element.style.width = availableWidth + 'px';            element.style.height = (availableWidth / this.ratio) + 'px';        }    }    else if (this.mode == "cover") {        let newWidth = (availableHeight * this.ratio);        if (newWidth >= availableWidth) {            element.style.width = newWidth + 'px';            element.style.height = availableHeight + 'px';        }        else {            element.style.width = availableWidth + 'px';            element.style.height = (availableWidth / this.ratio) + 'px';        }    }}let diffTop = (this.offsetHeight - element.offsetHeight - addedY) / 2;let diffLeft = (this.offsetWidth - element.offsetWidth - addedX) / 2;element.style.transform = "translate(" + diffLeft + "px, " + diffTop + "px)";element.style.opacity = '1';this._isCalculing = false;} showImg(e){if (this.display_bigger) {    let target = e.currentTarget;    let position = target.getPositionOnScreen();    let div = document.createElement("DIV");    div.style.position = 'absolute';    div.style.top = position.y + 'px';    div.style.left = position.x + 'px';    div.style.width = target.offsetWidth + 'px';    div.style.height = target.offsetHeight + 'px';    div.style.backgroundImage = 'url(' + this.src + ')';    div.style.backgroundSize = 'contain';    div.style.backgroundRepeat = 'no-repeat';    div.style.zIndex = '502';    div.style.transition = 'all 0.7s cubic-bezier(0.65, 0, 0.15, 1)';    div.style.backgroundPosition = 'center';    div.style.backgroundColor = 'black';    this.bigImg = div;    document.body.appendChild(div);    setTimeout(() => {        div.style.top = '50px';        div.style.left = '50px';        div.style.width = 'calc(100% - 100px)';        div.style.height = 'calc(100% - 100px)';        document.body.addEventListener('click', this.checkCloseBinded);        document.body.addEventListener('keydown', this.checkCloseBinded);    }, 100);}} postCreation(){this.addEventListener("click", (e) => { this.showImg(e); });new ResizeObserver(() => {    this.calculateSize();}).observe(this);}}
 window.customElements.define('av-img', AvImg);
-class AvButton extends WebComponent {
+class AvButton extends Aventus.WebComponent {
     __getStyle() {
         let arrStyle = super.__getStyle();
         arrStyle.push(`:host{background-color:var(--primary-color);color:var(--secondary-color);border-radius:900px;padding:10px 30px;cursor:pointer;box-shadow:0 0 2px var(--darker);transition:filter .4s var(--bezier-curve)}:host(:hover){filter:brightness(0.9)}`);
@@ -11592,3 +12884,23 @@ class AvApi extends AvGenericPage {
     }
      defineTitle(){return 'Aventus - API';}}
 window.customElements.define('av-api', AvApi);
+TodoList.AvHome=AvHome;
+TodoList.AvGenericPage=AvGenericPage;
+TodoList.AvInstallation=AvInstallation;
+TodoList.AvGettingStartedRouting=AvGettingStartedRouting;
+TodoList.AvGettingStartedWebcomponent=AvGettingStartedWebcomponent;
+TodoList.AvGettingStartedInitProject=AvGettingStartedInitProject;
+TodoList.AvGettingStarted=AvGettingStarted;
+TodoList.AvExample=AvExample;
+TodoList.AvApiConfiguration=AvApiConfiguration;
+TodoList.AvRessourceManager=AvRessourceManager;
+TodoList.AvNavigationFooter=AvNavigationFooter;
+TodoList.AvNavbar=AvNavbar;
+TodoList.AvSeparation=AvSeparation;
+TodoList.AvRow=AvRow;
+TodoList.AvCol=AvCol;
+TodoList.AvCode=AvCode;
+TodoList.AvImg=AvImg;
+TodoList.AvButton=AvButton;
+TodoList.AvApi=AvApi;
+})(TodoList || (TodoList = {}));
