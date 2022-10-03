@@ -1,47 +1,51 @@
 // version 0.0.1
 // region js //
-declare class AvRessourceManager {    private static memory;    private static waiting;    static get(url: any): unknown;    private static releaseAwaitFct;    private static awaitFct;    private static readFile;}
-declare interface Window {
+declare namespace TodoList{
+class AvRessourceManager {    private static memory;    private static waiting;    static get(url: any): unknown;    private static releaseAwaitFct;    private static awaitFct;    private static readFile;}
+interface Window {
     Prism:any
 }
 
 
 
-declare class AvHome extends AvPage implements DefaultComponent {
+class AvHome extends Aventus.AvPage implements Aventus.DefaultComponent {
     defineTitle(): string;
 }
 
-
-declare abstract class AvGenericPage extends AvPage implements DefaultComponent {
-    scrollElement: AvScrollable;
+abstract class AvGenericPage extends Aventus.AvPage implements Aventus.DefaultComponent {
+    scrollElement: Aventus.AvScrollable;
 }
 
-declare class AvInstallation extends AvGenericPage implements DefaultComponent {
+class AvInstallation extends AvGenericPage implements Aventus.DefaultComponent {
     defineTitle(): string;
 }
 
-declare class AvGettingStartedRouting extends AvGenericPage implements DefaultComponent {
+class AvGettingStartedRouting extends AvGenericPage implements Aventus.DefaultComponent {
     defineTitle(): string;
     protected postCreation(): void;
 }
 
-declare class AvGettingStartedWebcomponent extends AvGenericPage implements DefaultComponent {
+class AvGettingStartedWebcomponent extends AvGenericPage implements Aventus.DefaultComponent {
     defineTitle(): string;
 }
 
-declare class AvGettingStartedInitProject extends AvGenericPage implements DefaultComponent {
+class AvGettingStartedInitProject extends AvGenericPage implements Aventus.DefaultComponent {
     defineTitle(): string;
 }
 
-declare class AvExample extends AvGenericPage implements DefaultComponent {
+class AvGettingStarted extends AvGenericPage implements Aventus.DefaultComponent {
     defineTitle(): string;
 }
 
-declare class AvApiConfiguration extends AvGenericPage implements DefaultComponent {
+class AvExample extends AvGenericPage implements Aventus.DefaultComponent {
     defineTitle(): string;
 }
 
-declare class AvNavigationFooter extends WebComponent implements DefaultComponent {
+class AvApiConfiguration extends AvGenericPage implements Aventus.DefaultComponent {
+    defineTitle(): string;
+}
+
+class AvNavigationFooter extends Aventus.WebComponent implements Aventus.DefaultComponent {
     no_previous: boolean;
     previous_state: string;
     previous_name: string;
@@ -50,20 +54,20 @@ declare class AvNavigationFooter extends WebComponent implements DefaultComponen
     next_name: string;
 }
 
-declare class AvNavbar extends WebComponent implements DefaultComponent {
+class AvNavbar extends Aventus.WebComponent implements Aventus.DefaultComponent {
 }
 
-declare class AvSeparation extends WebComponent implements DefaultComponent {
+class AvSeparation extends Aventus.WebComponent implements Aventus.DefaultComponent {
 }
 
-declare class AvRow extends WebComponent implements DefaultComponent {
+class AvRow extends Aventus.WebComponent implements Aventus.DefaultComponent {
     max_width: string;
     sizes: any;
     _calculateWidth(): void;
     protected postCreation(): void;
 }
 
-declare class AvCol extends WebComponent implements DefaultComponent {
+class AvCol extends Aventus.WebComponent implements Aventus.DefaultComponent {
     size: number;
     size_xs: number;
     size_sm: number;
@@ -87,7 +91,7 @@ declare class AvCol extends WebComponent implements DefaultComponent {
     protected postCreation(): void;
 }
 
-declare class AvCode extends WebComponent implements DefaultComponent {
+class AvCode extends Aventus.WebComponent implements Aventus.DefaultComponent {
     static primsCSS: string;
     private static isLoading;
     private static waitingLoad;
@@ -102,7 +106,7 @@ declare class AvCode extends WebComponent implements DefaultComponent {
     protected postCreation(): void;
 }
 
-declare class AvImg extends WebComponent implements DefaultComponent {
+class AvImg extends Aventus.WebComponent implements Aventus.DefaultComponent {
     /**
      * Define the source for your image
      */
@@ -124,17 +128,23 @@ declare class AvImg extends WebComponent implements DefaultComponent {
     protected postCreation(): void;
 }
 
-declare class AvButton extends WebComponent implements DefaultComponent {
+class AvButton extends Aventus.WebComponent implements Aventus.DefaultComponent {
 }
 
-declare class AvApi extends AvGenericPage implements DefaultComponent {
+class AvApi extends AvGenericPage implements Aventus.DefaultComponent {
     defineTitle(): string;
 }
 
+}
+
+
+
+
+
 // end region js //
 // region css //
-{"av-button":[],"av-img":[{"name":"--img-color"},{"name":"--img-stroke-color"},{"name":"--img-fill-color"},{"name":"--img-color-transition"},{"name":"--img-color"},{"name":"--img-stroke-color"},{"name":"--img-fill-color"},{"name":"--img-color-transition"}],"av-code":[],"av-col":[],"av-row":[],"av-separation":[],"av-navbar":[],"av-navigation-footer":[],"av-api":[],"av-api-configuration":[],"av-example":[],"av-generic-page":[],"av-getting-started-init-project":[],"av-getting-started-webcomponent":[],"av-getting-started-routing":[],"av-home":[],"av-installation":[]}
+{"av-button":[],"av-img":[{"name":"--img-color"},{"name":"--img-stroke-color"},{"name":"--img-fill-color"},{"name":"--img-color-transition"},{"name":"--img-color"},{"name":"--img-stroke-color"},{"name":"--img-fill-color"},{"name":"--img-color-transition"}],"av-code":[],"av-col":[],"av-row":[],"av-separation":[],"av-navbar":[],"av-navigation-footer":[],"av-api":[],"av-api-configuration":[],"av-example":[],"av-generic-page":[],"av-getting-started":[],"av-getting-started-init-project":[],"av-getting-started-webcomponent":[],"av-getting-started-routing":[],"av-home":[],"av-installation":[]}
 // end region css //
 // region html //
-{"av-button":{"name":"av-button","description":"","attributes":{}},"av-img":{"name":"av-img","description":"","attributes":{"src":{"name":"src","description":"Define the source for your image","type":"string","values":[]},"display_bigger":{"name":"display_bigger","description":"","type":"boolean","values":[]},"mode":{"name":"mode","description":"","type":"string","values":[]}}},"av-code":{"name":"av-code","description":"","attributes":{"language":{"name":"language","description":"","type":"string","values":[]}}},"av-col":{"name":"av-col","description":"","attributes":{"size":{"name":"size","description":"","type":"number","values":[]},"size_xs":{"name":"size_xs","description":"","type":"number","values":[]},"size_sm":{"name":"size_sm","description":"","type":"number","values":[]},"size_md":{"name":"size_md","description":"","type":"number","values":[]},"size_lg":{"name":"size_lg","description":"","type":"number","values":[]},"size_xl":{"name":"size_xl","description":"","type":"number","values":[]},"offset":{"name":"offset","description":"","type":"number","values":[]},"offset_xs":{"name":"offset_xs","description":"","type":"number","values":[]},"offset_sm":{"name":"offset_sm","description":"","type":"number","values":[]},"offset_md":{"name":"offset_md","description":"","type":"number","values":[]},"offset_lg":{"name":"offset_lg","description":"","type":"number","values":[]},"offset_xl":{"name":"offset_xl","description":"","type":"number","values":[]},"offset_right":{"name":"offset_right","description":"","type":"number","values":[]},"offset_right_xs":{"name":"offset_right_xs","description":"","type":"number","values":[]},"offset_right_sm":{"name":"offset_right_sm","description":"","type":"number","values":[]},"offset_right_md":{"name":"offset_right_md","description":"","type":"number","values":[]},"offset_right_lg":{"name":"offset_right_lg","description":"","type":"number","values":[]},"offset_right_xl":{"name":"offset_right_xl","description":"","type":"number","values":[]},"nobreak":{"name":"nobreak","description":"","type":"boolean","values":[]},"center":{"name":"center","description":"","type":"boolean","values":[]}}},"av-row":{"name":"av-row","description":"","attributes":{"max_width":{"name":"max_width","description":"","type":"string","values":[]}}},"av-separation":{"name":"av-separation","description":"","attributes":{}},"av-navbar":{"name":"av-navbar","description":"","attributes":{}},"av-navigation-footer":{"name":"av-navigation-footer","description":"","attributes":{"no_previous":{"name":"no_previous","description":"","type":"boolean","values":[]},"previous_state":{"name":"previous_state","description":"","type":"string","values":[]},"previous_name":{"name":"previous_name","description":"","type":"string","values":[]},"no_next":{"name":"no_next","description":"","type":"boolean","values":[]},"next_state":{"name":"next_state","description":"","type":"string","values":[]},"next_name":{"name":"next_name","description":"","type":"string","values":[]}}},"av-api":{"name":"av-api","description":"","attributes":{}},"av-api-configuration":{"name":"av-api-configuration","description":"","attributes":{}},"av-example":{"name":"av-example","description":"","attributes":{}},"av-generic-page":{"name":"av-generic-page","description":"","attributes":{}},"av-getting-started-init-project":{"name":"av-getting-started-init-project","description":"","attributes":{}},"av-getting-started-webcomponent":{"name":"av-getting-started-webcomponent","description":"","attributes":{}},"av-getting-started-routing":{"name":"av-getting-started-routing","description":"","attributes":{}},"av-home":{"name":"av-home","description":"","attributes":{}},"av-installation":{"name":"av-installation","description":"","attributes":{}}}
+{"av-button":{"name":"av-button","description":"","attributes":{}},"av-img":{"name":"av-img","description":"","attributes":{"src":{"name":"src","description":"Define the source for your image","type":"string","values":[]},"display_bigger":{"name":"display_bigger","description":"","type":"boolean","values":[]},"mode":{"name":"mode","description":"","type":"string","values":[]}}},"av-code":{"name":"av-code","description":"","attributes":{"language":{"name":"language","description":"","type":"string","values":[]}}},"av-col":{"name":"av-col","description":"","attributes":{"size":{"name":"size","description":"","type":"number","values":[]},"size_xs":{"name":"size_xs","description":"","type":"number","values":[]},"size_sm":{"name":"size_sm","description":"","type":"number","values":[]},"size_md":{"name":"size_md","description":"","type":"number","values":[]},"size_lg":{"name":"size_lg","description":"","type":"number","values":[]},"size_xl":{"name":"size_xl","description":"","type":"number","values":[]},"offset":{"name":"offset","description":"","type":"number","values":[]},"offset_xs":{"name":"offset_xs","description":"","type":"number","values":[]},"offset_sm":{"name":"offset_sm","description":"","type":"number","values":[]},"offset_md":{"name":"offset_md","description":"","type":"number","values":[]},"offset_lg":{"name":"offset_lg","description":"","type":"number","values":[]},"offset_xl":{"name":"offset_xl","description":"","type":"number","values":[]},"offset_right":{"name":"offset_right","description":"","type":"number","values":[]},"offset_right_xs":{"name":"offset_right_xs","description":"","type":"number","values":[]},"offset_right_sm":{"name":"offset_right_sm","description":"","type":"number","values":[]},"offset_right_md":{"name":"offset_right_md","description":"","type":"number","values":[]},"offset_right_lg":{"name":"offset_right_lg","description":"","type":"number","values":[]},"offset_right_xl":{"name":"offset_right_xl","description":"","type":"number","values":[]},"nobreak":{"name":"nobreak","description":"","type":"boolean","values":[]},"center":{"name":"center","description":"","type":"boolean","values":[]}}},"av-row":{"name":"av-row","description":"","attributes":{"max_width":{"name":"max_width","description":"","type":"string","values":[]}}},"av-separation":{"name":"av-separation","description":"","attributes":{}},"av-navbar":{"name":"av-navbar","description":"","attributes":{}},"av-navigation-footer":{"name":"av-navigation-footer","description":"","attributes":{"no_previous":{"name":"no_previous","description":"","type":"boolean","values":[]},"previous_state":{"name":"previous_state","description":"","type":"string","values":[]},"previous_name":{"name":"previous_name","description":"","type":"string","values":[]},"no_next":{"name":"no_next","description":"","type":"boolean","values":[]},"next_state":{"name":"next_state","description":"","type":"string","values":[]},"next_name":{"name":"next_name","description":"","type":"string","values":[]}}},"av-api":{"name":"av-api","description":"","attributes":{}},"av-api-configuration":{"name":"av-api-configuration","description":"","attributes":{}},"av-example":{"name":"av-example","description":"","attributes":{}},"av-generic-page":{"name":"av-generic-page","description":"","attributes":{}},"av-getting-started":{"name":"av-getting-started","description":"","attributes":{}},"av-getting-started-init-project":{"name":"av-getting-started-init-project","description":"","attributes":{}},"av-getting-started-webcomponent":{"name":"av-getting-started-webcomponent","description":"","attributes":{}},"av-getting-started-routing":{"name":"av-getting-started-routing","description":"","attributes":{}},"av-home":{"name":"av-home","description":"","attributes":{}},"av-installation":{"name":"av-installation","description":"","attributes":{}}}
 // end region html //

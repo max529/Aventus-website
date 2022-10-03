@@ -1,7 +1,9 @@
 import { AvRessourceManager } from "../../../libs/ressourceManager.lib.avt";
 
-
-export class AvImg extends WebComponent implements DefaultComponent {
+@Debugger({
+    writeCompiled: true
+})
+export class AvImg extends Aventus.WebComponent implements Aventus.DefaultComponent {
 
     //#region static
 
@@ -12,7 +14,7 @@ export class AvImg extends WebComponent implements DefaultComponent {
     /**
      * Define the source for your image
      */
-    @property((target: AvImg) => {
+    @Property((target: AvImg) => {
         if(target.src.endsWith(".svg")) {
             AvRessourceManager.get(target.src).then((svgContent) => {
                 target.svgEl.innerHTML = svgContent;
@@ -28,10 +30,10 @@ export class AvImg extends WebComponent implements DefaultComponent {
     })
     src: string;
 
-    @attribute()
+    @Attribute()
     display_bigger: boolean;
 
-    @property((target: AvImg) => {
+    @Property((target: AvImg) => {
         if(target.src != "") {
             target.calculateSize();
         }
@@ -47,7 +49,9 @@ export class AvImg extends WebComponent implements DefaultComponent {
     _maxCalculateSize: number = 10;
     _isCalculing: boolean = false;
 
+    @ViewElement()
     imgEl: HTMLImageElement = undefined;
+    @ViewElement()
     svgEl: HTMLElement = undefined;
 
     //#endregion

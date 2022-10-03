@@ -14,9 +14,9 @@
     </p>
     <av-code language="html">
 &lt;script&gt;
-export class AvApp extends WebComponent implements DefaultComponent {
+    export class AvApp extends WebComponent implements DefaultComponent {
 
-}
+    }
 &lt;/script&gt;
 &lt;template&gt;
     &lt;slot&gt;&lt;/slot&gt;
@@ -35,9 +35,9 @@ export class AvApp extends WebComponent implements DefaultComponent {
 
         <av-code language="html">
 &lt;script&gt;
-export class AvApp extends WebComponent implements DefaultComponent {
+    export class AvApp extends WebComponent implements DefaultComponent {
 
-}
+    }
 &lt;/script&gt;
 &lt;template&gt;
     &lt;h1&gt;Hello World&lt;/h1&gt;
@@ -156,8 +156,8 @@ export class AvApp extends WebComponent implements DefaultComponent {
     </av-code>
     <p>A web component can also be created inside your Javascript by calling</p>
     <av-code language="typescript">
-        let app = new AvApp();
-        document.body.appendChild(app);
+let app = new AvApp();
+document.body.appendChild(app);
     </av-code>
     <p>
         In our example, we must trigger a function only when the component is rendered inside the DOM. There is a function called <b>postCreation</b> that would be triggerd only 
@@ -226,7 +226,7 @@ export class AvApp extends WebComponent implements DefaultComponent {
         Now your element is available directly inside your component scope.
     </p>
     <av-code language="html">
-        <h1 @element="titleEl">Hello world</h1>
+&lt;h1 @element="titleEl"&gt;Hello world&lt;/h1&gt;
     </av-code>
     <av-code language="typescript">
 export class AvApp extends WebComponent implements DefaultComponent {
@@ -266,7 +266,7 @@ export class AvApp extends WebComponent implements DefaultComponent {
         }
     }
 
-    private sleep(x): Promise<void> {
+    private sleep(x): Promise&lt;void&gt; {
         return new Promise((resolve) => setTimeout(() => resolve(), x));
     }
 
@@ -283,9 +283,9 @@ export class AvApp extends WebComponent implements DefaultComponent {
         For the example, the result will be an av-app tag with an attribute changing each second 
     </p>
     <av-code language="html">
-        <av-app content="Hello ">Hello </av-app>
-        <av-app content="Hello w">Hello w</av-app>
-        <av-app content="Hello wo">Hello wo</av-app>
+<av-app content="Hello ">Hello </av-app>
+<av-app content="Hello w">Hello w</av-app>
+<av-app content="Hello wo">Hello wo</av-app>
     </av-code>
     <p>
         In the script part, we can specify that we want an attribute on the generated tag by adding a property to the class 
@@ -317,7 +317,7 @@ export class AvApp extends WebComponent implements DefaultComponent {
 
     public titleEl: HTMLElement;
 
-    public async renderWorld(): Promise<void> {
+    public async renderWorld(): Promise&lt;void&gt; {
         while(true) {
             // update the content attribute instead of the HTML
             this.content = "Hello ";
@@ -330,7 +330,7 @@ export class AvApp extends WebComponent implements DefaultComponent {
             await this.sleep(1000);
         }
     }
-    private sleep(x): Promise<void> {
+    private sleep(x): Promise&lt;void&gt; {
         return new Promise((resolve) => setTimeout(() => resolve(), x));
     }
 
@@ -339,13 +339,13 @@ export class AvApp extends WebComponent implements DefaultComponent {
     }
 }
     </av-code>
-    <p>To improve readability again, you can remove the callback function inside @property and using injection inside view with {{propertyName}}</p>
+    <p>To improve readability again, you can remove the callback function inside @property and using injection inside view with \{{propertyName}}</p>
     <av-code language="typescript">
 @property()
 public content: string = "Hello ";
     </av-code>
     <av-code language="html">
-        <h1 @element="titleEl">{{content}}</h1>
+&lt;h1 @element="titleEl"&gt;\{{content}}&lt;/h1&gt;
     </av-code>
     <p>
         We can add some style to make the text green when Hello world is written
@@ -372,7 +372,7 @@ export class AvApp extends WebComponent implements DefaultComponent {
 
     public titleEl: HTMLElement;
 
-    public async renderWorld(): Promise<void> {
+    public async renderWorld(): Promise&lt;void&gt; {
         while(true) {
             // update the content attribute instead of the HTML
             this.content = "Hello ";
@@ -385,7 +385,7 @@ export class AvApp extends WebComponent implements DefaultComponent {
             await this.sleep(1000);
         }
     }
-    private sleep(x): Promise<void> {
+    private sleep(x): Promise&lt;void&gt; {
         return new Promise((resolve) => setTimeout(() => resolve(), x));
     }
 
@@ -397,6 +397,65 @@ export class AvApp extends WebComponent implements DefaultComponent {
     <p>If you look your browser, you can see that when it's written "Hello world" the color isn't green anymore</p>
     <p>We will just add a new property inside the class to try more watchable property</p>
     <av-code language="typescript">
-        
+@watch((target: AvApp, action: WatchAction, path: string, value: any) => {
+    // this log will be shown when something inside status is updated
+    console.log(WatchAction[action] + " on path " + path + " with value ", value);
+})
+public status = {
+    name: "",
+    value: 0
+};
+...
+public async renderWorld(): Promise&lt;void&gt; {
+    while(true) {
+        this.content = "Hello ";
+        this.status.name = "Progress";
+        let letters = "world";
+        for(let letter of letters) {
+            await this.sleep(1000);
+            this.content += letter;
+        }
+        this.status = {
+            name: "Done",
+            value: this.status.value + 1
+        };
+        await this.sleep(1000);
+    }
+}
     </av-code>
+    <p>Open the dev console in your browser and look what's happening.</p>
+    <p>
+        It can be tricky to know who is editing a watchable property. Aventus provides a tools to store each change. Before your class
+        you can add a decorator @Debugger
+    </p>
+    <av-code language="typescript">
+@Debugger({
+    enableWatchHistory: true,
+})
+export class AvApp extends WebComponent implements DefaultComponent {}
+    </av-code>
+    <p>
+        Now open your dev console, store the av-app as a variable. You can call the function <b>.getWatchHistory()</b> to obtain all changes 
+        triggered on this component. If you want to reset history use the function <b>.clearWatchHistory()</b>.
+    </p>
+    <av-row>
+        <av-col size="12">
+            <av-img src="/img/gettingStarted/init_webcomponent_debugger_watch.png"></av-img>
+        </av-col>
+    </av-row>
+    <p>
+        You saw the main concept on Aventus webcomponent. For the example, we worked on a single file component but you can split logical, 
+        style and view on 3 different files. Now you can clear the file App.wc.avt to keep only the script with the class definition for the next section.
+    </p>
+    <av-code language="html">
+&lt;script&gt;
+    export class AvApp extends WebComponent implements DefaultComponent {
+
+    }
+&lt;/script&gt;
+    </av-code>
+</section>
+<p></p>
+<section>
+    <av-navigation-footer previous_state="/introduction/init" previous_name="Init" next_state="/introduction/routing" next_name="Routing"></av-navigation-footer>
 </section>

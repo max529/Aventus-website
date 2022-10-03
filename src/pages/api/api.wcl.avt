@@ -1,6 +1,6 @@
 import { AvGenericPage } from "../genericPage/genericPage.wcl.avt";
 
-export class AvApi extends AvGenericPage implements DefaultComponent {
+export class AvApi extends AvGenericPage implements Aventus.DefaultComponent {
 
     //#region static
 

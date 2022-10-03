@@ -1,4 +1,4 @@
-export class AvNavbar extends WebComponent implements DefaultComponent {
+export class AvNavbar extends Aventus.WebComponent implements Aventus.DefaultComponent {
 
     //#region static
 

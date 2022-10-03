@@ -1,5 +1,5 @@
 
-export class AvHome extends AvPage implements DefaultComponent {
+export class AvHome extends Aventus.AvPage implements Aventus.DefaultComponent {
 
 	//#region static
 

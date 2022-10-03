@@ -1,9 +1,10 @@
 {
-	"identifier": "Av",
 	"build": [
         {
             "name": "main",
             "version": "0.0.1",
+            "namespace": "TodoList",
+            "componentPrefix": "av",
             "inputPath": [
                 "./src/*"
             ],

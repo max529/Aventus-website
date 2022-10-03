@@ -1,4 +1,4 @@
-export class AvCol extends WebComponent implements DefaultComponent {
+export class AvCol extends Aventus.WebComponent implements Aventus.DefaultComponent {
 
     //#region static
 
@@ -8,55 +8,55 @@ export class AvCol extends WebComponent implements DefaultComponent {
     //#region props
 
     //#region size
-    @attribute()
+    @Attribute()
     size: number;
-    @attribute()
+    @Attribute()
     size_xs: number;
-    @attribute()
+    @Attribute()
     size_sm: number;
-    @attribute()
+    @Attribute()
     size_md: number;
-    @attribute()
+    @Attribute()
     size_lg: number;
-    @attribute()
+    @Attribute()
     size_xl: number;
     //#endregion
 
     //#region offset
-    @attribute()
+    @Attribute()
     offset: number;
-    @attribute()
+    @Attribute()
     offset_xs: number;
-    @attribute()
+    @Attribute()
     offset_sm: number;
-    @attribute()
+    @Attribute()
     offset_md: number;
-    @attribute()
+    @Attribute()
     offset_lg: number;
-    @attribute()
+    @Attribute()
     offset_xl: number;
     //#endregion
 
     //#region offset-right
-    @attribute()
+    @Attribute()
     offset_right: number;
-    @attribute()
+    @Attribute()
     offset_right_xs: number;
-    @attribute()
+    @Attribute()
     offset_right_sm: number;
-    @attribute()
+    @Attribute()
     offset_right_md: number;
-    @attribute()
+    @Attribute()
     offset_right_lg: number;
-    @attribute()
+    @Attribute()
     offset_right_xl: number;
     //#endregion
 
 
-    @attribute()
+    @Attribute()
     nobreak: boolean;
 
-    @attribute()
+    @Attribute()
     center: boolean;
 
     //#endregion

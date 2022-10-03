@@ -1,4 +1,4 @@
-export class AvSeparation extends WebComponent implements DefaultComponent {
+export class AvSeparation extends Aventus.WebComponent implements Aventus.DefaultComponent {
 
 	//#region static
 

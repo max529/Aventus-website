@@ -1,4 +1,4 @@
-export class AvRow extends WebComponent implements DefaultComponent {
+export class AvRow extends Aventus.WebComponent implements Aventus.DefaultComponent {
 
     //#region static
 
@@ -7,7 +7,7 @@ export class AvRow extends WebComponent implements DefaultComponent {
 
     //#region props
 
-    @attribute()
+    @Attribute()
     max_width: string;
 
     //#endregion

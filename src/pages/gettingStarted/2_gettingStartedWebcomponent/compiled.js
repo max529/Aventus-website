@@ -1,0 +1,888 @@
+class AvGettingStartedWebcomponent extends AvGenericPage {
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(``);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<section>
+    <h1>Web Component</h1>
+    <p>A web component is a javascript class that allow to create some html tags with embedded logic and style. If you
+        need more information about web component you can read this explanation : <a href="https://css-tricks.com/an-introduction-to-web-components/" target="_blank">css-trick.com</a>
+    </p>
+    <p>Inside Aventus there are two kind of components:</p>
+    <ul>
+        <li><b>Single File Component</b> : Style - JS - HTML are wrapped inside the same file<br>Use it for small component</li>
+        <li><b>Multiple Files Component</b> : Style - JS - HTML are wrapped inside the same file<br>Use it for complex component</li>
+    </ul>
+    <p>
+      During the previous section, you created a new component called : <b>app.wc.avt</b>. It's a single file component.
+    </p>
+    <av-code language="html">
+&lt;script&gt;
+    export class AvApp extends WebComponent implements DefaultComponent {
+    }
+&lt;/script&gt;
+&lt;template&gt;
+    &lt;slot&gt;&lt;/slot&gt;
+&lt;/template&gt;
+&lt;style&gt;
+    :host {
+    }
+&lt;/style&gt;
+    </av-code>
+</section>
+<section>
+    <h2>Edit the view</h2>
+    <p>You can try to replace the <b>&lt;slot&gt;&lt;/slot&gt;</b> by <b>&lt;h1&gt;Hello World&lt;/h1&gt;</b>. Inside the tag <b>template</b> you can write <b>HTML</b></p>
+        <av-code language="html">
+&lt;script&gt;
+    export class AvApp extends WebComponent implements DefaultComponent {
+    }
+&lt;/script&gt;
+&lt;template&gt;
+    &lt;h1&gt;Hello World&lt;/h1&gt;
+&lt;/template&gt;
+&lt;style&gt;
+    :host {
+    }
+&lt;/style&gt;
+    </av-code>
+    <p>
+        You can render the website and show your first Hello world with Aventus
+    </p>
+    <av-row>
+        <av-col size="12" center="">
+            <av-img src="/img/gettingStarted/first_hello_world.png"></av-img>
+        </av-col>
+    </av-row>
+    <p></p>
+</section>
+<section>
+    <h2>Edit the style</h2>
+    <p>
+        Now you can add color to this Hello world. Inside the tag <b>style</b> you can write <b>SCSS</b>. 
+        When you targetting :host, it means you targeting the component itself.
+        By default Aventus WebComponent has display: inline-block; and box-sizing: border-box; set.
+    </p>
+    <p>
+        Try to add a background and a font color to the host and specify a new different color for your h1
+    </p>
+    <av-code language="scss">
+:host {
+    color: red;
+    background-color: rgb(200, 200, 200);
+    h1 {
+        color: blue;
+    }
+}
+    </av-code>
+    <av-row>
+        <av-col size="12" center="">
+            <av-img src="/img/gettingStarted/color_hello_world.png" style="height:100px"></av-img>
+        </av-col>
+    </av-row>
+    <p>As you can see, the title color is blue.</p>
+    <p>Style inside webcomponent can't be modified by the outside. To understand it, you can create a new file <i>static/default.scss</i> with the content below and link it to your index.html file</p>
+    <av-code language="scss">
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+av-app {
+    text-decoration: underline;
+}  
+    </av-code>
+    <p>This code will correctly underline (in red) your component. Now if you try to target h1 inside av-app it won't work. Because we can't change style from outside a component.</p>
+    <av-code language="scss">
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+av-app h1 {
+    text-decoration: underline;
+}  
+    </av-code>
+    <p>It's still possible to change h1 style with css variables</p>
+    <av-row>
+        <av-col size_xs="12" size_md="6">
+            <div>Style - App.wc.avt</div>
+            <av-code language="scss">
+:host {
+    color: red;
+    background-color: rgb(200, 200, 200);
+    h1 {
+        color: blue;
+        text-decoration: var(--app-title-text-decoration);
+    }
+}
+            </av-code>
+        </av-col>
+        <av-col size_xs="12" size_md="6">
+            <div>Style - default.scss</div>
+            <av-code language="scss">
+av-app {
+    --app-title-text-decoration: underline;
+}
+            </av-code>
+        </av-col>
+    </av-row>
+    <p>
+        For more informations about css variables, you can read <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Using_CSS_custom_properties" target="_blank">this</a><br>
+        To have a deeper explanation and good pratices for css variables inside Aventus you can read <av-router-link state="/">this</av-router-link>
+    </p>
+</section>
+<section>
+    <h2>Edit the script</h2>
+    <p>
+        Finally, you can bring some logical part to your component. We will write each letter of <i>world</i> after 1 second. When a custom element tag is written to the dom
+        the custom element class <b>constructor</b> is called. You can extend the constructor like below :
+    </p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    constructor() {
+        // mandatory
+        super();
+        alert("hello world constructor")
+    }
+}
+    </av-code>
+    <p>A web component can also be created inside your Javascript by calling</p>
+    <av-code language="typescript">
+let app = new AvApp();
+document.body.appendChild(app);
+    </av-code>
+    <p>
+        In our example, we must trigger a function only when the component is rendered inside the DOM. There is a function called <b>postCreation</b> that would be triggerd only 
+        the first time the component is added to the DOM. The lifecylce is the following : constructor =&gt; postCreation (when rendering)
+    </p>
+    <av-code language="typescript">
+protected override postCreation(): void {
+    alert("rendering hello world")
+}
+    </av-code>
+    <p>
+        When the first alert is displayed, you can't see your component on your browser, but when the second is displayed, your component is rendered. Now we can delete the 
+        constructor and remove the alert inside the postCreation. The base script is the following :
+    </p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    protected override postCreation(): void {
+    }
+}
+    </av-code>
+    <p>We will see 3 different way to write each letter :</p>
+    <ul>
+        <li>Using function</li>
+        <li>Using attribute / property</li>
+        <li>Using watch</li>
+    </ul>
+</section>
+<section>
+    <h3>Writting <i>world</i> - Using function</h3>
+    <p>
+        When rendering av-app component, we will call a function <i>writeWorld</i>
+    </p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    public writeWorld() {
+    }
+    protected override postCreation(): void {
+        this.writeWorld();
+    }
+}
+    </av-code>
+    <p>
+        First, we must select the title to edit the innerHTML property. The method <i>querySelector</i> can be use here to select a element like in normal javascript.
+        However you can't use document.querySelector or this.querySelector because the HTML code is encapsulated inside the shadowRoot. For more information about shadowRoot you can 
+        read <a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_shadow_DOM" target="_blank">this article</a>. 
+    </p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    public writeWorld() {
+        let titleEl: HTMLElement = this.shadowRoot.querySelector("h1");
+    }
+    protected override postCreation(): void {
+        this.writeWorld();
+    }
+}
+    </av-code>
+    <p>
+        To improve readability you can target an element in your view by adding a attribute called <b>@element</b> or <b>av-element</b> (where av is your identifier) with the name of the variable to store. 
+        Now your element is available directly inside your component scope.
+    </p>
+    <av-code language="html">
+&lt;h1 @element="titleEl"&gt;Hello world&lt;/h1&gt;
+    </av-code>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    public titleEl: HTMLElement;
+    public writeWorld() {
+    }
+    protected override postCreation(): void {
+        this.writeWorld();
+    }
+}
+    </av-code>
+    <p>
+        Now we can write the code for the function <i>writeWorld</i>.
+    </p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    public titleEl: HTMLElement;
+    public writeWorld() {
+        while(true) {
+            // clear the word "world"
+            this.titleEl.innerHTML = "Hello ";
+            let letters = "world";
+            // for each letter of "world";
+            for(let letter of letters) {
+                // wait 1 second
+                await this.sleep(1000);
+                // add letter to the current text
+                this.titleEl.innerHTML += letter;
+            }
+            await this.sleep(1000);
+        }
+    }
+    private sleep(x): Promise&lt;void&gt; {
+        return new Promise((resolve) =&gt; setTimeout(() =&gt; resolve(), x));
+    }
+    protected override postCreation(): void {
+        this.writeWorld();
+    }
+}
+    </av-code>
+    <p>Well done! You created a component with his embedded logic. Now we can look at other methods</p>
+</section>
+<section>
+    <h3>Writting <i>world</i> - Using attribute / property</h3>
+    <p>
+        For the example, the result will be an av-app tag with an attribute changing each second 
+    </p>
+    <av-code language="html">
+<av-app content="Hello ">Hello </av-app>
+<av-app content="Hello w">Hello w</av-app>
+<av-app content="Hello wo">Hello wo</av-app>
+    </av-code>
+    <p>
+        In the script part, we can specify that we want an attribute on the generated tag by adding a property to the class 
+        and a decorator (<b>@attribute</b> or <b>@property</b>) over the property. The @property decorator will look at changes.<br>
+        You can only use <i>string, number, boolean, luxon.Date and luxon.DateTime</i> as type for your property. This can be used to 
+        add a specify style for a component
+    </p>
+    <av-code language="typescript">
+@property()
+public property: string = "";
+@property((target: AvApp) =&gt; {
+    console.log("change");
+})
+public propertyWithChange: string = "";
+@attribute()
+public attribute: string = "";
+    </av-code>
+    <p>For this part, we need a attribute that will trigger change event. We can transform the code like below:</p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    @property((target: AvApp) =&gt; {
+        // update the view content with the new attribute value
+        target.titleEl.innerHTML = target.content;
+    })
+    public content: string = "Hello ";
+    public titleEl: HTMLElement;
+    public async renderWorld(): Promise&lt;void&gt; {
+        while(true) {
+            // update the content attribute instead of the HTML
+            this.content = "Hello ";
+            let letters = "world";
+            for(let letter of letters) {
+                await this.sleep(1000);
+                // update the content attribute instead of the HTML
+                this.content += letter;
+            }
+            await this.sleep(1000);
+        }
+    }
+    private sleep(x): Promise&lt;void&gt; {
+        return new Promise((resolve) =&gt; setTimeout(() =&gt; resolve(), x));
+    }
+    protected override postCreation(): void {
+        this.renderWorld();
+    }
+}
+    </av-code>
+    <p>To improve readability again, you can remove the callback function inside @property and using injection inside view with {{propertyName}}</p>
+    <av-code language="typescript">
+@property()
+public content: string = "Hello ";
+    </av-code>
+    <av-code language="html">
+&lt;h1 @element="titleEl"&gt;{{content}}&lt;/h1&gt;
+    </av-code>
+    <p>
+        We can add some style to make the text green when Hello world is written
+    </p>
+    <av-code language="scss">
+// specific style when attribute content = "Hello world"
+:host([content="Hello world"]) {
+    h1 {
+        color: green;
+    }
+}
+    </av-code>
+    <p>Here we go! You can now update a view based on the component attribute and define custom style</p>
+</section>
+<section>
+    <h3>Writting <i>world</i> - Using watch</h3>
+    <p>Now we want to get rid of the attribute but still having view change. We just have to replace @property by a new decorator <b>@watch</b></p>
+    <p>The watch decorator use a proxy to store any kind of data inside your component and notify changes.</p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    @watch()
+    public content: string = "Hello ";
+    public titleEl: HTMLElement;
+    public async renderWorld(): Promise&lt;void&gt; {
+        while(true) {
+            // update the content attribute instead of the HTML
+            this.content = "Hello ";
+            let letters = "world";
+            for(let letter of letters) {
+                await this.sleep(1000);
+                // update the content attribute instead of the HTML
+                this.content += letter;
+            }
+            await this.sleep(1000);
+        }
+    }
+    private sleep(x): Promise&lt;void&gt; {
+        return new Promise((resolve) =&gt; setTimeout(() =&gt; resolve(), x));
+    }
+    protected override postCreation(): void {
+        this.renderWorld();
+    }
+}
+    </av-code>
+    <p>If you look your browser, you can see that when it's written "Hello world" the color isn't green anymore</p>
+    <p>We will just add a new property inside the class to try more watchable property</p>
+    <av-code language="typescript">
+@watch((target: AvApp, action: WatchAction, path: string, value: any) =&gt; {
+    // this log will be shown when something inside status is updated
+    console.log(WatchAction[action] + " on path " + path + " with value ", value);
+})
+public status = {
+    name: "",
+    value: 0
+};
+...
+public async renderWorld(): Promise&lt;void&gt; {
+    while(true) {
+        this.content = "Hello ";
+        this.status.name = "Progress";
+        let letters = "world";
+        for(let letter of letters) {
+            await this.sleep(1000);
+            this.content += letter;
+        }
+        this.status = {
+            name: "Done",
+            value: this.status.value + 1
+        };
+        await this.sleep(1000);
+    }
+}
+    </av-code>
+    <p>Open the dev console in your browser and look what's happening.</p>
+    <p>
+        It can be tricky to know who is editing a watchable property. Aventus provides a tools to store each change. Before your class
+        you can add a decorator @Debugger
+    </p>
+    <av-code language="typescript">
+@Debugger({
+    enableWatchHistory: true,
+})
+export class AvApp extends WebComponent implements DefaultComponent {}
+    </av-code>
+    <p>
+        Now open your dev console, store the av-app as a variable. You can call the function <b>.getWatchHistory()</b> to obtain all changes 
+        triggered on this component. If you want to reset history use the function <b>.clearWatchHistory()</b>.
+    </p>
+    <av-row>
+        <av-col size="12">
+            <av-img src="/img/gettingStarted/init_webcomponent_debugger_watch.png"></av-img>
+        </av-col>
+    </av-row>
+    <p>
+        You saw the main concept on Aventus webcomponent. For the example, we worked on a single file component but you can split logical, 
+        style and view on 3 different files. Now you can clear the file App.wc.avt to keep only the script with the class definition for the next section.
+    </p>
+    <av-code language="html">
+&lt;script&gt;
+    export class AvApp extends WebComponent implements DefaultComponent {
+    }
+&lt;/script&gt;
+    </av-code>
+</section>
+<p></p>
+<section>
+    <av-navigation-footer previous_state="/introduction/init" previous_name="Init" next_state="/introduction/routing" next_name="Routing"></av-navigation-footer>
+</section>`,
+            slots: {
+            },
+            blocks: {
+                'default':`<section>
+    <h1>Web Component</h1>
+    <p>A web component is a javascript class that allow to create some html tags with embedded logic and style. If you
+        need more information about web component you can read this explanation : <a href="https://css-tricks.com/an-introduction-to-web-components/" target="_blank">css-trick.com</a>
+    </p>
+    <p>Inside Aventus there are two kind of components:</p>
+    <ul>
+        <li><b>Single File Component</b> : Style - JS - HTML are wrapped inside the same file<br>Use it for small component</li>
+        <li><b>Multiple Files Component</b> : Style - JS - HTML are wrapped inside the same file<br>Use it for complex component</li>
+    </ul>
+    <p>
+      During the previous section, you created a new component called : <b>app.wc.avt</b>. It's a single file component.
+    </p>
+    <av-code language="html">
+&lt;script&gt;
+    export class AvApp extends WebComponent implements DefaultComponent {
+    }
+&lt;/script&gt;
+&lt;template&gt;
+    &lt;slot&gt;&lt;/slot&gt;
+&lt;/template&gt;
+&lt;style&gt;
+    :host {
+    }
+&lt;/style&gt;
+    </av-code>
+</section>
+<section>
+    <h2>Edit the view</h2>
+    <p>You can try to replace the <b>&lt;slot&gt;&lt;/slot&gt;</b> by <b>&lt;h1&gt;Hello World&lt;/h1&gt;</b>. Inside the tag <b>template</b> you can write <b>HTML</b></p>
+        <av-code language="html">
+&lt;script&gt;
+    export class AvApp extends WebComponent implements DefaultComponent {
+    }
+&lt;/script&gt;
+&lt;template&gt;
+    &lt;h1&gt;Hello World&lt;/h1&gt;
+&lt;/template&gt;
+&lt;style&gt;
+    :host {
+    }
+&lt;/style&gt;
+    </av-code>
+    <p>
+        You can render the website and show your first Hello world with Aventus
+    </p>
+    <av-row>
+        <av-col size="12" center="">
+            <av-img src="/img/gettingStarted/first_hello_world.png"></av-img>
+        </av-col>
+    </av-row>
+    <p></p>
+</section>
+<section>
+    <h2>Edit the style</h2>
+    <p>
+        Now you can add color to this Hello world. Inside the tag <b>style</b> you can write <b>SCSS</b>. 
+        When you targetting :host, it means you targeting the component itself.
+        By default Aventus WebComponent has display: inline-block; and box-sizing: border-box; set.
+    </p>
+    <p>
+        Try to add a background and a font color to the host and specify a new different color for your h1
+    </p>
+    <av-code language="scss">
+:host {
+    color: red;
+    background-color: rgb(200, 200, 200);
+    h1 {
+        color: blue;
+    }
+}
+    </av-code>
+    <av-row>
+        <av-col size="12" center="">
+            <av-img src="/img/gettingStarted/color_hello_world.png" style="height:100px"></av-img>
+        </av-col>
+    </av-row>
+    <p>As you can see, the title color is blue.</p>
+    <p>Style inside webcomponent can't be modified by the outside. To understand it, you can create a new file <i>static/default.scss</i> with the content below and link it to your index.html file</p>
+    <av-code language="scss">
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+av-app {
+    text-decoration: underline;
+}  
+    </av-code>
+    <p>This code will correctly underline (in red) your component. Now if you try to target h1 inside av-app it won't work. Because we can't change style from outside a component.</p>
+    <av-code language="scss">
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+av-app h1 {
+    text-decoration: underline;
+}  
+    </av-code>
+    <p>It's still possible to change h1 style with css variables</p>
+    <av-row>
+        <av-col size_xs="12" size_md="6">
+            <div>Style - App.wc.avt</div>
+            <av-code language="scss">
+:host {
+    color: red;
+    background-color: rgb(200, 200, 200);
+    h1 {
+        color: blue;
+        text-decoration: var(--app-title-text-decoration);
+    }
+}
+            </av-code>
+        </av-col>
+        <av-col size_xs="12" size_md="6">
+            <div>Style - default.scss</div>
+            <av-code language="scss">
+av-app {
+    --app-title-text-decoration: underline;
+}
+            </av-code>
+        </av-col>
+    </av-row>
+    <p>
+        For more informations about css variables, you can read <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Using_CSS_custom_properties" target="_blank">this</a><br>
+        To have a deeper explanation and good pratices for css variables inside Aventus you can read <av-router-link state="/">this</av-router-link>
+    </p>
+</section>
+<section>
+    <h2>Edit the script</h2>
+    <p>
+        Finally, you can bring some logical part to your component. We will write each letter of <i>world</i> after 1 second. When a custom element tag is written to the dom
+        the custom element class <b>constructor</b> is called. You can extend the constructor like below :
+    </p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    constructor() {
+        // mandatory
+        super();
+        alert("hello world constructor")
+    }
+}
+    </av-code>
+    <p>A web component can also be created inside your Javascript by calling</p>
+    <av-code language="typescript">
+let app = new AvApp();
+document.body.appendChild(app);
+    </av-code>
+    <p>
+        In our example, we must trigger a function only when the component is rendered inside the DOM. There is a function called <b>postCreation</b> that would be triggerd only 
+        the first time the component is added to the DOM. The lifecylce is the following : constructor =&gt; postCreation (when rendering)
+    </p>
+    <av-code language="typescript">
+protected override postCreation(): void {
+    alert("rendering hello world")
+}
+    </av-code>
+    <p>
+        When the first alert is displayed, you can't see your component on your browser, but when the second is displayed, your component is rendered. Now we can delete the 
+        constructor and remove the alert inside the postCreation. The base script is the following :
+    </p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    protected override postCreation(): void {
+    }
+}
+    </av-code>
+    <p>We will see 3 different way to write each letter :</p>
+    <ul>
+        <li>Using function</li>
+        <li>Using attribute / property</li>
+        <li>Using watch</li>
+    </ul>
+</section>
+<section>
+    <h3>Writting <i>world</i> - Using function</h3>
+    <p>
+        When rendering av-app component, we will call a function <i>writeWorld</i>
+    </p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    public writeWorld() {
+    }
+    protected override postCreation(): void {
+        this.writeWorld();
+    }
+}
+    </av-code>
+    <p>
+        First, we must select the title to edit the innerHTML property. The method <i>querySelector</i> can be use here to select a element like in normal javascript.
+        However you can't use document.querySelector or this.querySelector because the HTML code is encapsulated inside the shadowRoot. For more information about shadowRoot you can 
+        read <a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_shadow_DOM" target="_blank">this article</a>. 
+    </p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    public writeWorld() {
+        let titleEl: HTMLElement = this.shadowRoot.querySelector("h1");
+    }
+    protected override postCreation(): void {
+        this.writeWorld();
+    }
+}
+    </av-code>
+    <p>
+        To improve readability you can target an element in your view by adding a attribute called <b>@element</b> or <b>av-element</b> (where av is your identifier) with the name of the variable to store. 
+        Now your element is available directly inside your component scope.
+    </p>
+    <av-code language="html">
+&lt;h1 @element="titleEl"&gt;Hello world&lt;/h1&gt;
+    </av-code>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    public titleEl: HTMLElement;
+    public writeWorld() {
+    }
+    protected override postCreation(): void {
+        this.writeWorld();
+    }
+}
+    </av-code>
+    <p>
+        Now we can write the code for the function <i>writeWorld</i>.
+    </p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    public titleEl: HTMLElement;
+    public writeWorld() {
+        while(true) {
+            // clear the word "world"
+            this.titleEl.innerHTML = "Hello ";
+            let letters = "world";
+            // for each letter of "world";
+            for(let letter of letters) {
+                // wait 1 second
+                await this.sleep(1000);
+                // add letter to the current text
+                this.titleEl.innerHTML += letter;
+            }
+            await this.sleep(1000);
+        }
+    }
+    private sleep(x): Promise&lt;void&gt; {
+        return new Promise((resolve) =&gt; setTimeout(() =&gt; resolve(), x));
+    }
+    protected override postCreation(): void {
+        this.writeWorld();
+    }
+}
+    </av-code>
+    <p>Well done! You created a component with his embedded logic. Now we can look at other methods</p>
+</section>
+<section>
+    <h3>Writting <i>world</i> - Using attribute / property</h3>
+    <p>
+        For the example, the result will be an av-app tag with an attribute changing each second 
+    </p>
+    <av-code language="html">
+<av-app content="Hello ">Hello </av-app>
+<av-app content="Hello w">Hello w</av-app>
+<av-app content="Hello wo">Hello wo</av-app>
+    </av-code>
+    <p>
+        In the script part, we can specify that we want an attribute on the generated tag by adding a property to the class 
+        and a decorator (<b>@attribute</b> or <b>@property</b>) over the property. The @property decorator will look at changes.<br>
+        You can only use <i>string, number, boolean, luxon.Date and luxon.DateTime</i> as type for your property. This can be used to 
+        add a specify style for a component
+    </p>
+    <av-code language="typescript">
+@property()
+public property: string = "";
+@property((target: AvApp) =&gt; {
+    console.log("change");
+})
+public propertyWithChange: string = "";
+@attribute()
+public attribute: string = "";
+    </av-code>
+    <p>For this part, we need a attribute that will trigger change event. We can transform the code like below:</p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    @property((target: AvApp) =&gt; {
+        // update the view content with the new attribute value
+        target.titleEl.innerHTML = target.content;
+    })
+    public content: string = "Hello ";
+    public titleEl: HTMLElement;
+    public async renderWorld(): Promise&lt;void&gt; {
+        while(true) {
+            // update the content attribute instead of the HTML
+            this.content = "Hello ";
+            let letters = "world";
+            for(let letter of letters) {
+                await this.sleep(1000);
+                // update the content attribute instead of the HTML
+                this.content += letter;
+            }
+            await this.sleep(1000);
+        }
+    }
+    private sleep(x): Promise&lt;void&gt; {
+        return new Promise((resolve) =&gt; setTimeout(() =&gt; resolve(), x));
+    }
+    protected override postCreation(): void {
+        this.renderWorld();
+    }
+}
+    </av-code>
+    <p>To improve readability again, you can remove the callback function inside @property and using injection inside view with {{propertyName}}</p>
+    <av-code language="typescript">
+@property()
+public content: string = "Hello ";
+    </av-code>
+    <av-code language="html">
+&lt;h1 @element="titleEl"&gt;{{content}}&lt;/h1&gt;
+    </av-code>
+    <p>
+        We can add some style to make the text green when Hello world is written
+    </p>
+    <av-code language="scss">
+// specific style when attribute content = "Hello world"
+:host([content="Hello world"]) {
+    h1 {
+        color: green;
+    }
+}
+    </av-code>
+    <p>Here we go! You can now update a view based on the component attribute and define custom style</p>
+</section>
+<section>
+    <h3>Writting <i>world</i> - Using watch</h3>
+    <p>Now we want to get rid of the attribute but still having view change. We just have to replace @property by a new decorator <b>@watch</b></p>
+    <p>The watch decorator use a proxy to store any kind of data inside your component and notify changes.</p>
+    <av-code language="typescript">
+export class AvApp extends WebComponent implements DefaultComponent {
+    @watch()
+    public content: string = "Hello ";
+    public titleEl: HTMLElement;
+    public async renderWorld(): Promise&lt;void&gt; {
+        while(true) {
+            // update the content attribute instead of the HTML
+            this.content = "Hello ";
+            let letters = "world";
+            for(let letter of letters) {
+                await this.sleep(1000);
+                // update the content attribute instead of the HTML
+                this.content += letter;
+            }
+            await this.sleep(1000);
+        }
+    }
+    private sleep(x): Promise&lt;void&gt; {
+        return new Promise((resolve) =&gt; setTimeout(() =&gt; resolve(), x));
+    }
+    protected override postCreation(): void {
+        this.renderWorld();
+    }
+}
+    </av-code>
+    <p>If you look your browser, you can see that when it's written "Hello world" the color isn't green anymore</p>
+    <p>We will just add a new property inside the class to try more watchable property</p>
+    <av-code language="typescript">
+@watch((target: AvApp, action: WatchAction, path: string, value: any) =&gt; {
+    // this log will be shown when something inside status is updated
+    console.log(WatchAction[action] + " on path " + path + " with value ", value);
+})
+public status = {
+    name: "",
+    value: 0
+};
+...
+public async renderWorld(): Promise&lt;void&gt; {
+    while(true) {
+        this.content = "Hello ";
+        this.status.name = "Progress";
+        let letters = "world";
+        for(let letter of letters) {
+            await this.sleep(1000);
+            this.content += letter;
+        }
+        this.status = {
+            name: "Done",
+            value: this.status.value + 1
+        };
+        await this.sleep(1000);
+    }
+}
+    </av-code>
+    <p>Open the dev console in your browser and look what's happening.</p>
+    <p>
+        It can be tricky to know who is editing a watchable property. Aventus provides a tools to store each change. Before your class
+        you can add a decorator @Debugger
+    </p>
+    <av-code language="typescript">
+@Debugger({
+    enableWatchHistory: true,
+})
+export class AvApp extends WebComponent implements DefaultComponent {}
+    </av-code>
+    <p>
+        Now open your dev console, store the av-app as a variable. You can call the function <b>.getWatchHistory()</b> to obtain all changes 
+        triggered on this component. If you want to reset history use the function <b>.clearWatchHistory()</b>.
+    </p>
+    <av-row>
+        <av-col size="12">
+            <av-img src="/img/gettingStarted/init_webcomponent_debugger_watch.png"></av-img>
+        </av-col>
+    </av-row>
+    <p>
+        You saw the main concept on Aventus webcomponent. For the example, we worked on a single file component but you can split logical, 
+        style and view on 3 different files. Now you can clear the file App.wc.avt to keep only the script with the class definition for the next section.
+    </p>
+    <av-code language="html">
+&lt;script&gt;
+    export class AvApp extends WebComponent implements DefaultComponent {
+    }
+&lt;/script&gt;
+    </av-code>
+</section>
+<p></p>
+<section>
+    <av-navigation-footer previous_state="/introduction/init" previous_name="Init" next_state="/introduction/routing" next_name="Routing"></av-navigation-footer>
+</section>`
+            }
+        }
+                let newHtml = parentInfo.html
+                for (let blockName in info.blocks) {
+                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
+                        throw "can't found slot with name " + blockName;
+                    }
+                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
+                }
+                info.html = newHtml;
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvGettingStartedWebcomponent", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvGettingStartedWebcomponent";
+    }
+     defineTitle(){return "Aventus - Web component";}}
+window.customElements.define('av-getting-started-webcomponent', AvGettingStartedWebcomponent);

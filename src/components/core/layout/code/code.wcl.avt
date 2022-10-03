@@ -1,4 +1,7 @@
-export class AvCode extends WebComponent implements DefaultComponent {
+@Debugger({
+    writeCompiled: true,
+})
+export class AvCode extends Aventus.WebComponent implements Aventus.DefaultComponent {
 
     //#region static
     public static primsCSS: string = "";
@@ -22,9 +25,8 @@ export class AvCode extends WebComponent implements DefaultComponent {
     public static async loadingPrism() {
         if(!AvCode.isLoading) {
             AvCode.isLoading = true;
-            await AvCode.loadScript("/libs/prism.js");
-            await AvCode.loadScript("/libs/prism-normalize-whitespace.min.js");
             AvCode.primsCSS = await (await fetch("/libs/prism_vscode_theme.css")).text();
+            await AvCode.loadScript("/libs/prism.js");
             AvCode.releaseAwaitFct();
             AvCode.isLoading = false;
         }
@@ -49,7 +51,7 @@ export class AvCode extends WebComponent implements DefaultComponent {
 
 
     //#region props
-    @property((target: AvCode) => {
+    @Property((target: AvCode) => {
         if(window.Prism) {
             if(!window.Prism.languages.hasOwnProperty(target.language)) {
                 target.language = 'plain';
@@ -61,6 +63,7 @@ export class AvCode extends WebComponent implements DefaultComponent {
 
 
     //#region variables
+    @ViewElement()
     public codeEl: HTMLElement;
     //#endregion
 

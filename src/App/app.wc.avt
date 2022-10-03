@@ -1,6 +1,5 @@
 
 <script>
-    import { AvGettingStarted } from "../pages/gettingStarted/gettingStarted.wcl.avt";
     import { AvExample } from "../pages/example/example.wcl.avt";
     import { AvHome } from "../pages/home/home.wcl.avt";
     import { AvInstallation } from "../pages/installation/installation.wcl.avt";
@@ -9,10 +8,11 @@
     import { AvGettingStartedInitProject } from "../pages/gettingStarted/1_gettingStartedInitProject/gettingStartedInitProject.wcl.avt";
     import { AvGettingStartedWebcomponent } from "../pages/gettingStarted/2_gettingStartedWebcomponent/gettingStartedWebcomponent.wcl.avt";
     import { AvGettingStartedRouting } from "../pages/gettingStarted/3_gettingStartedRouting/gettingStartedRouting.wcl.avt";
+    import { AvGettingStarted } from "../pages/gettingStarted/0_gettingStarted/gettingStarted.wcl.avt";
 
-    export class AvApp extends AvRouter implements DefaultComponent {
+    export class AvApp extends Aventus.AvRouter implements Aventus.DefaultComponent {
 
-        protected defineRoutes(): { [key: string]: new () => AvPage; } {
+        protected defineRoutes(): { [key: string]: new () => Aventus.AvPage; } {
             return {
                 "/": AvHome,
                 "/example": AvExample,

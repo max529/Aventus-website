@@ -1,4 +1,4 @@
-export class AvNavigationFooter extends WebComponent implements DefaultComponent {
+export class AvNavigationFooter extends Aventus.WebComponent implements Aventus.DefaultComponent {
 
     //#region static
 
@@ -6,18 +6,18 @@ export class AvNavigationFooter extends WebComponent implements DefaultComponent
 
 
     //#region props
-    @attribute()
+    @Attribute()
     public no_previous: boolean;
-	@property()
+	@Property()
 	public previous_state:string = "/";
-	@property()
+	@Property()
 	public previous_name:string = "Previous";
 
-	@attribute()
+	@Attribute()
     public no_next: boolean;
-	@property()
+	@Property()
 	public next_state:string = "/";
-	@property()
+	@Property()
 	public next_name:string = "Next";
 	//#endregion
 

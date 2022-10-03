@@ -2,9 +2,9 @@
 import { AvGenericPage } from "../../genericPage/genericPage.wcl.avt";
 
 @Debugger({
-	writeCompiled:false,
+	writeCompiled:true,
 })
-export class AvGettingStartedWebcomponent extends AvGenericPage implements DefaultComponent {
+export class AvGettingStartedWebcomponent extends AvGenericPage implements Aventus.DefaultComponent {
 
 	//#region static
 

@@ -1,3 +1,29 @@
 <section>
     <h1>Route configuration</h1>
+    <p>For our SPA, we need a central router with two pages</p>
+    <ul>
+        <li>the landing page</li>
+        <li>the todo page</li>
+    </ul>
+    <p>Create a new directory <i>./src/pages</i> and create two components (single or multiple as you want)</p>
+    <ul>
+        <li>HomePage</li>
+        <li>TodoPage</li>
+    </ul>
+    <p>
+        You can change parent of your new pages from <b>WebComponent</b> to <b>AvPage</b>, then implements your classes to correct errors.
+        You can find an example below.
+    </p>
+    <av-code language="typescript">
+export class AvHomePage extends AvPage implements DefaultComponent {
+
+    defineTitle(): string {
+        return "Todo - Home";
+    }
+
+}
+    </av-code>
+</section>
+<section>
+    <av-navigation-footer previous_state="/introduction/webcomponent" previous_name="Web component" next_state="/introduction/routing" next_name="Routing"></av-navigation-footer>
 </section>
