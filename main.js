@@ -5,7 +5,7 @@ class Utils {    static sleep(ms) {        return new Promise(resolve => setTi
 class StateManager {    logLevel = 0; // 0 = error only / 1 = errors and warning / 2 = error, warning and logs (not implemented)    _activeState = undefined;    _activeParams = undefined;    _activeSlug = undefined;    _callbackList = {};    _subscribersMutliple = {};    _subscribers = {};    _isNumberRegex = /^-?\d+$/;    _callbackFunctions = {};    constructor() {    }    static __instances = {};    static getInstance(name) {        if (!name) {            name = "";        }        if (!this.__instances.hasOwnProperty(name)) {            this.__instances[name] = new StateManager();        }        return this.__instances[name];    }    subscribe(state, callbacks) {        if (!callbacks.hasOwnProperty("active") && !callbacks.hasOwnProperty("inactive") && callbacks.hasOwnProperty("askChange")) {            this._log(`Trying to subscribe to state : ${state} with no callbacks !`, "warning");            return;        }        if (!Array.isArray(state)) {            state = [state];        }        for (let i = 0; i < state.length; i++) {            let _state = state[i];            let res = this._prepareStateString(_state);            _state = res["state"];            if (!this._subscribers.hasOwnProperty(_state)) {                let regex = new RegExp(_state);                let isActive = this._activeState !== undefined && regex.test(this._activeState);                this._subscribers[_state] = {                    "regex": regex,                    "callbacks": {                        "active": [],                        "inactive": [],                        "askChange": [],                    },                    "isActive": isActive,                    "testRegex": (string) => {                        if (!string) {                            string = this.getActiveState();                        }                        return this._subscribers[_state].regex.test(string);                    }                };            }            if (callbacks.hasOwnProperty("active")) {                this._subscribers[_state].callbacks.active.push(callbacks.active);                if (this._subscribers[_state].isActive) {                    callbacks.active(this._activeState);                }            }            if (callbacks.hasOwnProperty("inactive")) {                this._subscribers[_state].callbacks.inactive.push(callbacks.inactive);            }            if (callbacks.hasOwnProperty("askChange")) {                this._subscribers[_state].callbacks.askChange.push(callbacks.askChange);            }        }    }    /**     *     * @param {string|Array} state - The state(s) to unsubscribe from     * @param {Object} callbacks     * @param {activeCallback} [callbacks.active]     * @param {incativeCallback} [callbacks.inactive]     * @param {askChangeCallback} [callbacks.askChange]     */    unsubscribe(state, callbacks) {        if (!Array.isArray(state)) {            state = [state];        }        for (let i = 0; i < state.length; i++) {            let _state = state[i];            let res = this._prepareStateString(_state);            _state = res["state"];            if (this._subscribers.hasOwnProperty(_state)) {                let modifications = false;                if (callbacks.hasOwnProperty("active")) {                    let index = this._subscribers[_state].callbacks.active.indexOf(callbacks["active"]);                    if (index !== -1) {                        this._subscribers[_state].callbacks.active.splice(index, 1);                        modifications = true;                    }                }                if (callbacks.hasOwnProperty("inactive")) {                    let index = this._subscribers[_state].callbacks.inactive.indexOf(callbacks["inactive"]);                    if (index !== -1) {                        this._subscribers[_state].callbacks.inactive.splice(index, 1);                        modifications = true;                    }                }                if (callbacks.hasOwnProperty("askChange")) {                    let index = this._subscribers[_state].callbacks.askChange.indexOf(callbacks["askChange"]);                    if (index !== -1) {                        this._subscribers[_state].callbacks.askChange.splice(index, 1);                        modifications = true;                    }                }                if (modifications &&                    this._subscribers[_state].callbacks.active.length === 0 &&                    this._subscribers[_state].callbacks.inactive.length === 0 &&                    this._subscribers[_state].callbacks.askChange.length === 0) {                    delete this._subscribers[_state];                }            }            return;        }    }    /**     * Format a state and return if you need to bypass the test or not     * @param {string} string - The state to format     * @returns {Object} - The state, the formated state and if it's a regex state or not     */    _prepareStateString(string) {        let _state = string;        let stateToTest = _state;        let bypassTest = false;        if (_state.startsWith("^") && _state.endsWith("$")) {            bypassTest = true;        }        else {            if (_state.endsWith("/*")) {                _state = "^" + this._escapeRegExp(_state).replace("\*", "-?\\d+$");            }            else {                let splittedState = _state.split("/");                let slug = splittedState.pop();                if (this._isNumberRegex.test(slug)) {                    stateToTest = splittedState.join("/") + "/*";                }                _state = "^" + this._escapeRegExp(_state) + "$";            }        }        return { "state": _state, "stateToTest": stateToTest, "bypassTest": bypassTest };    }    /**     * Escape a string to be regex-compatible ()     * @param {string} string The string to escape     * @returns An escaped string     */    _escapeRegExp(string) {        return string.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&');    }    /**     * Get the slug from a state string     * @param {string} state The state to extract the slug from     * @returns {string|undefined} The slug of the state or undefined if the state don't have one     */    _getSlugFromState(state) {        let slug = state.split("/").pop();        if (this._isNumberRegex.test(slug)) {            return parseInt(slug);        }        else {            return undefined;        }    }    /**     * Save the current info (state/params) in cache     */    _saveDataInCache() {        if (!this._activeParams || Object.keys(this._activeParams).length == 0) {            if (localStorage["disableStorage"] == null) {                localStorage["state"] = this._activeState;            }        }    }    /**     * Add a callback to a key     * @param {string} key - The key to trigger to trigger the function     * @param {function} callback - The function to trigger     */    addFunction(key, callback) {        if (!this._callbackFunctions.hasOwnProperty(key)) {            this._callbackFunctions[key] = [];        }        this._callbackFunctions[key].push(callback);    }    /**     * Remove a function from a key     * @param {string} key - The key to remove the function from     * @param {function} callback - The function to remove     */    removeFunction(key, callback) {        if (this._callbackFunctions.hasOwnProperty(key)) {            const index = this._callbackFunctions[key].indexOf(callback);            if (index !== -1) {                this._callbackFunctions[key].splice(index, 1);                if (this._callbackFunctions[key].length === 0) {                    delete this._callbackFunctions[key];                }            }            else {                console.warn("Couldn't find callback in list " + key);            }        }        else {            console.warn("Couldn't find " + key + " in callback array");        }    }    /**     * Trigger all the functions added under a key     * @param {string} key - The key to trigger     * @param {*} [params] - The params to pass to the functions (optional)     */    triggerFunction(key, params = {}) {        if (this._callbackFunctions.hasOwnProperty(key)) {            const copy = [...this._callbackFunctions[key]];            copy.forEach(callback => {                callback(params);            });        }        else {            console.warn("Trying to trigger non existent key : " + key);        }    }    /**     * Remove all the function added under all keys     */    clearFunctions() {        this._callbackFunctions = {};    }    /**     * Set the current active state     * @param {string} state - The state to set to active     * @param {number} slug - The slug of the active state (Only work if the state ends with "*")     * @param {Object} params - The params of the active state     */    setActiveState(state, params = {}) {        if (this._activeState !== undefined && state === this._activeState) {            this._log("Trying to set a state that was already active. state : " + state + " activeState : " + this._activeState, "warning");            return;        }        let canChange = true;        if (this._activeState) {            let activeToInactive = [];            let inactiveToActive = [];            let triggerActive = [];            for (let key in this._subscribers) {                let current = this._subscribers[key];                if (current.isActive) {                    if (!current.regex.test(state)) {                        let clone = [...current.callbacks["askChange"]];                        for (let i = 0; i < clone.length; i++) {                            let callback = clone[i];                            if (!callback(this._activeState, state)) {                                canChange = false;                            }                        }                        activeToInactive.push(current);                    }                    else {                        triggerActive.push(current);                    }                }                else {                    if (current.regex.test(state)) {                        inactiveToActive.push(current);                    }                }            }            if (canChange) {                const oldState = this._activeState;                this._activeState = state;                this._activeSlug = this._getSlugFromState(state);                this._activeParams = params;                activeToInactive.forEach(route => {                    route.isActive = false;                    [...route.callbacks.inactive].forEach(callback => {                        callback(oldState, state);                    });                });                this.clearFunctions();                triggerActive.forEach(route => {                    [...route.callbacks.active].forEach(callback => {                        callback(state);                    });                });                inactiveToActive.forEach(route => {                    route.isActive = true;                    [...route.callbacks.active].forEach(callback => {                        callback(state);                    });                });            }        }        else {            this._activeState = state;            this._activeSlug = this._getSlugFromState(state);            this._activeParams = params;            this.clearFunctions();            for (let key in this._subscribers) {                if (this._subscribers[key].regex.test(state)) {                    this._subscribers[key].isActive = true;                    [...this._subscribers[key].callbacks.active].forEach(callback => {                        callback(state);                    });                }            }        }        this._saveDataInCache();        return;    }    /**     * Get the active state     * @returns {string} - The active state     */    getActiveState() {        return this._activeState;    }    /**     * Get the active params     * @returns {Object} - The active params     */    getActiveParams() {        return this._activeParams;    }    /**     * Get the active slug     * @returns {int} - The active slug     */    getActiveSlug() {        return this._activeSlug;    }    /**     * Check if a state is in the subscribers and active, return true if it is, false otherwise     * @param {string} state - The state to test     * @returns {boolean} - True if the state is in the subscription list and active, false otherwise     */    isStateActive(state) {        state = this._prepareStateString(state).state;        if (this._subscribers[state] && this._subscribers[state].isActive) {            return true;        }        return false;    }    _log(logMessage, type) {        if (type === "error") {            console.error(logMessage);        }        else if (type === "warning" && this.logLevel > 0) {            console.warn(logMessage);        }        else if (type === "info" && this.logLevel > 1) {            console.log(logMessage);        }    }}
 class Socket {    options;    waitingList = {};    multipltWaitingList = {};    onDone;    timeoutError;    memoryBeforeOpen = [];    nbClose = 0;    socket;    constructor() {    }    init(options = {}) {        if (!options.port) {            options.port = parseInt(window.location.port);        }        if (!options.ip) {            options.ip = window.location.hostname;        }        if (!options.hasOwnProperty('useHttps')) {            options.useHttps = window.location.protocol == "https:";        }        if (!options.routes) {            options.routes = {};        }        if (!options.socketName) {            options.socketName = this.getSocketName();        }        this.options = options;    }    static __instances = {};    static getInstance(name) {        if (!name) {            name = "";        }        if (!this.__instances.hasOwnProperty(name)) {            let temp = { class: this };            this.__instances[name] = new temp["class"]();            this.__instances[name].init({ log: true });        }        return this.__instances[name];    }    getSocketName() {        return "";    }    addRoute(newRoute) {        if (!this.options.routes.hasOwnProperty(newRoute.channel)) {            this.options.routes[newRoute.channel] = [];        }        this.options.routes[newRoute.channel].push(newRoute);    }    /**     * The route to remove     * @param route - The route to remove     */    removeRoute(route) {        let index = this.options.routes[route.channel].indexOf(route);        if (index != -1) {            this.options.routes[route.channel].splice(index, 1);        }    }    open(done = () => { }, error = () => { }) {        if (this.socket) {            this.socket.close();        }        let protocol = "ws";        if (this.options.useHttps) {            protocol = "wss";        }        let url = protocol + "://" + this.options.ip + ":" + this.options.port + "/ws/" + this.options.socketName;        this.log(url);        this.socket = new WebSocket(url);        this.timeoutError = setTimeout(() => {            if (this.socket &&                this.socket.readyState != 1) {                delete this.socket;                this.socket = null;                console.error('Timeout on socket open');                error();            }        }, 3000);        this.socket.onopen = this.onOpen.bind(this);        this.socket.onclose = this.onClose.bind(this);        this.socket.onerror = this.onError.bind(this);        this.socket.onmessage = this.onMessage.bind(this);        this.onDone = done;    }    /**     *     * @param channelName The channel on which the message is sent     * @param data The data to send     * @param options the options to add to the message (typically the uid)     */    sendMessage(channelName, data = null, options = {}) {        if (this.socket && this.socket.readyState == 1) {            let message = {                channel: channelName,            };            for (let key in options) {                message[key] = options[key];            }            if (data) {                message.data = data;                this.log(message);                message.data = JSON.stringify(data);            }            else {                this.log(message);            }            this.socket.send(JSON.stringify(message));        }        else {            this.log('Socket not ready ! Please ensure that it is open and ready to send message');            this.memoryBeforeOpen.push({                channelName: channelName,                data: data,                options: options            });        }    }    /**     *     * @param channelName The channel on which the message is sent     * @param data The data to send     * @param callbacks The callbacks to call. With the channel as key and the callback function as value     */    sendMessageAndWait(channelName, data, callbacks) {        let uid = '_' + Math.random().toString(36).substr(2, 9);        this.waitingList[uid] = callbacks;        this.sendMessage(channelName, data, {            uid: uid        });    }    ;    /**     *     * @param channelName The channel on which the message is sent     * @param data The data to send     * @param callbacks The callbacks to call. With the channel as key and the callback function as value     */    sendMessageAndWaitMultiple(channelName, data, callbacks) {        let uid = '_' + Math.random().toString(36).substr(2, 9);        this.multipltWaitingList[uid] = callbacks;        this.sendMessage(channelName, data, {            uid: uid        });    }    isReady() {        if (this.socket && this.socket.readyState == 1) {            return true;        }        return false;    }    onOpen() {        if (this.socket && this.socket.readyState == 1) {            this.log('Connection successfully established !' + this.options.ip + ":" + this.options.port);            window.clearTimeout(this.timeoutError);            this.onDone();            if (this.options.hasOwnProperty("onOpen")) {                this.options.onOpen();            }            for (let i = 0; i < this.memoryBeforeOpen.length; i++) {                this.sendMessage(this.memoryBeforeOpen[i].channelName, this.memoryBeforeOpen[i].data, this.memoryBeforeOpen[i].options);            }            this.memoryBeforeOpen = [];        }        else {            console.error("open with error " + this.options.ip + ":" + this.options.port + "(" + (this.socket ? this.socket.readyState : "unknown") + ")");            setTimeout(() => this.open(), 2000);        }    }    onError(event) {        this.log('An error has occured');        if (this.options.hasOwnProperty("onError")) {            this.options.onError();        }    }    onClose(event) {        this.log('Closing connection');        if (this.options.hasOwnProperty("onClose")) {            this.options.onClose();        }        else {            if (window.location.pathname == '/') {                this.nbClose++;                if (this.nbClose == 2) {                    window.location.href = '/login/logout';                }                else {                    console.warn("try reopen socket ");                    let reopenInterval = setTimeout(() => {                        this.open(() => {                            clearInterval(reopenInterval);                        }, () => { });                    }, 5000);                }            }            else {                console.warn("try reopen socket ");                let reopenInterval = setTimeout(() => {                    this.open(() => {                        clearInterval(reopenInterval);                    }, () => { });                }, 5000);            }        }    }    onMessage(event) {        let response = JSON.parse(event.data);        this.log(response);        response.data = JSON.parse(response.data);        if (this.options.routes.hasOwnProperty(response.channel)) {            this.options.routes[response.channel].forEach(element => {                element.callback(response.data);            });        }        if (response.uid) {            if (this.waitingList.hasOwnProperty(response.uid)) {                let group = this.waitingList[response.uid];                if (group.hasOwnProperty(response.channel)) {                    group[response.channel](response.data);                }                delete this.waitingList[response.uid];            }            else if (this.multipltWaitingList.hasOwnProperty(response.uid)) {                let group = this.multipltWaitingList[response.uid];                if (group.hasOwnProperty(response.channel)) {                    try {                        if (!group[response.channel](response.data)) {                            delete this.multipltWaitingList[response.uid];                        }                    }                    catch (e) {                        console.error(e);                        delete this.multipltWaitingList[response.uid];                    }                }            }        }    }    log(message) {        if (this.options.log) {            const now = new Date();            const hours = (now.getHours()).toLocaleString(undefined, { minimumIntegerDigits: 2 });            const minutes = (now.getMinutes()).toLocaleString(undefined, { minimumIntegerDigits: 2 });            const seconds = (now.getSeconds()).toLocaleString(undefined, { minimumIntegerDigits: 2 });            console.log(`[WEBSOCKET] [${hours}:${minutes}:${seconds}]: `, JSON.parse(JSON.stringify(message)));        }    }}
 class ResourceLoader {    static waitingResources = {};    static load(options, preventCache = false) {        let resourceData = localStorage.getItem("resource:" + options.url);        if (resourceData) {            options.success(resourceData);        }        else {            if (!this.waitingResources.hasOwnProperty(options.url)) {                this.waitingResources[options.url] = [options.success];                fetch(options.url)                    .then(async (response) => {                    let html = await response.text();                    if (preventCache) {                        localStorage.setItem("resource:" + options.url, html);                    }                    for (let i = 0; i < this.waitingResources[options.url].length; i++) {                        this.waitingResources[options.url][i](html);                    }                    delete this.waitingResources[options.url];                });            }            else {                this.waitingResources[options.url].push(options.success);            }        }    }}
-class ResizeObserver {    callback;    targets;    fpsInterval;    nextFrame;    entriesChangedEvent;    willTrigger;    static resizeObserverClassByObject = {};    static uniqueInstance;    static getUniqueInstance() {        if (!ResizeObserver.uniqueInstance) {            ResizeObserver.uniqueInstance = new ResizeObserver(entries => {                let allClasses = [];                for (let j = 0; j < entries.length; j++) {                    let entry = entries[j];                    let index = entry.target['sourceIndex'];                    if (ResizeObserver.resizeObserverClassByObject[index]) {                        for (let i = 0; i < ResizeObserver.resizeObserverClassByObject[index].length; i++) {                            let classTemp = ResizeObserver.resizeObserverClassByObject[index][i];                            classTemp.entryChanged(entry);                            if (allClasses.indexOf(classTemp) == -1) {                                allClasses.push(classTemp);                            }                        }                    }                }                for (let i = 0; i < allClasses.length; i++) {                    allClasses[i].triggerCb();                }            });        }        return ResizeObserver.uniqueInstance;    }    constructor(options) {        let realOption;        if (options instanceof Function) {            realOption = {                callback: options,            };        }        else {            realOption = options;        }        this.callback = realOption.callback;        this.targets = [];        if (!realOption.fps) {            realOption.fps = 60;        }        if (realOption.fps != -1) {            this.fpsInterval = 1000 / realOption.fps;        }        this.nextFrame = 0;        this.entriesChangedEvent = {};        this.willTrigger = false;    }    observe(target) {        if (!target["sourceIndex"]) {            target["sourceIndex"] = Math.random().toString(36);            this.targets.push(target);            ResizeObserver.resizeObserverClassByObject[target["sourceIndex"]] = [];            ResizeObserver.getUniqueInstance().observe(target);        }        if (ResizeObserver.resizeObserverClassByObject[target["sourceIndex"]].indexOf(this) == -1) {            ResizeObserver.resizeObserverClassByObject[target["sourceIndex"]].push(this);        }    }    unobserve(target) {        for (let i = 0; this.targets.length; i++) {            let tempTarget = this.targets[i];            if (tempTarget == target) {                let position = ResizeObserver.resizeObserverClassByObject[target['sourceIndex']].indexOf(this);                if (position != -1) {                    ResizeObserver.resizeObserverClassByObject[target['sourceIndex']].splice(position, 1);                }                if (ResizeObserver.resizeObserverClassByObject[target['sourceIndex']].length == 0) {                    delete ResizeObserver.resizeObserverClassByObject[target['sourceIndex']];                }                ResizeObserver.getUniqueInstance().unobserve(target);                this.targets.splice(i, 1);                return;            }        }    }    disconnect() {        for (let i = 0; this.targets.length; i++) {            this.unobserve(this.targets[i]);        }    }    entryChanged(entry) {        let index = entry.target.sourceIndex;        this.entriesChangedEvent[index] = entry;    }    triggerCb() {        if (!this.willTrigger) {            this.willTrigger = true;            this._triggerCb();        }    }    _triggerCb() {        let now = window.performance.now();        let elapsed = now - this.nextFrame;        if (this.fpsInterval != -1 && elapsed <= this.fpsInterval) {            requestAnimationFrame(() => {                this._triggerCb();            });            return;        }        this.nextFrame = now - (elapsed % this.fpsInterval);        let changed = Object.values(this.entriesChangedEvent);        this.entriesChangedEvent = {};        this.willTrigger = false;        setTimeout(() => {            this.callback(changed);        }, 0);    }}
+class ResizeObserver {    callback;    targets;    fpsInterval;    nextFrame;    entriesChangedEvent;    willTrigger;    static resizeObserverClassByObject = {};    static uniqueInstance;    static getUniqueInstance() {        if (!ResizeObserver.uniqueInstance) {            ResizeObserver.uniqueInstance = new window.ResizeObserver(entries => {                let allClasses = [];                for (let j = 0; j < entries.length; j++) {                    let entry = entries[j];                    let index = entry.target['sourceIndex'];                    if (ResizeObserver.resizeObserverClassByObject[index]) {                        for (let i = 0; i < ResizeObserver.resizeObserverClassByObject[index].length; i++) {                            let classTemp = ResizeObserver.resizeObserverClassByObject[index][i];                            classTemp.entryChanged(entry);                            if (allClasses.indexOf(classTemp) == -1) {                                allClasses.push(classTemp);                            }                        }                    }                }                for (let i = 0; i < allClasses.length; i++) {                    allClasses[i].triggerCb();                }            });        }        return ResizeObserver.uniqueInstance;    }    constructor(options) {        let realOption;        if (options instanceof Function) {            realOption = {                callback: options,            };        }        else {            realOption = options;        }        this.callback = realOption.callback;        this.targets = [];        if (!realOption.fps) {            realOption.fps = 60;        }        if (realOption.fps != -1) {            this.fpsInterval = 1000 / realOption.fps;        }        this.nextFrame = 0;        this.entriesChangedEvent = {};        this.willTrigger = false;    }    observe(target) {        if (!target["sourceIndex"]) {            target["sourceIndex"] = Math.random().toString(36);            this.targets.push(target);            ResizeObserver.resizeObserverClassByObject[target["sourceIndex"]] = [];            ResizeObserver.getUniqueInstance().observe(target);        }        if (ResizeObserver.resizeObserverClassByObject[target["sourceIndex"]].indexOf(this) == -1) {            ResizeObserver.resizeObserverClassByObject[target["sourceIndex"]].push(this);        }    }    unobserve(target) {        for (let i = 0; this.targets.length; i++) {            let tempTarget = this.targets[i];            if (tempTarget == target) {                let position = ResizeObserver.resizeObserverClassByObject[target['sourceIndex']].indexOf(this);                if (position != -1) {                    ResizeObserver.resizeObserverClassByObject[target['sourceIndex']].splice(position, 1);                }                if (ResizeObserver.resizeObserverClassByObject[target['sourceIndex']].length == 0) {                    delete ResizeObserver.resizeObserverClassByObject[target['sourceIndex']];                }                ResizeObserver.getUniqueInstance().unobserve(target);                this.targets.splice(i, 1);                return;            }        }    }    disconnect() {        for (let i = 0; this.targets.length; i++) {            this.unobserve(this.targets[i]);        }    }    entryChanged(entry) {        let index = entry.target.sourceIndex;        this.entriesChangedEvent[index] = entry;    }    triggerCb() {        if (!this.willTrigger) {            this.willTrigger = true;            this._triggerCb();        }    }    _triggerCb() {        let now = window.performance.now();        let elapsed = now - this.nextFrame;        if (this.fpsInterval != -1 && elapsed <= this.fpsInterval) {            requestAnimationFrame(() => {                this._triggerCb();            });            return;        }        this.nextFrame = now - (elapsed % this.fpsInterval);        let changed = Object.values(this.entriesChangedEvent);        this.entriesChangedEvent = {};        this.willTrigger = false;        setTimeout(() => {            this.callback(changed);        }, 0);    }}
 class PressManager {    options;    element;    subPressManager = [];    delayDblPress = 150;    delayLongPress = 700;    nbPress = 0;    offsetDrag = 20;    state = {        oneActionTriggered: false,        isMoving: false,    };    startPosition = { x: 0, y: 0 };    customFcts = {};    timeoutDblPress = 0;    timeoutLongPress = 0;    downEventSaved;    actionsName = {        press: "press",        longPress: "longPress",        dblPress: "dblPress",        drag: "drag"    };    useDblPress = false;    forceDblPress = false;    functionsBinded = {        downAction: (e) => { },        upAction: (e) => { },        moveAction: (e) => { },        childPress: (e) => { },        childDblPress: (e) => { },        childLongPress: (e) => { },        childDragStart: (e) => { },    };    /**     * @param {*} options - The options     * @param {HTMLElement | HTMLElement[]} options.element - The element to manage     */    constructor(options) {        if (options.element === void 0) {            throw 'You must provide an element';        }        if (Array.isArray(options.element)) {            for (let el of options.element) {                let cloneOpt = { ...options };                cloneOpt.element = el;                this.subPressManager.push(new PressManager(cloneOpt));            }        }        else {            this.element = options.element;            this.checkDragConstraint(options);            this.assignValueOption(options);            this.options = options;            this.init();        }    }    getElement() {        return this.element;    }    checkDragConstraint(options) {        if (options.onDrag !== void 0) {            if (options.onDragStart === void 0) {                options.onDragStart = (e) => { };            }            if (options.onDragEnd === void 0) {                options.onDragEnd = (e) => { };            }        }        if (options.onDragStart !== void 0) {            if (options.onDrag === void 0) {                options.onDrag = (e) => { };            }            if (options.onDragEnd === void 0) {                options.onDragEnd = (e) => { };            }        }        if (options.onDragEnd !== void 0) {            if (options.onDragStart === void 0) {                options.onDragStart = (e) => { };            }            if (options.onDrag === void 0) {                options.onDrag = (e) => { };            }        }    }    assignValueOption(options) {        if (options.delayDblPress !== undefined) {            this.delayDblPress = options.delayDblPress;        }        if (options.delayLongPress !== undefined) {            this.delayLongPress = options.delayLongPress;        }        if (options.offsetDrag !== undefined) {            this.offsetDrag = options.offsetDrag;        }        if (options.onDblPress !== undefined) {            this.useDblPress = true;        }        if (options.forceDblPress) {            this.useDblPress = true;        }    }    bindAllFunction() {        this.functionsBinded.downAction = this.downAction.bind(this);        this.functionsBinded.moveAction = this.moveAction.bind(this);        this.functionsBinded.upAction = this.upAction.bind(this);        this.functionsBinded.childDblPress = this.childDblPress.bind(this);        this.functionsBinded.childDragStart = this.childDragStart.bind(this);        this.functionsBinded.childLongPress = this.childLongPress.bind(this);        this.functionsBinded.childPress = this.childPress.bind(this);    }    init() {        this.bindAllFunction();        this.element.addEventListener("pointerdown", this.functionsBinded.downAction);        this.element.addEventListener("trigger_pointer_press", this.functionsBinded.childPress);        this.element.addEventListener("trigger_pointer_dblpress", this.functionsBinded.childDblPress);        this.element.addEventListener("trigger_pointer_longpress", this.functionsBinded.childLongPress);        this.element.addEventListener("trigger_pointer_dragstart", this.functionsBinded.childDragStart);    }    downAction(e) {        this.downEventSaved = e;        e.stopPropagation();        this.customFcts = {};        if (this.nbPress == 0) {            this.state.oneActionTriggered = false;            clearTimeout(this.timeoutDblPress);        }        this.startPosition = { x: e.pageX, y: e.pageY };        document.addEventListener("pointerup", this.functionsBinded.upAction);        document.addEventListener("pointermove", this.functionsBinded.moveAction);        this.timeoutLongPress = setTimeout(() => {            if (!this.state.oneActionTriggered) {                if (this.options.onLongPress) {                    this.state.oneActionTriggered = true;                    this.options.onLongPress(e, this);                    this.triggerEventToParent(this.actionsName.longPress, e);                }                else {                    this.emitTriggerFunction("longpress", e);                }            }        }, this.delayLongPress);        if (this.options.onPressStart) {            this.options.onPressStart(e, this);        }    }    upAction(e) {        e.stopPropagation();        document.removeEventListener("pointerup", this.functionsBinded.downAction);        document.removeEventListener("pointermove", this.functionsBinded.moveAction);        clearTimeout(this.timeoutLongPress);        if (this.state.isMoving) {            this.state.isMoving = false;            if (this.options.onDragEnd) {                this.options.onDragEnd(e, this);            }            else if (this.customFcts.src && this.customFcts.onDragEnd) {                this.customFcts.onDragEnd(e, this.customFcts.src);            }        }        else {            if (this.useDblPress) {                this.nbPress++;                if (this.nbPress == 2) {                    if (!this.state.oneActionTriggered) {                        this.state.oneActionTriggered = true;                        this.nbPress = 0;                        if (this.options.onDblPress) {                            this.options.onDblPress(e, this);                            this.triggerEventToParent(this.actionsName.dblPress, e);                        }                        else {                            this.emitTriggerFunction("dblpress", e);                        }                    }                }                else if (this.nbPress == 1) {                    this.timeoutDblPress = setTimeout(() => {                        this.nbPress = 0;                        if (!this.state.oneActionTriggered) {                            if (this.options.onPress) {                                this.state.oneActionTriggered = true;                                this.options.onPress(e, this);                                this.triggerEventToParent(this.actionsName.press, e);                            }                            else {                                this.emitTriggerFunction("press", e);                            }                        }                    }, this.delayDblPress);                }            }            else {                if (!this.state.oneActionTriggered) {                    if (this.options.onPress) {                        this.state.oneActionTriggered = true;                        this.options.onPress(e, this);                        this.triggerEventToParent(this.actionsName.press, e);                    }                    else {                        this.emitTriggerFunction("press", e);                    }                }            }        }        if (this.options.onPressEnd) {            this.options.onPressEnd(e, this);        }    }    moveAction(e) {        if (!this.state.isMoving && !this.state.oneActionTriggered) {            e.stopPropagation();            let xDist = e.pageX - this.startPosition.x;            let yDist = e.pageY - this.startPosition.y;            let distance = Math.sqrt(xDist * xDist + yDist * yDist);            if (distance > this.offsetDrag) {                this.state.oneActionTriggered = true;                if (this.options.onDragStart) {                    this.state.isMoving = true;                    if (this.options.onDragStart) {                        this.options.onDragStart(this.downEventSaved, this);                        this.triggerEventToParent(this.actionsName.drag, e);                    }                    else {                        this.emitTriggerFunction("dragstart", this.downEventSaved);                    }                }            }        }        else if (this.state.isMoving) {            if (this.options.onDrag) {                this.options.onDrag(e, this);            }            else if (this.customFcts.src && this.customFcts.onDrag) {                this.customFcts.onDrag(e, this.customFcts.src);            }        }    }    triggerEventToParent(eventName, pointerEvent) {        if (this.element.parentNode) {            this.element.parentNode.dispatchEvent(new CustomEvent("pressaction_trigger", {                bubbles: true,                cancelable: false,                composed: true,                detail: {                    target: this.element,                    eventName: eventName,                    realEvent: pointerEvent                }            }));        }    }    childPress(e) {        if (this.options.onPress) {            e.stopPropagation();            e.detail.state.oneActionTriggered = true;            this.options.onPress(e.detail.realEvent, this);            this.triggerEventToParent(this.actionsName.press, e.detail.realEvent);        }    }    childDblPress(e) {        if (this.options.onDblPress) {            e.stopPropagation();            if (e.detail.state) {                e.detail.state.oneActionTriggered = true;            }            this.options.onDblPress(e.detail.realEvent, this);            this.triggerEventToParent(this.actionsName.dblPress, e.detail.realEvent);        }    }    childLongPress(e) {        if (this.options.onLongPress) {            e.stopPropagation();            e.detail.state.oneActionTriggered = true;            this.options.onLongPress(e.detail.realEvent, this);            this.triggerEventToParent(this.actionsName.longPress, e.detail.realEvent);        }    }    childDragStart(e) {        if (this.options.onDragStart) {            e.stopPropagation();            e.detail.state.isMoving = true;            e.detail.customFcts.src = this;            e.detail.customFcts.onDrag = this.options.onDrag;            e.detail.customFcts.onDragEnd = this.options.onDragEnd;            this.options.onDragStart(e.detail.realEvent, this);            this.triggerEventToParent(this.actionsName.drag, e.detail.realEvent);        }    }    emitTriggerFunction(action, e) {        this.element.dispatchEvent(new CustomEvent("trigger_pointer_" + action, {            bubbles: true,            cancelable: true,            composed: true,            detail: {                state: this.state,                customFcts: this.customFcts,                realEvent: e            }        }));    }    destroy() {        for (let sub of this.subPressManager) {            sub.destroy();        }        if (this.element) {            this.element.removeEventListener("pointerdown", this.functionsBinded.downAction);            this.element.removeEventListener("trigger_pointer_press", this.functionsBinded.childPress);            this.element.removeEventListener("trigger_pointer_dblpress", this.functionsBinded.childDblPress);            this.element.removeEventListener("trigger_pointer_longpress", this.functionsBinded.childLongPress);            this.element.removeEventListener("trigger_pointer_dragstart", this.functionsBinded.childDragStart);        }    }}
 
 class DefaultHttpRequestOptions {    url = "";    method = HttpRequestMethod.GET;}class HttpRequest {    options = {};    url = '';    static getMethod(method) {        let genericMethod = method.toLowerCase().trim();        if (genericMethod == "get") {            return HttpRequestMethod.GET;        }        if (genericMethod == "post") {            return HttpRequestMethod.POST;        }        if (genericMethod == "delete") {            return HttpRequestMethod.DELETE;        }        if (genericMethod == "put") {            return HttpRequestMethod.PUT;        }        if (genericMethod == "option") {            return HttpRequestMethod.OPTION;        }        console.error("unknow type " + method + ". I ll return GET by default");        return HttpRequestMethod.GET;    }    getMethod(method) {        if (method == HttpRequestMethod.GET)            return "GET";        if (method == HttpRequestMethod.POST)            return "POST";        if (method == HttpRequestMethod.DELETE)            return "DELETE";        if (method == HttpRequestMethod.OPTION)            return "OPTION";        if (method == HttpRequestMethod.PUT)            return "PUT";        return "GET";    }    constructor(options) {        options = {            ...new DefaultHttpRequestOptions(),            ...options        };        let optionsToSend = {            method: this.getMethod(options.method),        };        if (options.data) {            if (options.data instanceof FormData) {                optionsToSend.body = options.data;            }            else {                let formData = new FormData();                for (let key in options.data) {                    formData.append(key, options.data[key]);                }                optionsToSend.body = formData;            }        }        this.options = optionsToSend;        this.url = options.url;    }    async send() {        let result = await fetch(this.url, this.options);        if (result.ok) {        }    }    static get(url) {        return fetch(url, {            method: "GET"        });    }    static async post(url, data) {        let formData = new FormData();        for (let key in data) {            formData.append(key, data[key]);        }        const response = await fetch(url, {            method: "POST",            body: formData        });        const content = await response.json();        return new Promise((resolve, reject) => {            if (response.ok) {                resolve(content);            }            else {                reject(content);            }        });    }}/** * List of HTTP Method allowed */var HttpRequestMethod;(function (HttpRequestMethod) {    HttpRequestMethod[HttpRequestMethod["GET"] = 0] = "GET";    HttpRequestMethod[HttpRequestMethod["POST"] = 1] = "POST";    HttpRequestMethod[HttpRequestMethod["DELETE"] = 2] = "DELETE";    HttpRequestMethod[HttpRequestMethod["PUT"] = 3] = "PUT";    HttpRequestMethod[HttpRequestMethod["OPTION"] = 4] = "OPTION";})(HttpRequestMethod || (HttpRequestMethod = {}));
@@ -84,7 +84,7 @@ class AvScrollable extends WebComponent {
                         } else{
                             this.removeAttribute('only_vertical');
                         }
-                    }    __prepareVariables() { super.__prepareVariables(); if(this.verticalScrollVisible === undefined) {this.verticalScrollVisible = false;}if(this.horizontalScrollVisible === undefined) {this.horizontalScrollVisible = false;}if(this.observer === undefined) {this.observer = undefined;}if(this.wheelAction === undefined) {this.wheelAction = undefined;}if(this.touchWheelAction === undefined) {this.touchWheelAction = undefined;}if(this.contentHidderWidth === undefined) {this.contentHidderWidth = 0;}if(this.contentHidderHeight === undefined) {this.contentHidderHeight = 0;}if(this.content === undefined) {this.content = {"vertical":{"value":0,"max":0},"horizontal":{"value":0,"max":0}};}if(this.scrollbar === undefined) {this.scrollbar = {"vertical":{"value":0,"max":0},"horizontal":{"value":0,"max":0}};}if(this.refreshTimeout === undefined) {this.refreshTimeout = 100;}if(this.elToCalculate === undefined) {this.elToCalculate = undefined;}if(this.contentZoom === undefined) {this.contentZoom = undefined;}if(this.contentHidder === undefined) {this.contentHidder = undefined;}if(this.contentWrapper === undefined) {this.contentWrapper = undefined;}if(this.contentscroller === undefined) {this.contentscroller = undefined;}if(this.verticalScrollerContainer === undefined) {this.verticalScrollerContainer = undefined;}if(this.verticalScroller === undefined) {this.verticalScroller = undefined;}if(this.horizontalScrollerContainer === undefined) {this.horizontalScrollerContainer = undefined;}if(this.horizontalScroller === undefined) {this.horizontalScroller = undefined;} }
+                    }    __prepareVariables() { super.__prepareVariables(); if(this.verticalScrollVisible === undefined) {this.verticalScrollVisible = false;}if(this.horizontalScrollVisible === undefined) {this.horizontalScrollVisible = false;}if(this.observer === undefined) {this.observer = undefined;}if(this.wheelAction === undefined) {this.wheelAction = undefined;}if(this.touchWheelAction === undefined) {this.touchWheelAction = undefined;}if(this.contentHidderWidth === undefined) {this.contentHidderWidth = 0;}if(this.contentHidderHeight === undefined) {this.contentHidderHeight = 0;}if(this.content === undefined) {this.content = {"vertical":{"value":0,"max":0},"horizontal":{"value":0,"max":0}};}if(this.scrollbar === undefined) {this.scrollbar = {"vertical":{"value":0,"max":0},"horizontal":{"value":0,"max":0}};}if(this.refreshTimeout === undefined) {this.refreshTimeout = 100;} }
     __getStyle() {
         let arrStyle = super.__getStyle();
         arrStyle.push(`:host{--internal-scrollbar-content-overflow: var(--scrollbar-content-overflow, hidden);--internal-scrollbar-content-height: var(--scrollbar-content-height, auto);--internal-scrollbar-content-width: var(--scrollbar-content-width, 100%);--internal-scrollbar-container-color: var(--scrollbar-container-color, transparent);--internal-scrollbar-color: var(--scrollbar-color, #757575);--internal-scrollbar-active-color: var(--scrollbar-active-color, #757575);--internal-scroller-width: var(--scroller-width, 6px);--internal-scroller-bottom: var(--scroller-bottom, 3px);--internal-scroller-right: var(--scroller-right, 3px);--internal-scroller-left: var(--scroller-left, 3px);--internal-scroller-top: var(--scroller-top, 3px);--internal-scroller-vertical-shadow: var(--scroller-shadow, var(--scroller-vertical-shadow, none));--internal-scroller-horizontal-shadow: var(--scroller-shadow, var(--scroller-horizontal-shadow, none));--internal-scollable-delay: var(--scrollable-delay, 0.3s)}:host{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-drag:none}:host *{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-drag:none;box-sizing:border-box}:host{display:block;position:relative;height:100%;width:100%}:host .scroll-main-container{display:block;position:relative;height:100%;width:100%}:host .scroll-main-container .content-zoom{display:block;position:relative;height:100%;width:100%;transform-origin:0 0}:host .scroll-main-container .content-hidder{overflow:var(--internal-scrollbar-content-overflow);width:100%;height:100%;position:relative;display:block}:host .scroll-main-container .content-wrapper{position:absolute;display:inline-block;top:0;left:0;height:var(--internal-scrollbar-content-height);width:var(--internal-scrollbar-content-width);transition:top var(--internal-scollable-delay) linear,left var(--internal-scollable-delay) linear}:host .scroll-main-container .container-scroller{position:absolute;background-color:var(--internal-scrollbar-container-color);border-radius:5px;z-index:5;display:none}:host .scroll-main-container .scroller{background-color:var(--internal-scrollbar-color);border-radius:5px;position:absolute;z-index:5;cursor:pointer}:host .scroll-main-container .scroller.active{background-color:var(--internal-scrollbar-active-color);transition:none !important}:host .scroll-main-container .container-scroller.vertical{width:calc(var(--internal-scroller-width) + var(--internal-scroller-left));padding-left:var(--internal-scroller-left);top:var(--internal-scroller-bottom);height:calc(100% - var(--internal-scroller-bottom)*2 - var(--internal-scroller-width));right:var(--internal-scroller-right)}:host .scroll-main-container .scroller.vertical{width:calc(100% - var(--internal-scroller-left));top:0;transition:top var(--internal-scollable-delay) linear;box-shadow:var(--internal-scroller-vertical-shadow)}:host .scroll-main-container .container-scroller.horizontal{height:calc(var(--internal-scroller-width) + var(--internal-scroller-top));padding-top:var(--internal-scroller-top);left:var(--internal-scroller-right);width:calc(100% - var(--internal-scroller-right)*2 - var(--internal-scroller-width));bottom:var(--internal-scroller-bottom)}:host .scroll-main-container .scroller.horizontal{height:calc(100% - var(--internal-scroller-top));left:0;transition:left var(--internal-scollable-delay) linear;box-shadow:var(--internal-scroller-horizontal-shadow)}:host([disable_scroll]) .content-wrapper{height:100%}:host([disable_scroll]) .scroller{display:none}:host(.scrolling) .content-wrapper *{user-select:none}:host(.scrolling) ::slotted{user-select:none}`);
@@ -93,20 +93,20 @@ class AvScrollable extends WebComponent {
     __getHtml() {
         let parentInfo = super.__getHtml();
         let info = {
-            html: `<div class="scroll-main-container" av-element="elToCalculate">
-    <div class="content-zoom" av-element="contentZoom">
-        <div class="content-hidder" av-element="contentHidder">
-            <div class="content-wrapper" av-element="contentWrapper">
+            html: `<div class="scroll-main-container" _id="avscrollable_0">
+    <div class="content-zoom" _id="avscrollable_1">
+        <div class="content-hidder" _id="avscrollable_2">
+            <div class="content-wrapper" _id="avscrollable_3">
                 <slot></slot>
             </div>
         </div>
     </div>
-    <div av-element="contentscroller">
-        <div class="container-scroller vertical" av-element="verticalScrollerContainer">
-            <div class="scroller vertical" av-element="verticalScroller"></div>
+    <div _id="avscrollable_4">
+        <div class="container-scroller vertical" _id="avscrollable_5">
+            <div class="scroller vertical" _id="avscrollable_6"></div>
         </div>
-        <div class="container-scroller horizontal" av-element="horizontalScrollerContainer">
-            <div class="scroller horizontal" av-element="horizontalScroller"></div>
+        <div class="container-scroller horizontal" _id="avscrollable_7">
+            <div class="scroller horizontal" _id="avscrollable_8"></div>
         </div>
     </div>
 </div>`,
@@ -114,20 +114,20 @@ class AvScrollable extends WebComponent {
                 'default':`<slot></slot>`
             },
             blocks: {
-                'default':`<div class="scroll-main-container" av-element="elToCalculate">
-    <div class="content-zoom" av-element="contentZoom">
-        <div class="content-hidder" av-element="contentHidder">
-            <div class="content-wrapper" av-element="contentWrapper">
+                'default':`<div class="scroll-main-container" _id="avscrollable_0">
+    <div class="content-zoom" _id="avscrollable_1">
+        <div class="content-hidder" _id="avscrollable_2">
+            <div class="content-wrapper" _id="avscrollable_3">
                 <slot></slot>
             </div>
         </div>
     </div>
-    <div av-element="contentscroller">
-        <div class="container-scroller vertical" av-element="verticalScrollerContainer">
-            <div class="scroller vertical" av-element="verticalScroller"></div>
+    <div _id="avscrollable_4">
+        <div class="container-scroller vertical" _id="avscrollable_5">
+            <div class="scroller vertical" _id="avscrollable_6"></div>
         </div>
-        <div class="container-scroller horizontal" av-element="horizontalScrollerContainer">
-            <div class="scroller horizontal" av-element="horizontalScroller"></div>
+        <div class="container-scroller horizontal" _id="avscrollable_7">
+            <div class="scroller horizontal" _id="avscrollable_8"></div>
         </div>
     </div>
 </div>`
@@ -137,9 +137,10 @@ class AvScrollable extends WebComponent {
     }
     __getMaxId() {
         let temp = super.__getMaxId();
-        temp.push(["AvScrollable", 0])
+        temp.push(["AvScrollable", 9])
         return temp;
     }
+    __mapSelectedElement() { super.__mapSelectedElement(); this.elToCalculate = this.shadowRoot.querySelector('[_id="avscrollable_0"]');this.contentZoom = this.shadowRoot.querySelector('[_id="avscrollable_1"]');this.contentHidder = this.shadowRoot.querySelector('[_id="avscrollable_2"]');this.contentWrapper = this.shadowRoot.querySelector('[_id="avscrollable_3"]');this.contentscroller = this.shadowRoot.querySelector('[_id="avscrollable_4"]');this.verticalScrollerContainer = this.shadowRoot.querySelector('[_id="avscrollable_5"]');this.verticalScroller = this.shadowRoot.querySelector('[_id="avscrollable_6"]');this.horizontalScrollerContainer = this.shadowRoot.querySelector('[_id="avscrollable_7"]');this.horizontalScroller = this.shadowRoot.querySelector('[_id="avscrollable_8"]');}
     __registerOnChange() { super.__registerOnChange(); this.__onChangeFct['disable_scroll'] = []this.__onChangeFct['disable_scroll'].push((path) => {((target) => {    if (target.disable_scroll) {        target.removeResizeObserver();        target.removeWheelAction();        target.contentZoom.style.width = '';        target.contentZoom.style.height = '';    }    else {        target.addResizeObserver();        target.addWheelAction();    }})(this);})this.__onChangeFct['zoom'] = []this.__onChangeFct['zoom'].push((path) => {((target) => {    target.changeZoom();})(this);}) }
     getClassName() {
         return "AvScrollable";
@@ -187,7 +188,7 @@ class AvRouterLink extends WebComponent {
 window.customElements.define('av-router-link', AvRouterLink);
 class AvRouter extends WebComponent {
     constructor() { super(); if (this.constructor == AvRouter) { throw "can't instanciate an abstract class"; } }
-    __prepareVariables() { super.__prepareVariables(); if(this.oldPage === undefined) {this.oldPage = undefined;}if(this.contentEl === undefined) {this.contentEl = undefined;} }
+    __prepareVariables() { super.__prepareVariables(); if(this.oldPage === undefined) {this.oldPage = undefined;} }
     __getStyle() {
         let arrStyle = super.__getStyle();
         arrStyle.push(``);
@@ -197,14 +198,14 @@ class AvRouter extends WebComponent {
         let parentInfo = super.__getHtml();
         let info = {
             html: `<slot name="before"></slot>
-<div class="content" av-element="contentEl"></div>
+<div class="content" _id="avrouter_0"></div>
 <slot name="after"></slot>`,
             slots: {
                 'before':`<slot name="before"></slot>`,'after':`<slot name="after"></slot>`
             },
             blocks: {
                 'default':`<slot name="before"></slot>
-<div class="content" av-element="contentEl"></div>
+<div class="content" _id="avrouter_0"></div>
 <slot name="after"></slot>`
             }
         }
@@ -212,9 +213,10 @@ class AvRouter extends WebComponent {
     }
     __getMaxId() {
         let temp = super.__getMaxId();
-        temp.push(["AvRouter", 0])
+        temp.push(["AvRouter", 1])
         return temp;
     }
+    __mapSelectedElement() { super.__mapSelectedElement(); this.contentEl = this.shadowRoot.querySelector('[_id="avrouter_0"]');}
     getClassName() {
         return "AvRouter";
     }
@@ -277,7 +279,7 @@ class AvHideable extends WebComponent {
 					}
 					set 'isVisible'(val) {
 						this.__watch["isVisible"] = val;
-					}    __prepareVariables() { super.__prepareVariables(); if(this.oldParent === undefined) {this.oldParent = "undefined";}if(this.options === undefined) {this.options = undefined;}if(this.checkCloseBinded === undefined) {this.checkCloseBinded = undefined;}if(this.pressManager === undefined) {this.pressManager = undefined;}if(this.content === undefined) {this.content = undefined;}if(this.onVisibilityChangeCallbacks === undefined) {this.onVisibilityChangeCallbacks = [];} }
+					}    __prepareVariables() { super.__prepareVariables(); if(this.oldParent === undefined) {this.oldParent = "undefined";}if(this.options === undefined) {this.options = undefined;}if(this.checkCloseBinded === undefined) {this.checkCloseBinded = undefined;}if(this.pressManager === undefined) {this.pressManager = undefined;}if(this.onVisibilityChangeCallbacks === undefined) {this.onVisibilityChangeCallbacks = [];} }
     __prepareWatchesActions() {
 					this.__watchActions["isVisible"] = [((target) => {    target.onVisibilityChangeCallbacks.forEach(callback => callback(target.isVisible));})];
 						this.__watchActionsCb["isVisible"] = (action, path, value) => {
@@ -309,22 +311,23 @@ class AvHideable extends WebComponent {
         let parentInfo = super.__getHtml();
         let info = {
             html: `<slot></slot>
-<div av-element="content"></div>`,
+<div _id="avhideable_0"></div>`,
             slots: {
                 'default':`<slot></slot>`
             },
             blocks: {
                 'default':`<slot></slot>
-<div av-element="content"></div>`
+<div _id="avhideable_0"></div>`
             }
         }
         return info;
     }
     __getMaxId() {
         let temp = super.__getMaxId();
-        temp.push(["AvHideable", 0])
+        temp.push(["AvHideable", 1])
         return temp;
     }
+    __mapSelectedElement() { super.__mapSelectedElement(); this.content = this.shadowRoot.querySelector('[_id="avhideable_0"]');}
     __endConstructor() { super.__endConstructor(); (() => {    this.options = {        noHideItems: [this],        container: document.body,        beforeHide: this.defaultBeforeHide,        afterHide: this.defaultAfterHide,        canHide: this.defaultCanHide    };    this.checkCloseBinded = this.checkClose.bind(this);})() }
     getClassName() {
         return "AvHideable";
@@ -9901,6 +9904,46 @@ class AvRessourceManager {    static memory = {};    static waiting = {};    
 
 
 
+class AvApp extends Aventus.AvRouter {
+    __getStyle() {
+        let arrStyle = super.__getStyle();
+        arrStyle.push(`:host{height:100%;width:100%;display:flex;flex-direction:column}:host .content{padding:15px 0;flex-grow:1}`);
+        return arrStyle;
+    }
+    __getHtml() {
+        let parentInfo = super.__getHtml();
+        let info = {
+            html: `<block name="before">
+	    <av-navbar slot="before"></av-navbar>
+	</block>`,
+            slots: {
+            },
+            blocks: {
+                'before':`
+	    <av-navbar slot="before"></av-navbar>
+	`
+            }
+        }
+                let newHtml = parentInfo.html
+                for (let blockName in info.blocks) {
+                    if (!parentInfo.slots.hasOwnProperty(blockName)) {
+                        throw "can't found slot with name " + blockName;
+                    }
+                    newHtml = newHtml.replace(parentInfo.slots[blockName], info.blocks[blockName]);
+                }
+                info.html = newHtml;
+        return info;
+    }
+    __getMaxId() {
+        let temp = super.__getMaxId();
+        temp.push(["AvApp", 0])
+        return temp;
+    }
+    getClassName() {
+        return "AvApp";
+    }
+     defineRoutes(){return {    "/": AvHome,    "/example": AvExample,    "/introduction": AvGettingStarted,    "/introduction/init": AvGettingStartedInitProject,    "/introduction/webcomponent": AvGettingStartedWebcomponent,    "/introduction/routing": AvGettingStartedRouting,    "/installation": AvInstallation,    "/api": AvApi,    "/api/configuration": AvApiConfiguration};}}
+window.customElements.define('av-app', AvApp);
 class AvHome extends Aventus.AvPage {
     __getStyle() {
         let arrStyle = super.__getStyle();
@@ -10164,7 +10207,7 @@ class AvGettingStartedRouting extends AvGenericPage {
         You can find an example below.
     </p>
     <av-code language="typescript">
-export class AvHomePage extends AvPage implements DefaultComponent {
+export class HomePage extends Aventus.AvPage implements Aventus.DefaultComponent {
     defineTitle(): string {
         return "Todo - Home";
     }
@@ -10194,7 +10237,7 @@ export class AvHomePage extends AvPage implements DefaultComponent {
         You can find an example below.
     </p>
     <av-code language="typescript">
-export class AvHomePage extends AvPage implements DefaultComponent {
+export class HomePage extends Aventus.AvPage implements Aventus.DefaultComponent {
     defineTitle(): string {
         return "Todo - Home";
     }
@@ -10224,7 +10267,7 @@ export class AvHomePage extends AvPage implements DefaultComponent {
     getClassName() {
         return "AvGettingStartedRouting";
     }
-     defineTitle(){return "Aventus - Routing";} postCreation(){setTimeout(() => {    this.scrollElement.scrollToPosition(0, 99999);}, 100);}}
+     defineTitle(){return "Aventus - Routing";}}
 window.customElements.define('av-getting-started-routing', AvGettingStartedRouting);
 class AvGettingStartedWebcomponent extends AvGenericPage {
     __getStyle() {
@@ -10250,7 +10293,7 @@ class AvGettingStartedWebcomponent extends AvGenericPage {
     </p>
     <av-code language="html">
 &lt;script&gt;
-    export class AvApp extends WebComponent implements DefaultComponent {
+    export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     }
 &lt;/script&gt;
 &lt;template&gt;
@@ -10267,7 +10310,7 @@ class AvGettingStartedWebcomponent extends AvGenericPage {
     <p>You can try to replace the <b>&lt;slot&gt;&lt;/slot&gt;</b> by <b>&lt;h1&gt;Hello World&lt;/h1&gt;</b>. Inside the tag <b>template</b> you can write <b>HTML</b></p>
         <av-code language="html">
 &lt;script&gt;
-    export class AvApp extends WebComponent implements DefaultComponent {
+    export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     }
 &lt;/script&gt;
 &lt;template&gt;
@@ -10375,7 +10418,7 @@ av-app {
         the custom element class <b>constructor</b> is called. You can extend the constructor like below :
     </p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     constructor() {
         // mandatory
         super();
@@ -10385,7 +10428,7 @@ export class AvApp extends WebComponent implements DefaultComponent {
     </av-code>
     <p>A web component can also be created inside your Javascript by calling</p>
     <av-code language="typescript">
-let app = new AvApp();
+let app = new App();
 document.body.appendChild(app);
     </av-code>
     <p>
@@ -10402,7 +10445,7 @@ protected override postCreation(): void {
         constructor and remove the alert inside the postCreation. The base script is the following :
     </p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     protected override postCreation(): void {
     }
 }
@@ -10420,7 +10463,7 @@ export class AvApp extends WebComponent implements DefaultComponent {
         When rendering av-app component, we will call a function <i>writeWorld</i>
     </p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     public writeWorld() {
     }
     protected override postCreation(): void {
@@ -10434,7 +10477,7 @@ export class AvApp extends WebComponent implements DefaultComponent {
         read <a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_shadow_DOM" target="_blank">this article</a>. 
     </p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     public writeWorld() {
         let titleEl: HTMLElement = this.shadowRoot.querySelector("h1");
     }
@@ -10444,14 +10487,15 @@ export class AvApp extends WebComponent implements DefaultComponent {
 }
     </av-code>
     <p>
-        To improve readability you can target an element in your view by adding a attribute called <b>@element</b> or <b>av-element</b> (where av is your identifier) with the name of the variable to store. 
-        Now your element is available directly inside your component scope.
+        To improve readability you can target an element in your view by adding a attribute called <b>@element</b> with the name of the variable to store. 
+        Now your element is available directly inside your component scope. You must specify that this variable is element in view by adding <b>@ViewElement()</b> decorator 
     </p>
     <av-code language="html">
 &lt;h1 @element="titleEl"&gt;Hello world&lt;/h1&gt;
     </av-code>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
+    @ViewElement()
     public titleEl: HTMLElement;
     public writeWorld() {
     }
@@ -10464,7 +10508,8 @@ export class AvApp extends WebComponent implements DefaultComponent {
         Now we can write the code for the function <i>writeWorld</i>.
     </p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
+    @ViewElement()
     public titleEl: HTMLElement;
     public writeWorld() {
         while(true) {
@@ -10497,36 +10542,37 @@ export class AvApp extends WebComponent implements DefaultComponent {
         For the example, the result will be an av-app tag with an attribute changing each second 
     </p>
     <av-code language="html">
-<av-app content="Hello ">Hello </av-app>
-<av-app content="Hello w">Hello w</av-app>
-<av-app content="Hello wo">Hello wo</av-app>
+&lt;av-app content="Hello "&gt;Hello &lt;/av-app&gt;
+&lt;av-app content="Hello w"&gt;Hello w&lt;/av-app&gt;
+&lt;av-app content="Hello wo"&gt;Hello wo&lt;/av-app&gt;
     </av-code>
     <p>
         In the script part, we can specify that we want an attribute on the generated tag by adding a property to the class 
-        and a decorator (<b>@attribute</b> or <b>@property</b>) over the property. The @property decorator will look at changes.<br>
-        You can only use <i>string, number, boolean, luxon.Date and luxon.DateTime</i> as type for your property. This can be used to 
+        and a decorator (<b>@Attribute</b> or <b>@Property</b>) over the property. The @Property decorator will look at changes.<br>
+        You can only use <i>string, number, boolean, luxon.Date, luxon.DateTime and literal ('opt1' | 'opt2' | ...)</i> as type for your property. This can be used to 
         add a specify style for a component
     </p>
     <av-code language="typescript">
-@property()
+@Property()
 public property: string = "";
-@property((target: AvApp) =&gt; {
+@Property((target: App) =&gt; {
     console.log("change");
 })
 public propertyWithChange: string = "";
-@attribute()
+@Attribute()
 public attribute: string = "";
     </av-code>
     <p>For this part, we need a attribute that will trigger change event. We can transform the code like below:</p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
-    @property((target: AvApp) =&gt; {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
+    @Property((target: App) =&gt; {
         // update the view content with the new attribute value
         target.titleEl.innerHTML = target.content;
     })
     public content: string = "Hello ";
+    @ViewElement()
     public titleEl: HTMLElement;
-    public async renderWorld(): Promise&lt;void&gt; {
+    public async writeWorld(): Promise&lt;void&gt; {
         while(true) {
             // update the content attribute instead of the HTML
             this.content = "Hello ";
@@ -10543,13 +10589,13 @@ export class AvApp extends WebComponent implements DefaultComponent {
         return new Promise((resolve) =&gt; setTimeout(() =&gt; resolve(), x));
     }
     protected override postCreation(): void {
-        this.renderWorld();
+        this.writeWorld();
     }
 }
     </av-code>
-    <p>To improve readability again, you can remove the callback function inside @property and using injection inside view with {{propertyName}}</p>
+    <p>To improve readability again, you can remove the callback function inside @Property and using injection inside view with {{propertyName}}</p>
     <av-code language="typescript">
-@property()
+@Property()
 public content: string = "Hello ";
     </av-code>
     <av-code language="html">
@@ -10570,14 +10616,15 @@ public content: string = "Hello ";
 </section>
 <section>
     <h3>Writting <i>world</i> - Using watch</h3>
-    <p>Now we want to get rid of the attribute but still having view change. We just have to replace @property by a new decorator <b>@watch</b></p>
+    <p>Now we want to get rid of the attribute but still having view change. We just have to replace @Property by a new decorator <b>@Watch</b></p>
     <p>The watch decorator use a proxy to store any kind of data inside your component and notify changes.</p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
-    @watch()
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
+    @Watch()
     public content: string = "Hello ";
+    @ViewElement()
     public titleEl: HTMLElement;
-    public async renderWorld(): Promise&lt;void&gt; {
+    public async writeWorld(): Promise&lt;void&gt; {
         while(true) {
             // update the content attribute instead of the HTML
             this.content = "Hello ";
@@ -10594,23 +10641,23 @@ export class AvApp extends WebComponent implements DefaultComponent {
         return new Promise((resolve) =&gt; setTimeout(() =&gt; resolve(), x));
     }
     protected override postCreation(): void {
-        this.renderWorld();
+        this.writeWorld();
     }
 }
     </av-code>
     <p>If you look your browser, you can see that when it's written "Hello world" the color isn't green anymore</p>
     <p>We will just add a new property inside the class to try more watchable property</p>
     <av-code language="typescript">
-@watch((target: AvApp, action: WatchAction, path: string, value: any) =&gt; {
+@Watch((target: App, action: Aventus.WatchAction, path: string, value: any) =&gt; {
     // this log will be shown when something inside status is updated
-    console.log(WatchAction[action] + " on path " + path + " with value ", value);
+    console.log(Aventus.WatchAction[action] + " on path " + path + " with value ", value);
 })
 public status = {
     name: "",
     value: 0
 };
 ...
-public async renderWorld(): Promise&lt;void&gt; {
+public async writeWorld(): Promise&lt;void&gt; {
     while(true) {
         this.content = "Hello ";
         this.status.name = "Progress";
@@ -10636,7 +10683,7 @@ public async renderWorld(): Promise&lt;void&gt; {
 @Debugger({
     enableWatchHistory: true,
 })
-export class AvApp extends WebComponent implements DefaultComponent {}
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {}
     </av-code>
     <p>
         Now open your dev console, store the av-app as a variable. You can call the function <b>.getWatchHistory()</b> to obtain all changes 
@@ -10653,7 +10700,7 @@ export class AvApp extends WebComponent implements DefaultComponent {}
     </p>
     <av-code language="html">
 &lt;script&gt;
-    export class AvApp extends WebComponent implements DefaultComponent {
+    export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     }
 &lt;/script&gt;
     </av-code>
@@ -10680,7 +10727,7 @@ export class AvApp extends WebComponent implements DefaultComponent {}
     </p>
     <av-code language="html">
 &lt;script&gt;
-    export class AvApp extends WebComponent implements DefaultComponent {
+    export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     }
 &lt;/script&gt;
 &lt;template&gt;
@@ -10697,7 +10744,7 @@ export class AvApp extends WebComponent implements DefaultComponent {}
     <p>You can try to replace the <b>&lt;slot&gt;&lt;/slot&gt;</b> by <b>&lt;h1&gt;Hello World&lt;/h1&gt;</b>. Inside the tag <b>template</b> you can write <b>HTML</b></p>
         <av-code language="html">
 &lt;script&gt;
-    export class AvApp extends WebComponent implements DefaultComponent {
+    export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     }
 &lt;/script&gt;
 &lt;template&gt;
@@ -10805,7 +10852,7 @@ av-app {
         the custom element class <b>constructor</b> is called. You can extend the constructor like below :
     </p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     constructor() {
         // mandatory
         super();
@@ -10815,7 +10862,7 @@ export class AvApp extends WebComponent implements DefaultComponent {
     </av-code>
     <p>A web component can also be created inside your Javascript by calling</p>
     <av-code language="typescript">
-let app = new AvApp();
+let app = new App();
 document.body.appendChild(app);
     </av-code>
     <p>
@@ -10832,7 +10879,7 @@ protected override postCreation(): void {
         constructor and remove the alert inside the postCreation. The base script is the following :
     </p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     protected override postCreation(): void {
     }
 }
@@ -10850,7 +10897,7 @@ export class AvApp extends WebComponent implements DefaultComponent {
         When rendering av-app component, we will call a function <i>writeWorld</i>
     </p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     public writeWorld() {
     }
     protected override postCreation(): void {
@@ -10864,7 +10911,7 @@ export class AvApp extends WebComponent implements DefaultComponent {
         read <a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_shadow_DOM" target="_blank">this article</a>. 
     </p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     public writeWorld() {
         let titleEl: HTMLElement = this.shadowRoot.querySelector("h1");
     }
@@ -10874,14 +10921,15 @@ export class AvApp extends WebComponent implements DefaultComponent {
 }
     </av-code>
     <p>
-        To improve readability you can target an element in your view by adding a attribute called <b>@element</b> or <b>av-element</b> (where av is your identifier) with the name of the variable to store. 
-        Now your element is available directly inside your component scope.
+        To improve readability you can target an element in your view by adding a attribute called <b>@element</b> with the name of the variable to store. 
+        Now your element is available directly inside your component scope. You must specify that this variable is element in view by adding <b>@ViewElement()</b> decorator 
     </p>
     <av-code language="html">
 &lt;h1 @element="titleEl"&gt;Hello world&lt;/h1&gt;
     </av-code>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
+    @ViewElement()
     public titleEl: HTMLElement;
     public writeWorld() {
     }
@@ -10894,7 +10942,8 @@ export class AvApp extends WebComponent implements DefaultComponent {
         Now we can write the code for the function <i>writeWorld</i>.
     </p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
+    @ViewElement()
     public titleEl: HTMLElement;
     public writeWorld() {
         while(true) {
@@ -10927,36 +10976,37 @@ export class AvApp extends WebComponent implements DefaultComponent {
         For the example, the result will be an av-app tag with an attribute changing each second 
     </p>
     <av-code language="html">
-<av-app content="Hello ">Hello </av-app>
-<av-app content="Hello w">Hello w</av-app>
-<av-app content="Hello wo">Hello wo</av-app>
+&lt;av-app content="Hello "&gt;Hello &lt;/av-app&gt;
+&lt;av-app content="Hello w"&gt;Hello w&lt;/av-app&gt;
+&lt;av-app content="Hello wo"&gt;Hello wo&lt;/av-app&gt;
     </av-code>
     <p>
         In the script part, we can specify that we want an attribute on the generated tag by adding a property to the class 
-        and a decorator (<b>@attribute</b> or <b>@property</b>) over the property. The @property decorator will look at changes.<br>
-        You can only use <i>string, number, boolean, luxon.Date and luxon.DateTime</i> as type for your property. This can be used to 
+        and a decorator (<b>@Attribute</b> or <b>@Property</b>) over the property. The @Property decorator will look at changes.<br>
+        You can only use <i>string, number, boolean, luxon.Date, luxon.DateTime and literal ('opt1' | 'opt2' | ...)</i> as type for your property. This can be used to 
         add a specify style for a component
     </p>
     <av-code language="typescript">
-@property()
+@Property()
 public property: string = "";
-@property((target: AvApp) =&gt; {
+@Property((target: App) =&gt; {
     console.log("change");
 })
 public propertyWithChange: string = "";
-@attribute()
+@Attribute()
 public attribute: string = "";
     </av-code>
     <p>For this part, we need a attribute that will trigger change event. We can transform the code like below:</p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
-    @property((target: AvApp) =&gt; {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
+    @Property((target: App) =&gt; {
         // update the view content with the new attribute value
         target.titleEl.innerHTML = target.content;
     })
     public content: string = "Hello ";
+    @ViewElement()
     public titleEl: HTMLElement;
-    public async renderWorld(): Promise&lt;void&gt; {
+    public async writeWorld(): Promise&lt;void&gt; {
         while(true) {
             // update the content attribute instead of the HTML
             this.content = "Hello ";
@@ -10973,13 +11023,13 @@ export class AvApp extends WebComponent implements DefaultComponent {
         return new Promise((resolve) =&gt; setTimeout(() =&gt; resolve(), x));
     }
     protected override postCreation(): void {
-        this.renderWorld();
+        this.writeWorld();
     }
 }
     </av-code>
-    <p>To improve readability again, you can remove the callback function inside @property and using injection inside view with {{propertyName}}</p>
+    <p>To improve readability again, you can remove the callback function inside @Property and using injection inside view with {{propertyName}}</p>
     <av-code language="typescript">
-@property()
+@Property()
 public content: string = "Hello ";
     </av-code>
     <av-code language="html">
@@ -11000,14 +11050,15 @@ public content: string = "Hello ";
 </section>
 <section>
     <h3>Writting <i>world</i> - Using watch</h3>
-    <p>Now we want to get rid of the attribute but still having view change. We just have to replace @property by a new decorator <b>@watch</b></p>
+    <p>Now we want to get rid of the attribute but still having view change. We just have to replace @Property by a new decorator <b>@Watch</b></p>
     <p>The watch decorator use a proxy to store any kind of data inside your component and notify changes.</p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
-    @watch()
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
+    @Watch()
     public content: string = "Hello ";
+    @ViewElement()
     public titleEl: HTMLElement;
-    public async renderWorld(): Promise&lt;void&gt; {
+    public async writeWorld(): Promise&lt;void&gt; {
         while(true) {
             // update the content attribute instead of the HTML
             this.content = "Hello ";
@@ -11024,23 +11075,23 @@ export class AvApp extends WebComponent implements DefaultComponent {
         return new Promise((resolve) =&gt; setTimeout(() =&gt; resolve(), x));
     }
     protected override postCreation(): void {
-        this.renderWorld();
+        this.writeWorld();
     }
 }
     </av-code>
     <p>If you look your browser, you can see that when it's written "Hello world" the color isn't green anymore</p>
     <p>We will just add a new property inside the class to try more watchable property</p>
     <av-code language="typescript">
-@watch((target: AvApp, action: WatchAction, path: string, value: any) =&gt; {
+@Watch((target: App, action: Aventus.WatchAction, path: string, value: any) =&gt; {
     // this log will be shown when something inside status is updated
-    console.log(WatchAction[action] + " on path " + path + " with value ", value);
+    console.log(Aventus.WatchAction[action] + " on path " + path + " with value ", value);
 })
 public status = {
     name: "",
     value: 0
 };
 ...
-public async renderWorld(): Promise&lt;void&gt; {
+public async writeWorld(): Promise&lt;void&gt; {
     while(true) {
         this.content = "Hello ";
         this.status.name = "Progress";
@@ -11066,7 +11117,7 @@ public async renderWorld(): Promise&lt;void&gt; {
 @Debugger({
     enableWatchHistory: true,
 })
-export class AvApp extends WebComponent implements DefaultComponent {}
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {}
     </av-code>
     <p>
         Now open your dev console, store the av-app as a variable. You can call the function <b>.getWatchHistory()</b> to obtain all changes 
@@ -11083,7 +11134,7 @@ export class AvApp extends WebComponent implements DefaultComponent {}
     </p>
     <av-code language="html">
 &lt;script&gt;
-    export class AvApp extends WebComponent implements DefaultComponent {
+    export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     }
 &lt;/script&gt;
     </av-code>
@@ -11153,10 +11204,11 @@ class AvGettingStartedInitProject extends AvGenericPage {
     <p>The default configuration file. An explanation of each part of this JSON is provided below</p>
     <av-code language="json">
 {
-    "identifier": "Av",
     "build": [
         {
             "name": "aventus_todo",
+            "namespace":"aventus_todo",
+            "componentPrefix": "av",
             "version": "0.0.1",
             "inputPath": [
                 "./src/*"
@@ -11168,15 +11220,24 @@ class AvGettingStartedInitProject extends AvGenericPage {
     ]
 }
     </av-code>
-    <p>First of all, we need to define an <b>identifier</b> for our project. This <b>identifier</b> is a prefix for all you Typescript
-        classes. Futhermore, you will find it before each web component. For example if I created a button web
-        component, I can use it in my HTML like that</p>
-    <av-code language="html">
-        <av-button></av-button>
-    </av-code>
     <p>
         The section <b>build</b> allows you to define all Aventus input files you need to compile in a single Javascript file.
-        You must provide two meta data fields : <b>build.name</b> and <b>build.version</b>.
+        You must provide two meta data fields : <b>build.name</b> and <b>build.version</b>. 
+        The field <b>build.namespace</b> represents the name where all your code is wrapped when compiled.
+    </p>
+    <av-code language="javascript">
+var aventus_todo = {
+    myClass1:...,
+    myClass2:...
+}
+    </av-code>
+    <p>
+        <b>build.componentPrefix</b> is the prefix for your web component tag. For example if I created a button web component, I can use it in my HTML like that :
+    </p>
+    <av-code language="html">
+        &lt;av-button&gt;&lt;/av-button&gt;
+    </av-code>
+    <p>
         Then you can add all your input paths with the field <b>build.inputPath</b> and define the output file to generate with the field 
         <b>build.outputFile</b>. Conventionally your source code will be inside the folder <i>src/</i> and the output will be inside the folder
         <i>dist/</i>
@@ -11230,8 +11291,8 @@ class AvGettingStartedInitProject extends AvGenericPage {
     </ul>
     <p>Save all files. You can check inside you dist directory and see two files : <b>aventus_todo.js</b> and <b>index.html</b></p>
     <p>We must link the HTML and the Javascript. Inside the index.html, add this code</p>
-    <av-code language="js">
-        <script src="/aventus_todo.js"></script>
+    <av-code language="html">
+        &lt;script src="/aventus_todo.js"&gt;&lt;/script&gt;
     </av-code>
     <p>Because of the SPA, we must create an entry point inside Aventus. Right click on the <i>src/</i> directory 
         and click on <b>Aventus : Create...</b>. <br>
@@ -11300,10 +11361,11 @@ class AvGettingStartedInitProject extends AvGenericPage {
     <p>The default configuration file. An explanation of each part of this JSON is provided below</p>
     <av-code language="json">
 {
-    "identifier": "Av",
     "build": [
         {
             "name": "aventus_todo",
+            "namespace":"aventus_todo",
+            "componentPrefix": "av",
             "version": "0.0.1",
             "inputPath": [
                 "./src/*"
@@ -11315,15 +11377,24 @@ class AvGettingStartedInitProject extends AvGenericPage {
     ]
 }
     </av-code>
-    <p>First of all, we need to define an <b>identifier</b> for our project. This <b>identifier</b> is a prefix for all you Typescript
-        classes. Futhermore, you will find it before each web component. For example if I created a button web
-        component, I can use it in my HTML like that</p>
-    <av-code language="html">
-        <av-button></av-button>
-    </av-code>
     <p>
         The section <b>build</b> allows you to define all Aventus input files you need to compile in a single Javascript file.
-        You must provide two meta data fields : <b>build.name</b> and <b>build.version</b>.
+        You must provide two meta data fields : <b>build.name</b> and <b>build.version</b>. 
+        The field <b>build.namespace</b> represents the name where all your code is wrapped when compiled.
+    </p>
+    <av-code language="javascript">
+var aventus_todo = {
+    myClass1:...,
+    myClass2:...
+}
+    </av-code>
+    <p>
+        <b>build.componentPrefix</b> is the prefix for your web component tag. For example if I created a button web component, I can use it in my HTML like that :
+    </p>
+    <av-code language="html">
+        &lt;av-button&gt;&lt;/av-button&gt;
+    </av-code>
+    <p>
         Then you can add all your input paths with the field <b>build.inputPath</b> and define the output file to generate with the field 
         <b>build.outputFile</b>. Conventionally your source code will be inside the folder <i>src/</i> and the output will be inside the folder
         <i>dist/</i>
@@ -11377,8 +11448,8 @@ class AvGettingStartedInitProject extends AvGenericPage {
     </ul>
     <p>Save all files. You can check inside you dist directory and see two files : <b>aventus_todo.js</b> and <b>index.html</b></p>
     <p>We must link the HTML and the Javascript. Inside the index.html, add this code</p>
-    <av-code language="js">
-        <script src="/aventus_todo.js"></script>
+    <av-code language="html">
+        &lt;script src="/aventus_todo.js"&gt;&lt;/script&gt;
     </av-code>
     <p>Because of the SPA, we must create an entry point inside Aventus. Right click on the <i>src/</i> directory 
         and click on <b>Aventus : Create...</b>. <br>
@@ -12797,7 +12868,7 @@ class AvImg extends Aventus.WebComponent {
     __defaultValue() { super.__defaultValue(); if(!this.hasAttribute('display_bigger')) { this.attributeChangedCallback('display_bigger', false, false); }if(!this.hasAttribute('mode')){ this['mode'] = 'contains'; } }
     __upgradeAttributes() { super.__upgradeAttributes(); this.__upgradeProperty('src');this.__upgradeProperty('mode'); }
     __listBoolProps() { return ["display_bigger"].concat(super.__listBoolProps()).filter((v, i, a) => a.indexOf(v) === i); }
-     checkClose(e){if (e instanceof KeyboardEvent) {    if (e.key == 'Escape') {        this.close();    }}else {    let realTargetEl = e.realTarget();    if (realTargetEl != this.bigImg) {        this.close();    }}} close(){this.bigImg.style.opacity = '0';document.body.removeEventListener('click', this.checkCloseBinded);setTimeout(() => {    this.bigImg.remove();}, 710);} calculateSize(attempt){if (this._isCalculing) {    return;}if (this.src == "") {    return;}this._isCalculing = true;if (getComputedStyle(this).display == 'none') {    return;}if (attempt == this._maxCalculateSize) {    this._isCalculing = false;    return;}let element = this.imgEl;if (this.src.endsWith(".svg")) {    element = this.svgEl;}this.style.width = '';this.style.height = '';element.style.width = '';element.style.height = '';if (element.offsetWidth == 0 && element.offsetHeight == 0) {    setTimeout(() => {        this._isCalculing = false;        this.calculateSize(attempt + 1);    }, 100);    return;}let style = getComputedStyle(this);let addedY = Number(style.paddingTop.replace("px", "")) + Number(style.paddingBottom.replace("px", "")) + Number(style.borderTopWidth.replace("px", "")) + Number(style.borderBottomWidth.replace("px", ""));let addedX = Number(style.paddingLeft.replace("px", "")) + Number(style.paddingRight.replace("px", "")) + Number(style.borderLeftWidth.replace("px", "")) + Number(style.borderRightWidth.replace("px", ""));let availableHeight = this.offsetHeight - addedY;let availableWidth = this.offsetWidth - addedX;let sameWidth = (element.offsetWidth == availableWidth);let sameHeight = (element.offsetHeight == availableHeight);this.ratio = element.offsetWidth / element.offsetHeight;if (sameWidth && !sameHeight) {    element.style.width = (availableHeight * this.ratio) + 'px';    element.style.height = availableHeight + 'px';}else if (!sameWidth && sameHeight) {    element.style.width = availableWidth + 'px';    element.style.height = (availableWidth / this.ratio) + 'px';}else if (!sameWidth && !sameHeight) {    if (this.mode == "stretch") {        element.style.width = '100%';        element.style.height = '100%';    }    else if (this.mode == "contains") {        let newWidth = (availableHeight * this.ratio);        if (newWidth <= availableWidth) {            element.style.width = newWidth + 'px';            element.style.height = availableHeight + 'px';        }        else {            element.style.width = availableWidth + 'px';            element.style.height = (availableWidth / this.ratio) + 'px';        }    }    else if (this.mode == "cover") {        let newWidth = (availableHeight * this.ratio);        if (newWidth >= availableWidth) {            element.style.width = newWidth + 'px';            element.style.height = availableHeight + 'px';        }        else {            element.style.width = availableWidth + 'px';            element.style.height = (availableWidth / this.ratio) + 'px';        }    }}let diffTop = (this.offsetHeight - element.offsetHeight - addedY) / 2;let diffLeft = (this.offsetWidth - element.offsetWidth - addedX) / 2;element.style.transform = "translate(" + diffLeft + "px, " + diffTop + "px)";element.style.opacity = '1';this._isCalculing = false;} showImg(e){if (this.display_bigger) {    let target = e.currentTarget;    let position = target.getPositionOnScreen();    let div = document.createElement("DIV");    div.style.position = 'absolute';    div.style.top = position.y + 'px';    div.style.left = position.x + 'px';    div.style.width = target.offsetWidth + 'px';    div.style.height = target.offsetHeight + 'px';    div.style.backgroundImage = 'url(' + this.src + ')';    div.style.backgroundSize = 'contain';    div.style.backgroundRepeat = 'no-repeat';    div.style.zIndex = '502';    div.style.transition = 'all 0.7s cubic-bezier(0.65, 0, 0.15, 1)';    div.style.backgroundPosition = 'center';    div.style.backgroundColor = 'black';    this.bigImg = div;    document.body.appendChild(div);    setTimeout(() => {        div.style.top = '50px';        div.style.left = '50px';        div.style.width = 'calc(100% - 100px)';        div.style.height = 'calc(100% - 100px)';        document.body.addEventListener('click', this.checkCloseBinded);        document.body.addEventListener('keydown', this.checkCloseBinded);    }, 100);}} postCreation(){this.addEventListener("click", (e) => { this.showImg(e); });new ResizeObserver(() => {    this.calculateSize();}).observe(this);}}
+     checkClose(e){if (e instanceof KeyboardEvent) {    if (e.key == 'Escape') {        this.close();    }}else {    let realTargetEl = e.realTarget();    if (realTargetEl != this.bigImg) {        this.close();    }}} close(){this.bigImg.style.opacity = '0';document.body.removeEventListener('click', this.checkCloseBinded);setTimeout(() => {    this.bigImg.remove();}, 710);} calculateSize(attempt){if (!attempt) {    attempt = 0;}if (this._isCalculing) {    return;}if (this.src == "") {    return;}this._isCalculing = true;if (getComputedStyle(this).display == 'none') {    return;}if (attempt == this._maxCalculateSize) {    this._isCalculing = false;    return;}let element = this.imgEl;if (this.src.endsWith(".svg")) {    element = this.svgEl;}this.style.width = '';this.style.height = '';element.style.width = '';element.style.height = '';if (element.offsetWidth == 0 && element.offsetHeight == 0) {    setTimeout(() => {        this._isCalculing = false;        this.calculateSize(attempt + 1);    }, 100);    return;}let style = getComputedStyle(this);let addedY = Number(style.paddingTop.replace("px", "")) + Number(style.paddingBottom.replace("px", "")) + Number(style.borderTopWidth.replace("px", "")) + Number(style.borderBottomWidth.replace("px", ""));let addedX = Number(style.paddingLeft.replace("px", "")) + Number(style.paddingRight.replace("px", "")) + Number(style.borderLeftWidth.replace("px", "")) + Number(style.borderRightWidth.replace("px", ""));let availableHeight = this.offsetHeight - addedY;let availableWidth = this.offsetWidth - addedX;let sameWidth = (element.offsetWidth == availableWidth);let sameHeight = (element.offsetHeight == availableHeight);this.ratio = element.offsetWidth / element.offsetHeight;if (sameWidth && !sameHeight) {    element.style.width = (availableHeight * this.ratio) + 'px';    element.style.height = availableHeight + 'px';}else if (!sameWidth && sameHeight) {    element.style.width = availableWidth + 'px';    element.style.height = (availableWidth / this.ratio) + 'px';}else if (!sameWidth && !sameHeight) {    if (this.mode == "stretch") {        element.style.width = '100%';        element.style.height = '100%';    }    else if (this.mode == "contains") {        let newWidth = (availableHeight * this.ratio);        if (newWidth <= availableWidth) {            element.style.width = newWidth + 'px';            element.style.height = availableHeight + 'px';        }        else {            element.style.width = availableWidth + 'px';            element.style.height = (availableWidth / this.ratio) + 'px';        }    }    else if (this.mode == "cover") {        let newWidth = (availableHeight * this.ratio);        if (newWidth >= availableWidth) {            element.style.width = newWidth + 'px';            element.style.height = availableHeight + 'px';        }        else {            element.style.width = availableWidth + 'px';            element.style.height = (availableWidth / this.ratio) + 'px';        }    }}let diffTop = (this.offsetHeight - element.offsetHeight - addedY) / 2;let diffLeft = (this.offsetWidth - element.offsetWidth - addedX) / 2;element.style.transform = "translate(" + diffLeft + "px, " + diffTop + "px)";element.style.opacity = '1';this._isCalculing = false;} showImg(e){if (this.display_bigger) {    let target = e.currentTarget;    let position = target.getPositionOnScreen();    let div = document.createElement("DIV");    div.style.position = 'absolute';    div.style.top = position.y + 'px';    div.style.left = position.x + 'px';    div.style.width = target.offsetWidth + 'px';    div.style.height = target.offsetHeight + 'px';    div.style.backgroundImage = 'url(' + this.src + ')';    div.style.backgroundSize = 'contain';    div.style.backgroundRepeat = 'no-repeat';    div.style.zIndex = '502';    div.style.transition = 'all 0.7s cubic-bezier(0.65, 0, 0.15, 1)';    div.style.backgroundPosition = 'center';    div.style.backgroundColor = 'black';    this.bigImg = div;    document.body.appendChild(div);    setTimeout(() => {        div.style.top = '50px';        div.style.left = '50px';        div.style.width = 'calc(100% - 100px)';        div.style.height = 'calc(100% - 100px)';        document.body.addEventListener('click', this.checkCloseBinded);        document.body.addEventListener('keydown', this.checkCloseBinded);    }, 100);}} postCreation(){this.addEventListener("click", (e) => { this.showImg(e); });new ResizeObserver(() => {    this.calculateSize();}).observe(this);}}
 window.customElements.define('av-img', AvImg);
 class AvButton extends Aventus.WebComponent {
     __getStyle() {
@@ -12884,6 +12955,7 @@ class AvApi extends AvGenericPage {
     }
      defineTitle(){return 'Aventus - API';}}
 window.customElements.define('av-api', AvApi);
+TodoList.AvApp=AvApp;
 TodoList.AvHome=AvHome;
 TodoList.AvGenericPage=AvGenericPage;
 TodoList.AvInstallation=AvInstallation;
