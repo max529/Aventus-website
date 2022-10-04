@@ -15,7 +15,7 @@
         You can find an example below.
     </p>
     <av-code language="typescript">
-export class AvHomePage extends AvPage implements DefaultComponent {
+export class HomePage extends Aventus.AvPage implements Aventus.DefaultComponent {
 
     defineTitle(): string {
         return "Todo - Home";

@@ -93,7 +93,10 @@ export class AvImg extends Aventus.WebComponent implements Aventus.DefaultCompon
             this.bigImg.remove();
         }, 710);
     }
-    private calculateSize(attempt = 0) {
+    private calculateSize(attempt: number = undefined) {
+        if(!attempt) {
+            attempt = 0;
+        }
         if(this._isCalculing) {
             return;
         }

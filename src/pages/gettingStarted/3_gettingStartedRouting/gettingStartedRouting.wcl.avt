@@ -31,11 +31,7 @@ export class AvGettingStartedRouting extends AvGenericPage implements Aventus.De
     defineTitle(): string {
         return "Aventus - Routing";
     }
-	protected override postCreation(): void {
-		setTimeout(() => {
-			this.scrollElement.scrollToPosition(0, 99999);
-		}, 100)
-	}
+	
 	//#endregion
 	
 }

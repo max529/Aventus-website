@@ -28,10 +28,11 @@
     <p>The default configuration file. An explanation of each part of this JSON is provided below</p>
     <av-code language="json">
 {
-    "identifier": "Av",
     "build": [
         {
             "name": "aventus_todo",
+            "namespace":"aventus_todo",
+            "componentPrefix": "av",
             "version": "0.0.1",
             "inputPath": [
                 "./src/*"
@@ -43,15 +44,24 @@
     ]
 }
     </av-code>
-    <p>First of all, we need to define an <b>identifier</b> for our project. This <b>identifier</b> is a prefix for all you Typescript
-        classes. Futhermore, you will find it before each web component. For example if I created a button web
-        component, I can use it in my HTML like that</p>
-    <av-code language="html">
-        <av-button></av-button>
-    </av-code>
     <p>
         The section <b>build</b> allows you to define all Aventus input files you need to compile in a single Javascript file.
-        You must provide two meta data fields : <b>build.name</b> and <b>build.version</b>.
+        You must provide two meta data fields : <b>build.name</b> and <b>build.version</b>. 
+        The field <b>build.namespace</b> represents the name where all your code is wrapped when compiled.
+    </p>
+    <av-code language="javascript">
+var aventus_todo = {
+    myClass1:...,
+    myClass2:...
+}
+    </av-code>
+    <p>
+        <b>build.componentPrefix</b> is the prefix for your web component tag. For example if I created a button web component, I can use it in my HTML like that :
+    </p>
+    <av-code language="html">
+        &lt;av-button&gt;&lt;/av-button&gt;
+    </av-code>
+    <p>
         Then you can add all your input paths with the field <b>build.inputPath</b> and define the output file to generate with the field 
         <b>build.outputFile</b>. Conventionally your source code will be inside the folder <i>src/</i> and the output will be inside the folder
         <i>dist/</i>
@@ -106,8 +116,8 @@
     </ul>
     <p>Save all files. You can check inside you dist directory and see two files : <b>aventus_todo.js</b> and <b>index.html</b></p>
     <p>We must link the HTML and the Javascript. Inside the index.html, add this code</p>
-    <av-code language="js">
-        <script src="/aventus_todo.js"></script>
+    <av-code language="html">
+        &lt;script src="/aventus_todo.js"&gt;&lt;/script&gt;
     </av-code>
     <p>Because of the SPA, we must create an entry point inside Aventus. Right click on the <i>src/</i> directory 
         and click on <b>Aventus : Create...</b>. <br />

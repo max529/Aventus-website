@@ -22,7 +22,7 @@ class AvGettingStartedWebcomponent extends AvGenericPage {
     </p>
     <av-code language="html">
 &lt;script&gt;
-    export class AvApp extends WebComponent implements DefaultComponent {
+    export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     }
 &lt;/script&gt;
 &lt;template&gt;
@@ -39,7 +39,7 @@ class AvGettingStartedWebcomponent extends AvGenericPage {
     <p>You can try to replace the <b>&lt;slot&gt;&lt;/slot&gt;</b> by <b>&lt;h1&gt;Hello World&lt;/h1&gt;</b>. Inside the tag <b>template</b> you can write <b>HTML</b></p>
         <av-code language="html">
 &lt;script&gt;
-    export class AvApp extends WebComponent implements DefaultComponent {
+    export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     }
 &lt;/script&gt;
 &lt;template&gt;
@@ -147,7 +147,7 @@ av-app {
         the custom element class <b>constructor</b> is called. You can extend the constructor like below :
     </p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     constructor() {
         // mandatory
         super();
@@ -157,7 +157,7 @@ export class AvApp extends WebComponent implements DefaultComponent {
     </av-code>
     <p>A web component can also be created inside your Javascript by calling</p>
     <av-code language="typescript">
-let app = new AvApp();
+let app = new App();
 document.body.appendChild(app);
     </av-code>
     <p>
@@ -174,7 +174,7 @@ protected override postCreation(): void {
         constructor and remove the alert inside the postCreation. The base script is the following :
     </p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     protected override postCreation(): void {
     }
 }
@@ -192,7 +192,7 @@ export class AvApp extends WebComponent implements DefaultComponent {
         When rendering av-app component, we will call a function <i>writeWorld</i>
     </p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     public writeWorld() {
     }
     protected override postCreation(): void {
@@ -206,7 +206,7 @@ export class AvApp extends WebComponent implements DefaultComponent {
         read <a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_shadow_DOM" target="_blank">this article</a>. 
     </p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     public writeWorld() {
         let titleEl: HTMLElement = this.shadowRoot.querySelector("h1");
     }
@@ -216,14 +216,15 @@ export class AvApp extends WebComponent implements DefaultComponent {
 }
     </av-code>
     <p>
-        To improve readability you can target an element in your view by adding a attribute called <b>@element</b> or <b>av-element</b> (where av is your identifier) with the name of the variable to store. 
-        Now your element is available directly inside your component scope.
+        To improve readability you can target an element in your view by adding a attribute called <b>@element</b> with the name of the variable to store. 
+        Now your element is available directly inside your component scope. You must specify that this variable is element in view by adding <b>@ViewElement()</b> decorator 
     </p>
     <av-code language="html">
 &lt;h1 @element="titleEl"&gt;Hello world&lt;/h1&gt;
     </av-code>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
+    @ViewElement()
     public titleEl: HTMLElement;
     public writeWorld() {
     }
@@ -236,7 +237,8 @@ export class AvApp extends WebComponent implements DefaultComponent {
         Now we can write the code for the function <i>writeWorld</i>.
     </p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
+    @ViewElement()
     public titleEl: HTMLElement;
     public writeWorld() {
         while(true) {
@@ -269,36 +271,37 @@ export class AvApp extends WebComponent implements DefaultComponent {
         For the example, the result will be an av-app tag with an attribute changing each second 
     </p>
     <av-code language="html">
-<av-app content="Hello ">Hello </av-app>
-<av-app content="Hello w">Hello w</av-app>
-<av-app content="Hello wo">Hello wo</av-app>
+&lt;av-app content="Hello "&gt;Hello &lt;/av-app&gt;
+&lt;av-app content="Hello w"&gt;Hello w&lt;/av-app&gt;
+&lt;av-app content="Hello wo"&gt;Hello wo&lt;/av-app&gt;
     </av-code>
     <p>
         In the script part, we can specify that we want an attribute on the generated tag by adding a property to the class 
-        and a decorator (<b>@attribute</b> or <b>@property</b>) over the property. The @property decorator will look at changes.<br>
-        You can only use <i>string, number, boolean, luxon.Date and luxon.DateTime</i> as type for your property. This can be used to 
+        and a decorator (<b>@Attribute</b> or <b>@Property</b>) over the property. The @Property decorator will look at changes.<br>
+        You can only use <i>string, number, boolean, luxon.Date, luxon.DateTime and literal ('opt1' | 'opt2' | ...)</i> as type for your property. This can be used to 
         add a specify style for a component
     </p>
     <av-code language="typescript">
-@property()
+@Property()
 public property: string = "";
-@property((target: AvApp) =&gt; {
+@Property((target: App) =&gt; {
     console.log("change");
 })
 public propertyWithChange: string = "";
-@attribute()
+@Attribute()
 public attribute: string = "";
     </av-code>
     <p>For this part, we need a attribute that will trigger change event. We can transform the code like below:</p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
-    @property((target: AvApp) =&gt; {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
+    @Property((target: App) =&gt; {
         // update the view content with the new attribute value
         target.titleEl.innerHTML = target.content;
     })
     public content: string = "Hello ";
+    @ViewElement()
     public titleEl: HTMLElement;
-    public async renderWorld(): Promise&lt;void&gt; {
+    public async writeWorld(): Promise&lt;void&gt; {
         while(true) {
             // update the content attribute instead of the HTML
             this.content = "Hello ";
@@ -315,13 +318,13 @@ export class AvApp extends WebComponent implements DefaultComponent {
         return new Promise((resolve) =&gt; setTimeout(() =&gt; resolve(), x));
     }
     protected override postCreation(): void {
-        this.renderWorld();
+        this.writeWorld();
     }
 }
     </av-code>
-    <p>To improve readability again, you can remove the callback function inside @property and using injection inside view with {{propertyName}}</p>
+    <p>To improve readability again, you can remove the callback function inside @Property and using injection inside view with {{propertyName}}</p>
     <av-code language="typescript">
-@property()
+@Property()
 public content: string = "Hello ";
     </av-code>
     <av-code language="html">
@@ -342,14 +345,15 @@ public content: string = "Hello ";
 </section>
 <section>
     <h3>Writting <i>world</i> - Using watch</h3>
-    <p>Now we want to get rid of the attribute but still having view change. We just have to replace @property by a new decorator <b>@watch</b></p>
+    <p>Now we want to get rid of the attribute but still having view change. We just have to replace @Property by a new decorator <b>@Watch</b></p>
     <p>The watch decorator use a proxy to store any kind of data inside your component and notify changes.</p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
-    @watch()
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
+    @Watch()
     public content: string = "Hello ";
+    @ViewElement()
     public titleEl: HTMLElement;
-    public async renderWorld(): Promise&lt;void&gt; {
+    public async writeWorld(): Promise&lt;void&gt; {
         while(true) {
             // update the content attribute instead of the HTML
             this.content = "Hello ";
@@ -366,23 +370,23 @@ export class AvApp extends WebComponent implements DefaultComponent {
         return new Promise((resolve) =&gt; setTimeout(() =&gt; resolve(), x));
     }
     protected override postCreation(): void {
-        this.renderWorld();
+        this.writeWorld();
     }
 }
     </av-code>
     <p>If you look your browser, you can see that when it's written "Hello world" the color isn't green anymore</p>
     <p>We will just add a new property inside the class to try more watchable property</p>
     <av-code language="typescript">
-@watch((target: AvApp, action: WatchAction, path: string, value: any) =&gt; {
+@Watch((target: App, action: Aventus.WatchAction, path: string, value: any) =&gt; {
     // this log will be shown when something inside status is updated
-    console.log(WatchAction[action] + " on path " + path + " with value ", value);
+    console.log(Aventus.WatchAction[action] + " on path " + path + " with value ", value);
 })
 public status = {
     name: "",
     value: 0
 };
 ...
-public async renderWorld(): Promise&lt;void&gt; {
+public async writeWorld(): Promise&lt;void&gt; {
     while(true) {
         this.content = "Hello ";
         this.status.name = "Progress";
@@ -408,7 +412,7 @@ public async renderWorld(): Promise&lt;void&gt; {
 @Debugger({
     enableWatchHistory: true,
 })
-export class AvApp extends WebComponent implements DefaultComponent {}
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {}
     </av-code>
     <p>
         Now open your dev console, store the av-app as a variable. You can call the function <b>.getWatchHistory()</b> to obtain all changes 
@@ -425,7 +429,7 @@ export class AvApp extends WebComponent implements DefaultComponent {}
     </p>
     <av-code language="html">
 &lt;script&gt;
-    export class AvApp extends WebComponent implements DefaultComponent {
+    export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     }
 &lt;/script&gt;
     </av-code>
@@ -452,7 +456,7 @@ export class AvApp extends WebComponent implements DefaultComponent {}
     </p>
     <av-code language="html">
 &lt;script&gt;
-    export class AvApp extends WebComponent implements DefaultComponent {
+    export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     }
 &lt;/script&gt;
 &lt;template&gt;
@@ -469,7 +473,7 @@ export class AvApp extends WebComponent implements DefaultComponent {}
     <p>You can try to replace the <b>&lt;slot&gt;&lt;/slot&gt;</b> by <b>&lt;h1&gt;Hello World&lt;/h1&gt;</b>. Inside the tag <b>template</b> you can write <b>HTML</b></p>
         <av-code language="html">
 &lt;script&gt;
-    export class AvApp extends WebComponent implements DefaultComponent {
+    export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     }
 &lt;/script&gt;
 &lt;template&gt;
@@ -577,7 +581,7 @@ av-app {
         the custom element class <b>constructor</b> is called. You can extend the constructor like below :
     </p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     constructor() {
         // mandatory
         super();
@@ -587,7 +591,7 @@ export class AvApp extends WebComponent implements DefaultComponent {
     </av-code>
     <p>A web component can also be created inside your Javascript by calling</p>
     <av-code language="typescript">
-let app = new AvApp();
+let app = new App();
 document.body.appendChild(app);
     </av-code>
     <p>
@@ -604,7 +608,7 @@ protected override postCreation(): void {
         constructor and remove the alert inside the postCreation. The base script is the following :
     </p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     protected override postCreation(): void {
     }
 }
@@ -622,7 +626,7 @@ export class AvApp extends WebComponent implements DefaultComponent {
         When rendering av-app component, we will call a function <i>writeWorld</i>
     </p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     public writeWorld() {
     }
     protected override postCreation(): void {
@@ -636,7 +640,7 @@ export class AvApp extends WebComponent implements DefaultComponent {
         read <a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_shadow_DOM" target="_blank">this article</a>. 
     </p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     public writeWorld() {
         let titleEl: HTMLElement = this.shadowRoot.querySelector("h1");
     }
@@ -646,14 +650,15 @@ export class AvApp extends WebComponent implements DefaultComponent {
 }
     </av-code>
     <p>
-        To improve readability you can target an element in your view by adding a attribute called <b>@element</b> or <b>av-element</b> (where av is your identifier) with the name of the variable to store. 
-        Now your element is available directly inside your component scope.
+        To improve readability you can target an element in your view by adding a attribute called <b>@element</b> with the name of the variable to store. 
+        Now your element is available directly inside your component scope. You must specify that this variable is element in view by adding <b>@ViewElement()</b> decorator 
     </p>
     <av-code language="html">
 &lt;h1 @element="titleEl"&gt;Hello world&lt;/h1&gt;
     </av-code>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
+    @ViewElement()
     public titleEl: HTMLElement;
     public writeWorld() {
     }
@@ -666,7 +671,8 @@ export class AvApp extends WebComponent implements DefaultComponent {
         Now we can write the code for the function <i>writeWorld</i>.
     </p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
+    @ViewElement()
     public titleEl: HTMLElement;
     public writeWorld() {
         while(true) {
@@ -699,36 +705,37 @@ export class AvApp extends WebComponent implements DefaultComponent {
         For the example, the result will be an av-app tag with an attribute changing each second 
     </p>
     <av-code language="html">
-<av-app content="Hello ">Hello </av-app>
-<av-app content="Hello w">Hello w</av-app>
-<av-app content="Hello wo">Hello wo</av-app>
+&lt;av-app content="Hello "&gt;Hello &lt;/av-app&gt;
+&lt;av-app content="Hello w"&gt;Hello w&lt;/av-app&gt;
+&lt;av-app content="Hello wo"&gt;Hello wo&lt;/av-app&gt;
     </av-code>
     <p>
         In the script part, we can specify that we want an attribute on the generated tag by adding a property to the class 
-        and a decorator (<b>@attribute</b> or <b>@property</b>) over the property. The @property decorator will look at changes.<br>
-        You can only use <i>string, number, boolean, luxon.Date and luxon.DateTime</i> as type for your property. This can be used to 
+        and a decorator (<b>@Attribute</b> or <b>@Property</b>) over the property. The @Property decorator will look at changes.<br>
+        You can only use <i>string, number, boolean, luxon.Date, luxon.DateTime and literal ('opt1' | 'opt2' | ...)</i> as type for your property. This can be used to 
         add a specify style for a component
     </p>
     <av-code language="typescript">
-@property()
+@Property()
 public property: string = "";
-@property((target: AvApp) =&gt; {
+@Property((target: App) =&gt; {
     console.log("change");
 })
 public propertyWithChange: string = "";
-@attribute()
+@Attribute()
 public attribute: string = "";
     </av-code>
     <p>For this part, we need a attribute that will trigger change event. We can transform the code like below:</p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
-    @property((target: AvApp) =&gt; {
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
+    @Property((target: App) =&gt; {
         // update the view content with the new attribute value
         target.titleEl.innerHTML = target.content;
     })
     public content: string = "Hello ";
+    @ViewElement()
     public titleEl: HTMLElement;
-    public async renderWorld(): Promise&lt;void&gt; {
+    public async writeWorld(): Promise&lt;void&gt; {
         while(true) {
             // update the content attribute instead of the HTML
             this.content = "Hello ";
@@ -745,13 +752,13 @@ export class AvApp extends WebComponent implements DefaultComponent {
         return new Promise((resolve) =&gt; setTimeout(() =&gt; resolve(), x));
     }
     protected override postCreation(): void {
-        this.renderWorld();
+        this.writeWorld();
     }
 }
     </av-code>
-    <p>To improve readability again, you can remove the callback function inside @property and using injection inside view with {{propertyName}}</p>
+    <p>To improve readability again, you can remove the callback function inside @Property and using injection inside view with {{propertyName}}</p>
     <av-code language="typescript">
-@property()
+@Property()
 public content: string = "Hello ";
     </av-code>
     <av-code language="html">
@@ -772,14 +779,15 @@ public content: string = "Hello ";
 </section>
 <section>
     <h3>Writting <i>world</i> - Using watch</h3>
-    <p>Now we want to get rid of the attribute but still having view change. We just have to replace @property by a new decorator <b>@watch</b></p>
+    <p>Now we want to get rid of the attribute but still having view change. We just have to replace @Property by a new decorator <b>@Watch</b></p>
     <p>The watch decorator use a proxy to store any kind of data inside your component and notify changes.</p>
     <av-code language="typescript">
-export class AvApp extends WebComponent implements DefaultComponent {
-    @watch()
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
+    @Watch()
     public content: string = "Hello ";
+    @ViewElement()
     public titleEl: HTMLElement;
-    public async renderWorld(): Promise&lt;void&gt; {
+    public async writeWorld(): Promise&lt;void&gt; {
         while(true) {
             // update the content attribute instead of the HTML
             this.content = "Hello ";
@@ -796,23 +804,23 @@ export class AvApp extends WebComponent implements DefaultComponent {
         return new Promise((resolve) =&gt; setTimeout(() =&gt; resolve(), x));
     }
     protected override postCreation(): void {
-        this.renderWorld();
+        this.writeWorld();
     }
 }
     </av-code>
     <p>If you look your browser, you can see that when it's written "Hello world" the color isn't green anymore</p>
     <p>We will just add a new property inside the class to try more watchable property</p>
     <av-code language="typescript">
-@watch((target: AvApp, action: WatchAction, path: string, value: any) =&gt; {
+@Watch((target: App, action: Aventus.WatchAction, path: string, value: any) =&gt; {
     // this log will be shown when something inside status is updated
-    console.log(WatchAction[action] + " on path " + path + " with value ", value);
+    console.log(Aventus.WatchAction[action] + " on path " + path + " with value ", value);
 })
 public status = {
     name: "",
     value: 0
 };
 ...
-public async renderWorld(): Promise&lt;void&gt; {
+public async writeWorld(): Promise&lt;void&gt; {
     while(true) {
         this.content = "Hello ";
         this.status.name = "Progress";
@@ -838,7 +846,7 @@ public async renderWorld(): Promise&lt;void&gt; {
 @Debugger({
     enableWatchHistory: true,
 })
-export class AvApp extends WebComponent implements DefaultComponent {}
+export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {}
     </av-code>
     <p>
         Now open your dev console, store the av-app as a variable. You can call the function <b>.getWatchHistory()</b> to obtain all changes 
@@ -855,7 +863,7 @@ export class AvApp extends WebComponent implements DefaultComponent {}
     </p>
     <av-code language="html">
 &lt;script&gt;
-    export class AvApp extends WebComponent implements DefaultComponent {
+    export class App extends Aventus.WebComponent implements Aventus.DefaultComponent {
     }
 &lt;/script&gt;
     </av-code>
