@@ -9580,14 +9580,14 @@ Object.transformIntoWatcher = function (obj, onDataChanged) {
                         proxyData.history.push({
                             object: JSON.parse(JSON.stringify(currentProxyData.baseData, jsonReplacer)),
                             trace: stacks.reverse(),
-                            action:WatchAction[type],
+                            action:Aventus.WatchAction[type],
                             path:pathToSend
                         });
                     }
 
                     [...currentProxyData.callbacks].forEach((cb) => {
 
-                        cb(WatchAction[type], pathToSend, value);
+                        cb(Aventus.WatchAction[type], pathToSend, value);
                     });
 
                 }
@@ -11181,19 +11181,19 @@ class AvGettingStartedInitProject extends AvGenericPage {
     <p>You can right click inside the explorer part and click on <b>Aventus : Create...</b></p>
     <av-row>
         <av-col size="12" center="">
-            <av-img src="/img/gettingStarted/init_right_click.PNG"></av-img>
+            <av-img src="/img/gettingStarted/init_right_click.png"></av-img>
         </av-col>
     </av-row>
     <p>A dropdown appears. You must select the option : <b>Init</b></p>
     <av-row>
         <av-col size="12" center="">
-            <av-img src="/img/gettingStarted/init_select_create.PNG"></av-img>
+            <av-img src="/img/gettingStarted/init_select_create.png"></av-img>
         </av-col>
     </av-row>
     <p>Then you must enter the name for your project, by default the name used is the folder name</p>
     <av-row>
         <av-col size="12" center="">
-            <av-img src="/img/gettingStarted/init_create_name.PNG"></av-img>
+            <av-img src="/img/gettingStarted/init_create_name.png"></av-img>
         </av-col>
     </av-row>
     <p>The extension will create for you the configuration file and the default structure. Then the config file is displayed</p>
@@ -11338,19 +11338,19 @@ var aventus_todo = {
     <p>You can right click inside the explorer part and click on <b>Aventus : Create...</b></p>
     <av-row>
         <av-col size="12" center="">
-            <av-img src="/img/gettingStarted/init_right_click.PNG"></av-img>
+            <av-img src="/img/gettingStarted/init_right_click.png"></av-img>
         </av-col>
     </av-row>
     <p>A dropdown appears. You must select the option : <b>Init</b></p>
     <av-row>
         <av-col size="12" center="">
-            <av-img src="/img/gettingStarted/init_select_create.PNG"></av-img>
+            <av-img src="/img/gettingStarted/init_select_create.png"></av-img>
         </av-col>
     </av-row>
     <p>Then you must enter the name for your project, by default the name used is the folder name</p>
     <av-row>
         <av-col size="12" center="">
-            <av-img src="/img/gettingStarted/init_create_name.PNG"></av-img>
+            <av-img src="/img/gettingStarted/init_create_name.png"></av-img>
         </av-col>
     </av-row>
     <p>The extension will create for you the configuration file and the default structure. Then the config file is displayed</p>
